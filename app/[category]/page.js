@@ -20,27 +20,29 @@ export default function CategoryPage({ params }) {
     <>
       <nav className="breadcrumb">
         <Link href="/">Home</Link>
-        <span>/</span>
+        <span className="sep">/</span>
         <span>{c.name}</span>
       </nav>
 
-      <section className="hero hero-sm">
-        <h1 className="hero-title">{c.emoji} {c.name}</h1>
-        <p className="hero-sub">{c.description}</p>
-      </section>
+      <header className="page-head">
+        <h1>{c.emoji} {c.name}</h1>
+        <p>{c.description}</p>
+      </header>
 
       {c.tools.length === 0 ? (
         <div className="empty">
-          <p>These tools are <strong>coming soon</strong>.</p>
-          <p className="muted">We&apos;re building the boring stuff first. Check back shortly.</p>
+          <p style={{ margin: "0 0 6px", fontWeight: 600 }}>These tools are coming soon.</p>
+          <p className="muted" style={{ margin: 0 }}>
+            We&apos;re building the boring stuff first. Check back shortly.
+          </p>
         </div>
       ) : (
         <div className="grid">
           {c.tools.map((t) => (
             <Link key={t.slug} href={`/${c.slug}/${t.slug}`} className="card tool-card">
               <span className="tool-name">{t.name}</span>
-              <span className="tool-desc muted">{t.description}</span>
-              <span className="badge">Coming soon</span>
+              <span className="tool-desc">{t.description}</span>
+              <span className="cat-meta"><span className="badge">Coming soon</span></span>
             </Link>
           ))}
         </div>

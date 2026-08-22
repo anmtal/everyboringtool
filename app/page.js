@@ -1,17 +1,40 @@
 import Link from "next/link";
-import { categories, SITE } from "../lib/tools";
+import { categories, allTools, SITE } from "../lib/tools";
+import ToolSearch from "../components/ToolSearch";
 
 export default function Home() {
+  const popular = allTools().filter((t) => t.popular).slice(0, 6);
+
   return (
     <>
       <section className="hero">
         <h1 className="hero-title">Every boring tool.<br />One simple place.</h1>
         <p className="hero-sub">{SITE.description}</p>
-        <p className="hero-note">No sign-up. No clutter. Just tools that work.</p>
+        <ToolSearch />
+        <ul className="trust">
+          <li>Free forever</li>
+          <li>No sign-up</li>
+          <li>Runs in your browser</li>
+          <li>Files never leave your device</li>
+        </ul>
       </section>
 
-      <section>
-        <h2 className="section-title">Categories</h2>
+      {popular.length > 0 && (
+        <section className="block">
+          <h2 className="section-title">Popular tools</h2>
+          <div className="chips">
+            {popular.map((t) => (
+              <Link key={t.href} href={t.href} className="chip">
+                <span aria-hidden="true">{t.emoji}</span>
+                {t.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="block">
+        <h2 className="section-title">Browse by category</h2>
         <div className="grid">
           {categories.map((c) => (
             <Link
@@ -21,7 +44,7 @@ export default function Home() {
             >
               <span className="cat-emoji" aria-hidden="true">{c.emoji}</span>
               <span className="cat-name">{c.name}</span>
-              <span className="cat-desc muted">{c.description}</span>
+              <span className="cat-desc">{c.description}</span>
               <span className="cat-meta">
                 {c.status === "soon" ? (
                   <span className="badge">Coming soon</span>

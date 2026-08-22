@@ -27,20 +27,20 @@ export default function ToolPage({ params }) {
     <>
       <nav className="breadcrumb">
         <Link href="/">Home</Link>
-        <span>/</span>
+        <span className="sep">/</span>
         <Link href={`/${c.slug}`}>{c.name}</Link>
-        <span>/</span>
+        <span className="sep">/</span>
         <span>{t.name}</span>
       </nav>
 
-      <section className="hero hero-sm">
-        <h1 className="hero-title">{t.name}</h1>
-        <p className="hero-sub">{t.description}</p>
-      </section>
+      <header className="page-head">
+        <h1>{t.name}</h1>
+        <p>{t.description}</p>
+      </header>
 
       <div className="empty tool-stub">
         <span className="stub-badge">Coming soon</span>
-        <p>The shell is live — this tool is next on the list.</p>
+        <p style={{ margin: 0 }}>The shell is live — this tool is next on the build list.</p>
         <Link href={`/${c.slug}`} className="btn">← Back to {c.name}</Link>
       </div>
     </>
