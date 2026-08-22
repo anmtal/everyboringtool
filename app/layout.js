@@ -1,6 +1,7 @@
 import "./globals.css";
 import Link from "next/link";
 import { SITE } from "../lib/tools";
+import CategoryNav from "../components/CategoryNav";
 
 export const metadata = {
   metadataBase: new URL("https://everyboringtool.com"),
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
             </Link>
             <span className="brand-tagline">{SITE.tagline}</span>
           </div>
+          <CategoryNav />
         </header>
         <main className="container main">{children}</main>
         <footer className="site-footer">
