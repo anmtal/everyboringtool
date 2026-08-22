@@ -6,7 +6,7 @@ export default function sitemap() {
   for (const c of categories) {
     urls.push({ url: `${base}/${c.slug}` });
     for (const t of c.tools) {
-      urls.push({ url: `${base}/${c.slug}/${t.slug}` });
+      if (t.built) urls.push({ url: `${base}/${c.slug}/${t.slug}` });
     }
   }
   return urls;

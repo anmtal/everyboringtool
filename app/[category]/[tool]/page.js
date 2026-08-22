@@ -15,7 +15,12 @@ export function generateStaticParams() {
 export function generateMetadata({ params }) {
   const t = getTool(params.category, params.tool);
   if (!t) return {};
-  return { title: t.name, description: t.description };
+  return {
+    title: t.name,
+    description: t.description,
+    // Coming-soon stubs stay out of the index until the tool actually works.
+    robots: t.built ? { index: true, follow: true } : { index: false, follow: true },
+  };
 }
 
 export default function ToolPage({ params }) {
