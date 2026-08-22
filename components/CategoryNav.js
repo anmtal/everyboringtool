@@ -31,48 +31,53 @@ export default function CategoryNav() {
     };
   }, []);
 
+  const current = open ? categories.find((c) => c.slug === open) : null;
+
   return (
     <nav className="catnav" ref={ref} aria-label="Tool categories">
-      <div className="container catnav-inner">
-        {categories.map((c) => {
-          const isOpen = open === c.slug;
-          return (
-            <div key={c.slug} className={`catnav-item ${isOpen ? "is-open" : ""}`}>
+      <div className="catnav-wrap container">
+        <div className="catnav-row">
+          {categories.map((c) => {
+            const isOpen = open === c.slug;
+            return (
               <button
+                key={c.slug}
                 type="button"
-                className="catnav-btn"
+                className={`catnav-btn ${isOpen ? "is-open" : ""}`}
                 aria-expanded={isOpen}
                 aria-haspopup="true"
                 onClick={() => setOpen(isOpen ? null : c.slug)}
               >
                 <span aria-hidden="true">{c.emoji}</span>
-                <span>{c.name}</span>
+                <span>{c.short || c.name}</span>
                 <span className="caret" aria-hidden="true">▾</span>
               </button>
+            );
+          })}
+        </div>
 
-              {isOpen && (
-                <div className="catnav-menu">
-                  <Link href={`/${c.slug}`} className="catnav-menu-head">
-                    All {c.name} →
+        {current && (
+          <div className="catnav-panel">
+            <Link href={`/${current.slug}`} className="catnav-panel-head">
+              All {current.name} →
+            </Link>
+            {current.tools.length === 0 ? (
+              <div className="catnav-panel-empty">Coming soon</div>
+            ) : (
+              <div className="catnav-panel-grid">
+                {current.tools.map((t) => (
+                  <Link
+                    key={t.slug}
+                    href={`/${current.slug}/${t.slug}`}
+                    className="catnav-panel-link"
+                  >
+                    {t.name}
                   </Link>
-                  {c.tools.length === 0 ? (
-                    <span className="catnav-menu-empty">Coming soon</span>
-                  ) : (
-                    c.tools.map((t) => (
-                      <Link
-                        key={t.slug}
-                        href={`/${c.slug}/${t.slug}`}
-                        className="catnav-menu-link"
-                      >
-                        {t.name}
-                      </Link>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );
