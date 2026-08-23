@@ -19,12 +19,24 @@ export default function Home() {
       </section>
 
       <section className="block">
-        <Link href="/unscramble" className="card cat-card" style={{ borderColor: "var(--accent, #2a7de1)" }}>
-          <span className="cat-emoji" aria-hidden="true">🔤</span>
-          <span className="cat-name">Word Unscrambler</span>
-          <span className="cat-desc">Unscramble letters into words instantly — for Scrabble, Words With Friends, anagrams and crosswords.</span>
-          <span className="cat-meta"><span className="badge badge-live">Try it →</span></span>
-        </Link>
+        <h2 className="section-title">🔤 Word Games</h2>
+        <div className="grid">
+          {[
+            { href: "/unscramble", emoji: "🔤", name: "Word Unscrambler", desc: "Unscramble letters into words for Scrabble & Words With Friends." },
+            { href: "/anagram", emoji: "🔀", name: "Anagram Solver", desc: "Find every anagram of your letters." },
+            { href: "/wordle-solver", emoji: "🟩", name: "Wordle Solver", desc: "Enter your clues, see every possible answer." },
+            { href: "/words-starting-with", emoji: "🔠", name: "Words Starting With", desc: "Every word that starts with your letters." },
+            { href: "/words-ending-with", emoji: "🔡", name: "Words Ending With", desc: "Words ending in -ing, -ed and more." },
+            { href: "/words-containing", emoji: "🔍", name: "Words Containing", desc: "Words with a letter sequence inside." },
+          ].map((t) => (
+            <Link key={t.href} href={t.href} className="card cat-card">
+              <span className="cat-emoji" aria-hidden="true">{t.emoji}</span>
+              <span className="cat-name">{t.name}</span>
+              <span className="cat-desc">{t.desc}</span>
+              <span className="cat-meta"><span className="badge badge-live">Play →</span></span>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="block">

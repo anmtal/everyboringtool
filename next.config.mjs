@@ -5,6 +5,10 @@ const nextConfig = {
   experimental: {
     outputFileTracingIncludes: {
       "/unscramble/[letters]": ["./public/words/dict.txt"],
+      "/anagram/[letters]": ["./public/words/dict.txt"],
+      "/words-starting-with/[prefix]": ["./public/words/dict.txt"],
+      "/words-ending-with/[suffix]": ["./public/words/dict.txt"],
+      "/words-containing/[substr]": ["./public/words/dict.txt"],
     },
   },
   webpack: (config) => {
