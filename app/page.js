@@ -19,6 +19,15 @@ export default function Home() {
       </section>
 
       <section className="block">
+        <Link href="/unscramble" className="card cat-card" style={{ borderColor: "var(--accent, #2a7de1)" }}>
+          <span className="cat-emoji" aria-hidden="true">🔤</span>
+          <span className="cat-name">Word Unscrambler</span>
+          <span className="cat-desc">Unscramble letters into words instantly — for Scrabble, Words With Friends, anagrams and crosswords.</span>
+          <span className="cat-meta"><span className="badge badge-live">Try it →</span></span>
+        </Link>
+      </section>
+
+      <section className="block">
         <h2 className="section-title">Browse by category</h2>
         <div className="grid">
           {categories.map((c) => {
