@@ -269,14 +269,14 @@ export default function HvacLoadEstimator() {
         </div>
       </div>
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <p className="tool-result-label">ESTIMATED COOLING LOAD</p>
         <div className="tool-result-value">
           {result ? `${formatInt(result.coolingBtu)} BTU/hr` : "-"}
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">
             {result ? formatDecimal(result.tonsRounded, 1) : "-"}

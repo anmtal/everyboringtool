@@ -143,7 +143,7 @@ export default function RotatePdf() {
 
       {file && pageCount > 0 && (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{NUM_FMT.format(pageCount)}</div>
               <div className="tool-stat-label">
@@ -208,7 +208,7 @@ export default function RotatePdf() {
           </div>
 
           {result && (
-            <div className="tool-result">
+            <div className="tool-result" role="status" aria-live="polite">
               <div className="tool-result-label">Done</div>
               <div className="tool-result-value">
                 Rotated {NUM_FMT.format(pageCount)}{" "}

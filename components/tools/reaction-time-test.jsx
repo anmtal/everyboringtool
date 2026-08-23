@@ -202,7 +202,7 @@ export default function ReactionTimeTest() {
       </div>
 
       {times.length > 0 && (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">{lastTime !== null ? lastTime : "—"}</div>
             <div className="tool-stat-label">Last (ms)</div>
@@ -225,7 +225,7 @@ export default function ReactionTimeTest() {
       )}
 
       {times.length > 0 && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">
             {isResult ? "Final results" : "Rounds so far"}
           </p>

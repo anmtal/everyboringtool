@@ -442,7 +442,7 @@ export default function FlashcardGenerator() {
 
       {error ? <div className="tool-error">{error}</div> : null}
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{cards.length}</div>
           <div className="tool-stat-label">Cards</div>

@@ -129,7 +129,7 @@ export default function TipCalculator() {
 
       {result ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">
               {result.count > 1 ? "Total per person" : "Total (bill + tip)"}
             </p>
@@ -140,7 +140,7 @@ export default function TipCalculator() {
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{usd.format(result.tipAmount)}</div>
               <div className="tool-stat-label">Tip amount ({result.tip}%)</div>

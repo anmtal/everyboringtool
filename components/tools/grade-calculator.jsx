@@ -204,7 +204,7 @@ export default function GradeCalculator() {
             </button>
           </div>
 
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">WEIGHTED AVERAGE</p>
             <div className="tool-result-value">
               {weighted ? `${num2.format(weighted.average)}%` : "—"}
@@ -212,7 +212,7 @@ export default function GradeCalculator() {
           </div>
 
           {weighted ? (
-            <div className="tool-stat-grid">
+            <div className="tool-stat-grid" role="status" aria-live="polite">
               <div className="tool-stat">
                 <div className="tool-stat-num">{`${num1.format(
                   weighted.totalWeight
@@ -304,7 +304,7 @@ export default function GradeCalculator() {
             </div>
           </div>
 
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">SCORE NEEDED ON FINAL</p>
             <div className="tool-result-value">
               {finalNeeded && !finalNeeded.invalidWeight

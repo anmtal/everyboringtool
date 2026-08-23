@@ -201,7 +201,7 @@ export default function SavingsGoalCalculator() {
 
       {result.status === "reached" && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">TIME TO REACH GOAL</p>
             <div className="tool-result-value">Already reached</div>
           </div>
@@ -214,7 +214,7 @@ export default function SavingsGoalCalculator() {
 
       {result.status === "never" && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">TIME TO REACH GOAL</p>
             <div className="tool-result-value">Not reachable</div>
           </div>
@@ -230,14 +230,14 @@ export default function SavingsGoalCalculator() {
 
       {result.status === "ok" && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">TIME TO REACH GOAL</p>
             <div className="tool-result-value">
               {formatDuration(result.months)}
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{result.months}</div>
               <div className="tool-stat-label">Total months</div>

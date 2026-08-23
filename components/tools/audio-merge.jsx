@@ -125,7 +125,7 @@ export default function AudioMerge() {
       {error && <p className="tool-error" role="alert">{error}</p>}
 
       {result && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">Done — {fmtBytes(result.size)}</p>
           <audio controls src={result.url} style={{ width: "100%", marginTop: 8 }} />
           <div className="tool-actions" style={{ marginTop: 10 }}>

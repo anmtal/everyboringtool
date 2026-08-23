@@ -254,16 +254,18 @@ export default function WeekNumber() {
 
           {forward && !dateInvalid && (
             <>
-              <div className="tool-result">
+              <div className="tool-result" role="status" aria-live="polite">
                 <p className="tool-result-label">
-                  {forward.weekday}, {formatLongDate(forward.date)} falls in
+                  {/* formatLongDate already begins with the weekday — printing
+                      forward.weekday too gave "Friday, Friday, 1 January 2021". */}
+                  {formatLongDate(forward.date)} falls in
                 </p>
                 <div className="tool-result-value">
                   ISO week {forward.week} of {forward.isoYear}
                 </div>
               </div>
 
-              <div className="tool-stat-grid">
+              <div className="tool-stat-grid" role="status" aria-live="polite">
                 <div className="tool-stat">
                   <div className="tool-stat-num">{forward.week}</div>
                   <div className="tool-stat-label">ISO week number</div>
@@ -290,7 +292,7 @@ export default function WeekNumber() {
                 </div>
               </div>
 
-              <div className="tool-result">
+              <div className="tool-result" role="status" aria-live="polite">
                 <p className="tool-result-label">
                   That week runs Monday to Sunday
                 </p>
@@ -373,7 +375,7 @@ export default function WeekNumber() {
 
           {!reverse.error && (
             <>
-              <div className="tool-result">
+              <div className="tool-result" role="status" aria-live="polite">
                 <p className="tool-result-label">
                   ISO week {reverse.week} of {reverse.year} runs
                 </p>
@@ -385,7 +387,7 @@ export default function WeekNumber() {
                 </div>
               </div>
 
-              <div className="tool-stat-grid">
+              <div className="tool-stat-grid" role="status" aria-live="polite">
                 <div className="tool-stat">
                   <div className="tool-stat-num">
                     {formatShortDate(reverse.monday)}

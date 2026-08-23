@@ -193,7 +193,7 @@ export default function JsonToCsv() {
 
       {result.output ? (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {result.rowCount.toLocaleString("en-US")}

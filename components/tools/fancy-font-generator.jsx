@@ -170,7 +170,7 @@ export default function FancyFontGenerator() {
         </button>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{charCount.toLocaleString("en-US")}</div>
           <div className="tool-stat-label">Characters</div>
@@ -183,7 +183,7 @@ export default function FancyFontGenerator() {
 
       {hasText ? (
         results.map((r) => (
-          <div className="tool-result" key={r.id}>
+          <div className="tool-result" role="status" aria-live="polite" key={r.id}>
             <p className="tool-result-label">{r.label}</p>
             <div
               className="tool-result-value"

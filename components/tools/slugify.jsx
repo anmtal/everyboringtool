@@ -185,7 +185,7 @@ export default function Slugify() {
         </div>
       ) : null}
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{fmt(stats.lines)}</div>
           <div className="tool-stat-label">Lines</div>

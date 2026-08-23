@@ -137,14 +137,14 @@ export default function RoiCalculator() {
 
         {ready ? (
           <>
-            <div className="tool-result">
+            <div className="tool-result" role="status" aria-live="polite">
               <span className="tool-result-label">Return on investment</span>
               <span className="tool-result-value">
                 {formatPercent(results.roi)}
               </span>
             </div>
 
-            <div className="tool-stat-grid">
+            <div className="tool-stat-grid" role="status" aria-live="polite">
               <div className="tool-stat">
                 <div className="tool-stat-num">{formatPercent(results.roi)}</div>
                 <div className="tool-stat-label">ROI</div>

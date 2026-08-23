@@ -188,7 +188,7 @@ export default function TypingSpeedTest() {
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{stats.wpm}</div>
           <div className="tool-stat-label">Words per minute</div>
@@ -210,7 +210,7 @@ export default function TypingSpeedTest() {
       </div>
 
       {finished && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">Result</p>
           <div className="tool-result-value">{stats.wpm} WPM</div>
           <p className="tool-note">

@@ -283,7 +283,7 @@ export default function MorseCodeTranslator() {
         </div>
       ) : null}
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{fmt(stats.chars)}</div>
           <div className="tool-stat-label">Input characters</div>

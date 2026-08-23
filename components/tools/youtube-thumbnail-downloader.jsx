@@ -115,13 +115,13 @@ export default function YoutubeThumbnailDownloader() {
 
       {videoId ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Detected video ID</p>
             <div className="tool-result-value">{videoId}</div>
           </div>
 
           <div
-            className="tool-stat-grid"
+            className="tool-stat-grid" role="status" aria-live="polite"
             style={{ marginTop: "1rem", gap: "1rem" }}
           >
             {thumbnails.map((thumb) => (

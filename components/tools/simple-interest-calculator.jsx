@@ -104,14 +104,14 @@ export default function SimpleInterestCalculator() {
 
       {results ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">TOTAL AMOUNT</p>
             <div className="tool-result-value">
               {currency.format(results.total)}
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {currency.format(results.principal)}

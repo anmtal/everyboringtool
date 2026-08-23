@@ -384,7 +384,7 @@ export default function Minesweeper() {
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{minesRemaining}</div>
           <div className="tool-stat-label">Mines Remaining</div>

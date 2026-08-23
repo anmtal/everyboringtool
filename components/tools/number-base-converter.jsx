@@ -166,7 +166,7 @@ export default function NumberBaseConverter() {
       {OUTPUTS.map((row) => {
         const text = value === null ? "" : formatInBase(value, row.base);
         return (
-          <div className="tool-result" key={row.key}>
+          <div className="tool-result" role="status" aria-live="polite" key={row.key}>
             <div className="tool-result-label">
               {row.label}
               {row.base === 16 ? " (uppercase)" : ""}
@@ -204,7 +204,7 @@ export default function NumberBaseConverter() {
       })}
 
       {stats ? (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">{stats.bits}</div>
             <div className="tool-stat-label">Bit length</div>

@@ -40,7 +40,11 @@ function parseCsv(text, delimiter) {
       continue;
     }
 
-    if (ch === '"') {
+    // A double-quote only opens a quoted field at the START of a field. Treating
+    // any bare quote as an opener meant a value like  5" pipe  put the parser into
+    // quoted mode, and because the quote never closed, the entire rest of the file
+    // was swallowed into one field with no error. Mid-field quotes are literal.
+    if (ch === '"' && field === "") {
       inQuotes = true;
       started = true;
       i += 1;
@@ -255,7 +259,7 @@ export default function CsvToJson() {
 
       {result.output ? (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {result.rowCount.toLocaleString("en-US")}

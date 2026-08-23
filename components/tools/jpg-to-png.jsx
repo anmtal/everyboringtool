@@ -167,7 +167,7 @@ export default function JpgToPng() {
 
       {outputUrl && !error ? (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{formatBytes(originalSize)}</div>
               <div className="tool-stat-label">Original</div>
@@ -190,7 +190,7 @@ export default function JpgToPng() {
             ) : null}
           </div>
 
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">Preview</div>
             <div className="tool-result-value">
               <div

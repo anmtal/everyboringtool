@@ -171,7 +171,7 @@ export default function Stopwatch() {
       </div>
 
       {laps.length > 0 && (
-        <div className="tool-stat-grid" style={{ marginTop: "1rem" }}>
+        <div className="tool-stat-grid" role="status" aria-live="polite" style={{ marginTop: "1rem" }}>
           <div className="tool-stat">
             <div className="tool-stat-num">{laps.length}</div>
             <div className="tool-stat-label">Laps</div>

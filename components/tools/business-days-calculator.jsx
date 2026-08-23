@@ -418,14 +418,14 @@ export default function BusinessDaysCalculator() {
 
       {mode === "count" && countResult && !countResult.tooLarge && !countInvalid && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Business days in this range</p>
             <div className="tool-result-value">
               {formatNumber(countResult.businessDays)}
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {formatNumber(countResult.totalDays)}
@@ -484,7 +484,7 @@ export default function BusinessDaysCalculator() {
 
       {mode === "add" && addResult && !addResult.tooLarge && !addInvalid && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">
               {addResult.n === 0
                 ? "Result (0 business days added)"

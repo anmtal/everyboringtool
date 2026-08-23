@@ -282,7 +282,7 @@ export default function HashGenerator() {
 
       {hasOutput ? (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {input.length.toLocaleString("en-US")}

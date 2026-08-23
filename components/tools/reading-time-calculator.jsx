@@ -81,12 +81,12 @@ export default function ReadingTimeCalculator() {
         </div>
       </div>
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <div className="tool-result-label">Estimated reading time</div>
         <div className="tool-result-value">{stats.readingTime}</div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{fmt(stats.words)}</div>
           <div className="tool-stat-label">Words</div>

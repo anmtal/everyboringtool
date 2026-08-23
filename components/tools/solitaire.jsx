@@ -169,7 +169,7 @@ export default function Solitaire() {
       </div>
 
       {game.won && (
-        <div className="tool-result"><p className="tool-result-value" style={{ textAlign: "center", fontSize: 20 }}>🎉 You won! Well played.</p></div>
+        <div className="tool-result" role="status" aria-live="polite"><p className="tool-result-value" style={{ textAlign: "center", fontSize: 20 }}>🎉 You won! Well played.</p></div>
       )}
 
       <div style={{ overflowX: "auto" }}>

@@ -180,7 +180,7 @@ export default function ReorderPages() {
 
       {file && originalCount > 0 && (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {NUM_FMT.format(originalCount)}

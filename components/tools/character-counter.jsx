@@ -61,7 +61,7 @@ export default function CharacterCounter() {
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{fmt(stats.characters)}</div>
           <div className="tool-stat-label">Characters</div>
@@ -81,7 +81,7 @@ export default function CharacterCounter() {
       </div>
 
       {limit !== null && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">
             {over ? "Over limit by" : "Remaining characters"}
           </p>

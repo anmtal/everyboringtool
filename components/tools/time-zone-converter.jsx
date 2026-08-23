@@ -299,21 +299,21 @@ export default function TimeZoneConverter() {
 
       {result && !invalid && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">
               Source · {labelFor(source)}
             </p>
             <div className="tool-result-value">{result.sourceText}</div>
           </div>
 
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">
               Target · {labelFor(target)}
             </p>
             <div className="tool-result-value">{result.targetText}</div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{result.srcOffset}</div>
               <div className="tool-stat-label">Source offset</div>

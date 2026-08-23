@@ -129,7 +129,7 @@ export default function Hangman() {
         </button>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{Math.max(0, remaining)}</div>
           <div className="tool-stat-label">Guesses left</div>

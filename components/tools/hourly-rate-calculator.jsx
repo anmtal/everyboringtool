@@ -145,14 +145,14 @@ export default function HourlyRateCalculator() {
 
       {result ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Required hourly rate</p>
             <div className="tool-result-value">
               {usd.format(result.hourlyRate)}
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {num.format(result.annualBillableHours)}

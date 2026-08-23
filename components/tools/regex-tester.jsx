@@ -372,7 +372,7 @@ export default function RegexTester() {
       ) : null}
 
       {result.ok && !result.empty ? (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">{fmt(matchCount)}</div>
             <div className="tool-stat-label">

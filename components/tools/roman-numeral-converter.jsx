@@ -152,7 +152,7 @@ export default function RomanNumeralConverter() {
         </p>
       ) : null}
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <div className="tool-result-label">Roman numeral</div>
         <div
           style={{
@@ -210,7 +210,7 @@ export default function RomanNumeralConverter() {
         </p>
       ) : null}
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <div className="tool-result-label">Number</div>
         <div
           style={{
@@ -235,7 +235,7 @@ export default function RomanNumeralConverter() {
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         {REFERENCE.map(([sym, val]) => (
           <div className="tool-stat" key={sym}>
             <div className="tool-stat-num">{sym}</div>

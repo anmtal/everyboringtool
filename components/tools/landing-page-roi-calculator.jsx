@@ -222,14 +222,14 @@ export default function LandingPageRoiCalculator() {
 
       {showResult && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">Current monthly revenue</div>
             <div className="tool-result-value">
               {usd.format(result.currentRevenue)}
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             {result.stats.map((stat) => (
               <div className="tool-stat" key={stat.label}>
                 <div className="tool-stat-num">{stat.value}</div>
@@ -240,7 +240,7 @@ export default function LandingPageRoiCalculator() {
 
           {result.improved && (
             <>
-              <div className="tool-result">
+              <div className="tool-result" role="status" aria-live="polite">
                 <div className="tool-result-label">
                   Extra revenue from the improvement
                 </div>
@@ -259,7 +259,7 @@ export default function LandingPageRoiCalculator() {
                 </div>
               </div>
 
-              <div className="tool-stat-grid">
+              <div className="tool-stat-grid" role="status" aria-live="polite">
                 {result.improved.stats.map((stat) => (
                   <div className="tool-stat" key={stat.label}>
                     <div className="tool-stat-num">{stat.value}</div>

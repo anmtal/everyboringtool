@@ -59,7 +59,7 @@ export default function MarkdownToHtml() {
 
       {view === "preview" ? (
         <div
-          className="tool-result"
+          className="tool-result" role="status" aria-live="polite"
           style={{ background: "#ffffff", color: "#1a1a1a", padding: "14px 18px", borderRadius: 10, lineHeight: 1.55, overflowX: "auto" }}
           dangerouslySetInnerHTML={{ __html: html }}
         />

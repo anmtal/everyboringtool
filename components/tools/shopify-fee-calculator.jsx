@@ -117,12 +117,12 @@ export default function ShopifyFeeCalculator() {
 
       {result ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Net payout</p>
             <div className="tool-result-value">{usd.format(result.payout)}</div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{usd.format(result.fee)}</div>
               <div className="tool-stat-label">Transaction fee</div>

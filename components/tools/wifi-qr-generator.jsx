@@ -194,7 +194,7 @@ export default function WifiQrGenerator() {
       {trimmedSsid && dataUrl ? (
         <>
           <div
-            className="tool-result"
+            className="tool-result" role="status" aria-live="polite"
             style={{
               display: "flex",
               flexDirection: "column",

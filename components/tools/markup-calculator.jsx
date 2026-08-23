@@ -154,7 +154,7 @@ export default function MarkupCalculator() {
 
         {ready ? (
           <>
-            <div className="tool-result">
+            <div className="tool-result" role="status" aria-live="polite">
               <span className="tool-result-label">
                 {mode === "markup" ? "Sale price" : "Markup"}
               </span>
@@ -165,7 +165,7 @@ export default function MarkupCalculator() {
               </span>
             </div>
 
-            <div className="tool-stat-grid">
+            <div className="tool-stat-grid" role="status" aria-live="polite">
               {mode === "markup" ? (
                 <div className="tool-stat">
                   <div className="tool-stat-num">{formatMoney(results.sale)}</div>

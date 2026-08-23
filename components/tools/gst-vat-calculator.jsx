@@ -170,12 +170,12 @@ export default function GstVatCalculator() {
 
       {parsed.ok && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <span className="tool-result-label">{primaryLabel}</span>
             <span className="tool-result-value">{usd.format(primaryValue)}</span>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{usd.format(parsed.net)}</div>
               <div className="tool-stat-label">Net (excl. tax)</div>

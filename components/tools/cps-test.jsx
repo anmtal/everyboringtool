@@ -249,7 +249,7 @@ export default function CpsTest() {
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{clicks}</div>
           <div className="tool-stat-label">Clicks</div>
@@ -271,7 +271,7 @@ export default function CpsTest() {
       </div>
 
       {status === "finished" && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">Your result</p>
           <div className="tool-result-value">{cps.toFixed(2)} CPS</div>
           <p

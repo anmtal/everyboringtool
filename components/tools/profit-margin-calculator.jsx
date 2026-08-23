@@ -84,7 +84,7 @@ export default function ProfitMarginCalculator() {
         </div>
 
         {ready ? (
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{currency.format(results.profit)}</div>
               <div className="tool-stat-label">Profit</div>

@@ -348,7 +348,7 @@ export default function AddSubtractDays() {
 
           {shiftResult.status === "ok" && (
             <>
-              <div className="tool-result">
+              <div className="tool-result" role="status" aria-live="polite">
                 <p className="tool-result-label">
                   {shiftResult.amount === 0
                     ? "Same day (nothing to add or subtract)"
@@ -362,7 +362,7 @@ export default function AddSubtractDays() {
                 </div>
               </div>
 
-              <div className="tool-stat-grid">
+              <div className="tool-stat-grid" role="status" aria-live="polite">
                 <div className="tool-stat">
                   <div className="tool-stat-num">
                     {WEEKDAYS[shiftResult.result.getDay()]}
@@ -438,7 +438,7 @@ export default function AddSubtractDays() {
 
           {diffResult.status === "ok" && (
             <>
-              <div className="tool-result">
+              <div className="tool-result" role="status" aria-live="polite">
                 <p className="tool-result-label">
                   {diffResult.reversed
                     ? "Difference (dates were out of order, so we used the absolute span)"
@@ -450,7 +450,7 @@ export default function AddSubtractDays() {
                 </div>
               </div>
 
-              <div className="tool-stat-grid">
+              <div className="tool-stat-grid" role="status" aria-live="polite">
                 <div className="tool-stat">
                   <div className="tool-stat-num">
                     {formatDecimal(diffResult.totalWeeks, 2)}

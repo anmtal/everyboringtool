@@ -147,7 +147,7 @@ export default function TemperatureConverter() {
         <p className="tool-error">Enter a valid number to convert.</p>
       )}
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <div className="tool-result-label">
           {isValid
             ? `${formatTemp(parsed)} ${fromSymbol} = ${toSymbol}`
@@ -158,7 +158,7 @@ export default function TemperatureConverter() {
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">
             {equivalents ? formatTemp(equivalents.C) : "—"}

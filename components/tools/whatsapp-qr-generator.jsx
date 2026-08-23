@@ -142,7 +142,7 @@ export default function WhatsappQrGenerator() {
 
       {isValid && qrDataUrl && (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{digits.length}</div>
               <div className="tool-stat-label">Digits</div>
@@ -185,7 +185,7 @@ export default function WhatsappQrGenerator() {
             </div>
           </div>
 
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">wa.me link</div>
             <div className="tool-result-value">{waLink}</div>
           </div>

@@ -146,7 +146,7 @@ export default function EtsyFeeCalculator() {
 
       {result ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">
               {result.hasCost ? "Net profit" : "Total Etsy fees"}
             </p>
@@ -157,7 +157,7 @@ export default function EtsyFeeCalculator() {
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{usd.format(result.totalFees)}</div>
               <div className="tool-stat-label">Total fees</div>

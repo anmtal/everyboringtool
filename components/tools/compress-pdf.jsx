@@ -120,12 +120,12 @@ export default function CompressPdf() {
 
       {source && output && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">NEW SIZE</p>
             <div className="tool-result-value">{formatSize(output.size)}</div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{formatSize(source.size)}</div>
               <div className="tool-stat-label">Original</div>

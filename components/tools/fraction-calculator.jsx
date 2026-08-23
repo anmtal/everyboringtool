@@ -242,7 +242,7 @@ export default function FractionCalculator() {
           {result.error}
         </p>
       ) : (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">
             {result ? result.expression + " =" : "Result"}
           </p>
@@ -250,7 +250,7 @@ export default function FractionCalculator() {
             {result ? result.improper : "—"}
           </div>
           {result && (
-            <div className="tool-stat-grid">
+            <div className="tool-stat-grid" role="status" aria-live="polite">
               <div className="tool-stat">
                 <div className="tool-stat-num">{result.improper}</div>
                 <div className="tool-stat-label">Improper fraction</div>

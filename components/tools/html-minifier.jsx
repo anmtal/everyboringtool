@@ -120,7 +120,7 @@ export default function HtmlMinifier() {
 
       {hasOutput ? (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{fmt(result.original)}</div>
               <div className="tool-stat-label">Original bytes</div>

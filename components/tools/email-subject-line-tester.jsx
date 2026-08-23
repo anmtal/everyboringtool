@@ -310,7 +310,7 @@ export default function EmailSubjectLineTester() {
         </div>
       </div>
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <p className="tool-result-label">Subject line score</p>
         <div className="tool-result-value" style={scoreColor ? { color: scoreColor } : undefined}>
           {analysis.isEmpty ? "—" : `${analysis.score}/100`}
@@ -345,7 +345,7 @@ export default function EmailSubjectLineTester() {
         )}
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div
             className="tool-stat-num"

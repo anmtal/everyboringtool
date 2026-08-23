@@ -208,7 +208,7 @@ export default function ImageToBase64() {
             />
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{formatBytes(originalSize)}</div>
               <div className="tool-stat-label">Original file</div>
@@ -225,13 +225,13 @@ export default function ImageToBase64() {
             </div>
           </div>
 
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <span className="tool-result-label">Type</span>
             <span className="tool-result-value">{mimeType || "unknown"}</span>
           </div>
 
           {dimensions ? (
-            <div className="tool-result">
+            <div className="tool-result" role="status" aria-live="polite">
               <span className="tool-result-label">Dimensions</span>
               <span className="tool-result-value">
                 {dimensions.w} x {dimensions.h} px

@@ -405,7 +405,7 @@ export default function StudyPlanner() {
 
       {plan && plan.status === "ok" ? (
         <>
-          <div className="tool-stat-grid" style={{ marginTop: 18 }}>
+          <div className="tool-stat-grid" role="status" aria-live="polite" style={{ marginTop: 18 }}>
             <div className="tool-stat">
               <div className="tool-stat-num">{plan.totalDays}</div>
               <div className="tool-stat-label">

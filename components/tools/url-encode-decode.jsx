@@ -143,7 +143,7 @@ export default function UrlEncodeDecode() {
 
       {output && !error ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <span className="tool-result-label">
               {mode === "encode" ? "Encoded output" : "Decoded output"}
             </span>
@@ -164,7 +164,7 @@ export default function UrlEncodeDecode() {
             </button>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <span className="tool-stat-num">{input.length}</span>
               <span className="tool-stat-label">Input characters</span>

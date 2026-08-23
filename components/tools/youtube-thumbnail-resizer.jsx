@@ -247,7 +247,7 @@ export default function YoutubeThumbnailResizer() {
         </div>
       )}
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <p className="tool-result-label">Output size (YouTube thumbnail spec)</p>
         <div className="tool-result-value">
           {TARGET_W} × {TARGET_H} px · 16:9
@@ -255,7 +255,7 @@ export default function YoutubeThumbnailResizer() {
       </div>
 
       {natural && (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">
               {natural.w} × {natural.h}

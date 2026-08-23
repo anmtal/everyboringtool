@@ -84,9 +84,16 @@ export default function QrCodeScanner() {
         rafRef.current = requestAnimationFrame(tick);
       };
       rafRef.current = requestAnimationFrame(tick);
-    } catch {
-      setError("Couldn't access the camera. Allow permission, or scan an uploaded image instead.");
-      setScanning(false);
+    } catch (err) {
+      // If getUserMedia already resolved, the camera is live — tearing it down
+      // matters, and blaming "permission" would be wrong (it was granted).
+      const gotStream = !!streamRef.current;
+      stopCamera();
+      setError(
+        gotStream
+          ? "The camera started but the scanner couldn't run. Try again, or scan an uploaded image instead."
+          : "Couldn't access the camera. Allow permission, or scan an uploaded image instead."
+      );
     }
   }
 
@@ -137,7 +144,7 @@ export default function QrCodeScanner() {
 
       {result && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Decoded result</p>
             <div className="tool-result-value" style={{ fontSize: 18, wordBreak: "break-all" }}>
               {isUrl ? (

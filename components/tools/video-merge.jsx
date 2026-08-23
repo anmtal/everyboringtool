@@ -148,7 +148,7 @@ export default function VideoMerge() {
       {error && <p className="tool-error" role="alert">{error}</p>}
 
       {result && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">Done — {fmtBytes(result.size)}</p>
           <video controls src={result.url} style={{ width: "100%", maxWidth: 420, marginTop: 8, borderRadius: 8, background: "#000" }} />
           <div className="tool-actions" style={{ marginTop: 10 }}>

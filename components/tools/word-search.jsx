@@ -301,7 +301,7 @@ export default function WordSearch() {
       )}
 
       {ready && (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">{puzzle.placements.length}</div>
             <div className="tool-stat-label">Words hidden</div>
@@ -375,7 +375,7 @@ export default function WordSearch() {
       )}
 
       {ready && puzzle.placements.length > 0 && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <div className="tool-result-label">
             Find these words ({puzzle.placements.length}) — click one to spotlight it
           </div>

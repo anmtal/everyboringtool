@@ -30,20 +30,32 @@ export default function ImageToText() {
     try {
       const { createWorker } = await import("tesseract.js");
       setStatus("Loading OCR engine (first run downloads a language model)…");
-      worker = await createWorker("eng", 1, {
-        logger: (m) => {
-          if (m.status) setStatus(m.status.replace(/(^|\s)\w/g, (c) => c.toUpperCase()));
-          if (typeof m.progress === "number") setProgress(Math.round(m.progress * 100));
-        },
-      });
+      // tesseract.js swallows failures in its loadLanguage/initialize chain, so a
+      // failed CDN download leaves this promise pending forever and the tool spins
+      // with no error. Race it so the user always gets an outcome.
+      worker = await Promise.race([
+        createWorker("eng", 1, {
+          logger: (m) => {
+            if (m.status) setStatus(m.status.replace(/(^|\s)\w/g, (c) => c.toUpperCase()));
+            if (typeof m.progress === "number") setProgress(Math.round(m.progress * 100));
+          },
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("ocr-load-timeout")), 60000)
+        ),
+      ]);
       setStatus("Reading text…");
       const { data } = await worker.recognize(file);
       const out = (data.text || "").trim();
       setText(out);
       if (!out) setError("No readable text was found. Try a clearer, higher-contrast image.");
       setStatus("");
-    } catch {
-      setError("Couldn't read the image — please try again with a clearer picture.");
+    } catch (e) {
+      setError(
+        e && e.message === "ocr-load-timeout"
+          ? "The text-recognition engine took too long to download. Check your connection and try again — it's about 4 MB the first time, and it's cached afterwards."
+          : "Couldn't read the image — please try again with a clearer picture."
+      );
       setStatus("");
     } finally {
       if (worker) { try { await worker.terminate(); } catch { /* ignore */ } }

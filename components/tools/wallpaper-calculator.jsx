@@ -242,7 +242,7 @@ export default function WallpaperCalculator() {
         </div>
       </div>
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <p className="tool-result-label">ROLLS REQUIRED</p>
         <div className="tool-result-value">
           {result && !result.rollTooShort
@@ -261,7 +261,7 @@ export default function WallpaperCalculator() {
         </p>
       )}
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">
             {result ? formatNumber(result.stripsNeeded, 0) : "-"}

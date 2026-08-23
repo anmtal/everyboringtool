@@ -245,7 +245,7 @@ export default function JwtDecoder() {
 
       {result.status === "ok" ? (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{result.alg || "—"}</div>
               <div className="tool-stat-label">Algorithm (alg)</div>
@@ -292,7 +292,7 @@ export default function JwtDecoder() {
           </p>
 
           {timeRows.length > 0 ? (
-            <div className="tool-result">
+            <div className="tool-result" role="status" aria-live="polite">
               <div className="tool-result-label">Timestamps</div>
               <div
                 className="tool-result-value"

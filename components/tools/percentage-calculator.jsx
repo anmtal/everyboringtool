@@ -87,7 +87,7 @@ export default function PercentageCalculator() {
             />
           </div>
         </div>
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">
             {toNumber(pct1) !== null && toNumber(base1) !== null
               ? `${formatNumber(toNumber(pct1))}% of ${formatNumber(toNumber(base1))} is`
@@ -129,7 +129,7 @@ export default function PercentageCalculator() {
         {result2 && result2.error ? (
           <p className="tool-error" role="alert">{result2.error}</p>
         ) : (
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">
               {result2
                 ? `${formatNumber(toNumber(part2))} is this percent of ${formatNumber(toNumber(whole2))}`
@@ -174,7 +174,7 @@ export default function PercentageCalculator() {
         {result3 && result3.error ? (
           <p className="tool-error" role="alert">{result3.error}</p>
         ) : (
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">
               {result3
                 ? result3.value > 0

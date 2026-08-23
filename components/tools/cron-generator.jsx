@@ -413,7 +413,7 @@ export default function CronGenerator() {
       </div>
 
       {/* Result */}
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <div className="tool-result-label">Cron expression</div>
         <div
           className="tool-result-value"
@@ -431,7 +431,7 @@ export default function CronGenerator() {
         <strong>When it runs:</strong> {humanText}
       </p>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         {FIELDS.map((field) => (
           <div className="tool-stat" key={field.key}>
             <div

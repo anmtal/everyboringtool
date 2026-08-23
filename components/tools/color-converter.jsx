@@ -214,7 +214,7 @@ export default function ColorConverter() {
       </div>
 
       {results.map((row) => (
-        <div className="tool-result" key={row.key}>
+        <div className="tool-result" role="status" aria-live="polite" key={row.key}>
           <div className="tool-result-label">{row.label}</div>
           <div
             style={{
@@ -237,7 +237,7 @@ export default function ColorConverter() {
         </div>
       ))}
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{rgb.r}</div>
           <div className="tool-stat-label">Red</div>

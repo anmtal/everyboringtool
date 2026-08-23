@@ -284,7 +284,7 @@ export default function LinkInBioQr() {
 
       {urlValid && qrDataUrl && (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{normalized.length}</div>
               <div className="tool-stat-label">URL length</div>
@@ -344,7 +344,7 @@ export default function LinkInBioQr() {
             </div>
           </div>
 
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">Encoded link</div>
             <div
               className="tool-result-value"

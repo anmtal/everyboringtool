@@ -118,14 +118,14 @@ export default function BreakEvenCalculator() {
 
         {ready && (
           <>
-            <div className="tool-result">
+            <div className="tool-result" role="status" aria-live="polite">
               <span className="tool-result-label">Break-even point</span>
               <span className="tool-result-value">
                 {numberFmt.format(results.units)} units
               </span>
             </div>
 
-            <div className="tool-stat-grid">
+            <div className="tool-stat-grid" role="status" aria-live="polite">
               <div className="tool-stat">
                 <div className="tool-stat-num">
                   {numberFmt.format(results.units)}

@@ -528,7 +528,7 @@ export default function InvoiceGenerator() {
       </div>
 
       {/* Totals summary */}
-      <div className="tool-stat-grid" style={{ marginTop: 18 }}>
+      <div className="tool-stat-grid" role="status" aria-live="polite" style={{ marginTop: 18 }}>
         <div className="tool-stat">
           <div className="tool-stat-num">{money.format(totals.subtotal)}</div>
           <div className="tool-stat-label">Subtotal</div>

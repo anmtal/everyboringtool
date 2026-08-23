@@ -13,6 +13,13 @@ const nextConfig = {
       "/crossword-solver/[pattern]": ["./public/words/dict.txt"],
     },
   },
+  // /text/word-unscrambler was a second, weaker Word Unscrambler: it shipped a
+  // hand-typed 8,767-word list to the browser (61 KB) and competed with
+  // /unscramble — which uses the full 168,551-word dictionary — for the same
+  // head term. Consolidated rather than left to cannibalise itself.
+  async redirects() {
+    return [{ source: "/text/word-unscrambler", destination: "/unscramble", permanent: true }];
+  },
   webpack: (config) => {
     // pdfjs-dist (used by PDF → Word) references Node's optional `canvas` package,
     // which isn't needed in the browser. Alias it away so the client bundle builds.

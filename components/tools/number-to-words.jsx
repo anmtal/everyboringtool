@@ -275,7 +275,7 @@ export default function NumberToWords() {
         )
       ) : (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">
               In words{" "}
               {result.formatted ? (
@@ -310,7 +310,7 @@ export default function NumberToWords() {
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{result.digits}</div>
               <div className="tool-stat-label">

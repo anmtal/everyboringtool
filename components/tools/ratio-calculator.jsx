@@ -330,7 +330,7 @@ export default function RatioCalculator() {
           )}
 
           {solveResult.status === "full" && (
-            <div className="tool-result">
+            <div className="tool-result" role="status" aria-live="polite">
               <p className="tool-result-label">
                 All four filled — {solveResult.holds ? "this proportion is true" : "this proportion is false"}
               </p>
@@ -344,7 +344,7 @@ export default function RatioCalculator() {
           )}
 
           {solveResult.status === "solved" && (
-            <div className="tool-result">
+            <div className="tool-result" role="status" aria-live="polite">
               <p className="tool-result-label">
                 {solveResult.missing.toUpperCase()} =
               </p>
@@ -434,7 +434,7 @@ export default function RatioCalculator() {
 
           {simplifyResult.status === "ok" && (
             <>
-              <div className="tool-result">
+              <div className="tool-result" role="status" aria-live="polite">
                 <p className="tool-result-label">Simplified ratio</p>
                 <div className="tool-result-value">{simplifiedText}</div>
                 <div className="tool-actions">
@@ -448,7 +448,7 @@ export default function RatioCalculator() {
                 </div>
               </div>
 
-              <div className="tool-stat-grid">
+              <div className="tool-stat-grid" role="status" aria-live="polite">
                 <div className="tool-stat">
                   <div className="tool-stat-num">
                     {simplifyResult.decimal === null

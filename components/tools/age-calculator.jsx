@@ -139,7 +139,7 @@ export default function AgeCalculator() {
 
       {result && !result.error && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">
               {result.isBirthdayToday ? "Happy birthday! Your age is" : "Your age is"}
             </p>
@@ -150,7 +150,7 @@ export default function AgeCalculator() {
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{formatNumber(result.years)}</div>
               <div className="tool-stat-label">Years</div>

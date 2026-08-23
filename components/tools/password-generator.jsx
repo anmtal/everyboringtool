@@ -251,7 +251,7 @@ export default function PasswordGenerator() {
         </div>
       ) : (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">Your password</div>
             <div
               className="tool-result-value"

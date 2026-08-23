@@ -971,7 +971,7 @@ export default function SchemaGenerator() {
       </div>
 
       {fieldCount > 0 ? (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">{type}</div>
             <div className="tool-stat-label">schema type</div>

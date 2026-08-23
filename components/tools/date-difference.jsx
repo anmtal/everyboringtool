@@ -192,7 +192,7 @@ export default function DateDifference() {
 
       {result && !invalid && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">
               {result.reversed
                 ? "Difference (dates were out of order, so we used the absolute span)"
@@ -203,7 +203,7 @@ export default function DateDifference() {
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{formatNumber(result.totalDays)}</div>
               <div className="tool-stat-label">

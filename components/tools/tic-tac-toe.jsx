@@ -292,7 +292,7 @@ export default function TicTacToe() {
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num" style={{ color: markColors.X }}>
             {scores.X}

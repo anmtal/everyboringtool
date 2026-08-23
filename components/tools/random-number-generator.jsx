@@ -237,7 +237,7 @@ export default function RandomNumberGenerator() {
         <div className="tool-error">{error}</div>
       ) : numbers.length > 0 ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">
               {numbers.length === 1
                 ? "Your random number"
@@ -251,7 +251,7 @@ export default function RandomNumberGenerator() {
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {numbers.length.toLocaleString("en-US")}

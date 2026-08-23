@@ -115,14 +115,14 @@ export default function LoanCalculator() {
 
       {results ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">MONTHLY PAYMENT</p>
             <div className="tool-result-value">
               {currency.format(results.monthlyPayment)}
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {currency.format(results.totalInterest)}

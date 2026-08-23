@@ -240,7 +240,7 @@ export default function UnitConverter() {
 
       {hasError && <p className="tool-error">Please enter a valid number.</p>}
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <p className="tool-result-label">
           {formatNumber(Number(value.trim() || 0))} {fromUnit} =
         </p>

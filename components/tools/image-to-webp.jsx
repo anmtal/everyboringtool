@@ -261,7 +261,7 @@ export default function ImageToWebp() {
       ) : null}
 
       {hasResult ? (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">{formatBytes(originalSize)}</div>
             <div className="tool-stat-label">Original</div>
@@ -284,7 +284,7 @@ export default function ImageToWebp() {
       ) : null}
 
       {dimensions ? (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <span className="tool-result-label">Dimensions</span>
           <span className="tool-result-value">
             {dimensions.w} x {dimensions.h} px

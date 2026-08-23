@@ -146,14 +146,14 @@ export default function FlooringCalculator() {
         </div>
       </div>
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <p className="tool-result-label">FLOOR AREA</p>
         <div className="tool-result-value">
           {result ? `${formatNumber(result.area, 2)} ${areaUnit}` : "-"}
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">
             {result ? formatNumber(result.areaWithWaste, 2) : "-"}

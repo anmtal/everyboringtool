@@ -139,12 +139,12 @@ export default function AverageCalculator() {
         </p>
       ) : (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Average (mean)</p>
             <div className="tool-result-value">{formatNumber(stats.mean)}</div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{formatNumber(stats.count)}</div>
               <div className="tool-stat-label">Count</div>

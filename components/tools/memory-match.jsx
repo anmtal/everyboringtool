@@ -271,7 +271,7 @@ export default function MemoryMatch() {
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div className="tool-stat-num">{moves}</div>
           <div className="tool-stat-label">Moves</div>

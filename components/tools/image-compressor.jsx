@@ -167,14 +167,14 @@ export default function ImageCompressor() {
 
       {source && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">COMPRESSED SIZE</p>
             <div className="tool-result-value">
               {busy && !output ? "Compressing…" : output ? formatSize(output.size) : "—"}
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{KB_FMT.format(source.size / 1024)}</div>
               <div className="tool-stat-label">Original KB</div>

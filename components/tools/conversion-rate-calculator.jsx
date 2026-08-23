@@ -172,13 +172,13 @@ export default function ConversionRateCalculator() {
 
       {showResult && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">Conversion rate</div>
             <div className="tool-result-value">{pct.format(result.rate)}%</div>
           </div>
 
           {result.extras.length > 0 && (
-            <div className="tool-stat-grid">
+            <div className="tool-stat-grid" role="status" aria-live="polite">
               {result.extras.map((stat) => (
                 <div className="tool-stat" key={stat.label}>
                   <div className="tool-stat-num">{stat.value}</div>

@@ -252,7 +252,7 @@ export default function CalorieCalculator() {
 
       {error ? <p className="tool-error">{error}</p> : null}
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <p className="tool-result-label">MAINTENANCE CALORIES</p>
         <div className="tool-result-value">
           {result ? `${formatCalories(result.maintenance)} kcal/day` : "—"}
@@ -261,7 +261,7 @@ export default function CalorieCalculator() {
 
       {result ? (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{formatCalories(result.bmr)}</div>
               <div className="tool-stat-label">BMR (kcal/day)</div>

@@ -28,7 +28,20 @@ export default function TweetCharacterCounter() {
     // regardless of its real length, everything else by true char count.
     const urls = value.match(URL_REGEX) || [];
     const withoutUrls = value.replace(URL_REGEX, "");
-    const weighted = Array.from(withoutUrls).length + urls.length * URL_WEIGHT;
+    // X does not count every character as 1. Per its published weighting config,
+    // code points in these ranges weigh 1; everything else — CJK, emoji and most
+    // non-Latin scripts — weighs 2. Counting them all as 1 told people a post fit
+    // when X would reject it.
+    const weighted =
+      Array.from(withoutUrls).reduce((sum, chr) => {
+        const cp = chr.codePointAt(0);
+        const light =
+          (cp >= 0 && cp <= 4351) ||
+          (cp >= 8192 && cp <= 8205) ||
+          (cp >= 8208 && cp <= 8223) ||
+          (cp >= 8242 && cp <= 8247);
+        return sum + (light ? 1 : 2);
+      }, 0) + urls.length * URL_WEIGHT;
 
     return {
       plainLength,
@@ -99,7 +112,7 @@ export default function TweetCharacterCounter() {
         </div>
       </div>
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <p className="tool-result-label">
           {over ? "Over limit by" : "Characters remaining"}
         </p>
@@ -143,7 +156,7 @@ export default function TweetCharacterCounter() {
         )}
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
           <div
             className="tool-stat-num"

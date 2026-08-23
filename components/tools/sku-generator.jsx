@@ -410,7 +410,7 @@ export default function SkuGenerator() {
 
       {count > 0 ? (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{count.toLocaleString("en-US")}</div>
               <div className="tool-stat-label">{count === 1 ? "SKU" : "SKUs"}</div>

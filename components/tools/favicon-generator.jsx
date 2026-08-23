@@ -286,7 +286,7 @@ export default function FaviconGenerator() {
       ) : null}
 
       {natural ? (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">
               {natural.w} × {natural.h}
@@ -319,7 +319,7 @@ export default function FaviconGenerator() {
 
       {icons.length > 0 ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">Previews</div>
             <div className="tool-result-value">
               <div
@@ -390,7 +390,7 @@ export default function FaviconGenerator() {
             ))}
           </div>
 
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">HTML to add inside your &lt;head&gt;</div>
             <div className="tool-result-value">
               <pre className="tool-output">{SNIPPET}</pre>

@@ -207,13 +207,13 @@ export default function QuoteCalculator() {
       </div>
 
       {/* Headline total */}
-      <div className="tool-result" style={{ marginTop: 18 }}>
+      <div className="tool-result" role="status" aria-live="polite" style={{ marginTop: 18 }}>
         <span className="tool-result-label">Quote total</span>
         <span className="tool-result-value">{money.format(totals.total)}</span>
       </div>
 
       {/* Breakdown */}
-      <div className="tool-stat-grid" style={{ marginTop: 16 }}>
+      <div className="tool-stat-grid" role="status" aria-live="polite" style={{ marginTop: 16 }}>
         <div className="tool-stat">
           <div className="tool-stat-num">{money.format(totals.subtotal)}</div>
           <div className="tool-stat-label">Subtotal</div>

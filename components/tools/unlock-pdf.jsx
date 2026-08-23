@@ -65,7 +65,7 @@ export default function UnlockPdf() {
       {error && <p className="tool-error" role="alert">{error}</p>}
 
       {result && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">Done — {fmtBytes(result.size)}</p>
           <div className="tool-actions" style={{ marginTop: 8 }}>
             <a className="btn btn-success" href={result.url} download={result.name}>↓ Download {result.name}</a>

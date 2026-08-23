@@ -833,7 +833,7 @@ export default function WordUnscrambler() {
       </div>
 
       {hasInput && (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">{total}</div>
             <div className="tool-stat-label">Words found</div>
@@ -865,7 +865,7 @@ export default function WordUnscrambler() {
 
       {hasInput &&
         groups.map((group) => (
-          <div key={group.len} className="tool-result">
+          <div key={group.len} className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">
               {group.len} letters ({group.words.length})
             </div>

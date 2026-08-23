@@ -87,7 +87,7 @@ export default function HeicToJpg() {
       {error && <p className="tool-error" role="alert">{error}</p>}
 
       {result && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">Done — {fmtBytes(result.size)}</p>
           <img src={result.url} alt="Converted preview" style={{ maxWidth: "100%", height: "auto", borderRadius: 8, marginTop: 8 }} />
           <div className="tool-actions" style={{ marginTop: 10 }}>

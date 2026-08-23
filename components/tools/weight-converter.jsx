@@ -154,7 +154,7 @@ export default function WeightConverter() {
         </button>
       </div>
 
-      <div className="tool-result">
+      <div className="tool-result" role="status" aria-live="polite">
         <p className="tool-result-label">RESULT</p>
         <div className="tool-result-value">
           {hasResult

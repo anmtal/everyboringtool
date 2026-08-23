@@ -223,7 +223,7 @@ export default function UtmBuilder() {
 
       {output && !error ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <span className="tool-result-label">Tagged URL</span>
             <span
               className="tool-result-value"
@@ -245,7 +245,7 @@ export default function UtmBuilder() {
             </button>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <span className="tool-stat-num">{appended}</span>
               <span className="tool-stat-label">UTM params added</span>

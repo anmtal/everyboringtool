@@ -110,7 +110,7 @@ export default function RoasCalculator() {
 
       {result ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Return on ad spend (ROAS)</p>
             <div className="tool-result-value">
               {`${new Intl.NumberFormat("en-US", {
@@ -120,7 +120,7 @@ export default function RoasCalculator() {
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{pct(result.acos)}</div>
               <div className="tool-stat-label">ACOS (spend ÷ revenue)</div>

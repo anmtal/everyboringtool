@@ -201,12 +201,12 @@ export default function CacCalculator() {
 
       {result ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Customer acquisition cost (CAC)</p>
             <div className="tool-result-value">{money.format(result.cac)}</div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{money.format(result.spend)}</div>
               <div className="tool-stat-label">Total spend</div>
@@ -233,7 +233,7 @@ export default function CacCalculator() {
 
           {result.hasLtv && result.health ? (
             <div
-              className="tool-result"
+              className="tool-result" role="status" aria-live="polite"
               style={{
                 borderColor:
                   result.health.tone === "bad"

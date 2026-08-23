@@ -247,7 +247,7 @@ export default function FindAndReplace() {
       ) : null}
 
       {showResult ? (
-        <div className="tool-stat-grid">
+        <div className="tool-stat-grid" role="status" aria-live="polite">
           <div className="tool-stat">
             <div className="tool-stat-num">{fmt(result.count)}</div>
             <div className="tool-stat-label">

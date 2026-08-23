@@ -101,7 +101,7 @@ export default function CountdownTimer() {
       )}
 
       {result && !result.error && result.done && (
-        <div className="tool-result">
+        <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">Countdown finished</p>
           <div className="tool-result-value">Time's up!</div>
           <p className="tool-note">
@@ -112,7 +112,7 @@ export default function CountdownTimer() {
 
       {result && !result.error && !result.done && (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Time remaining</p>
             <div
               className="tool-result-value"
@@ -126,7 +126,7 @@ export default function CountdownTimer() {
             </p>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div
                 className="tool-stat-num"

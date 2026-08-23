@@ -193,7 +193,7 @@ export default function WorkHoursCalculator() {
         <p className="tool-error">{result.error}</p>
       ) : ok ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Total worked time</p>
             <div className="tool-result-value">
               {formatHM(result.netMinutes)}
@@ -201,7 +201,7 @@ export default function WorkHoursCalculator() {
             </div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{formatHM(result.netMinutes)}</div>
               <div className="tool-stat-label">Worked (paid)</div>

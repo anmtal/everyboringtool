@@ -320,7 +320,7 @@ export default function AppointmentSlotGenerator() {
         <div className="tool-error">{error}</div>
       ) : slots.length > 0 ? (
         <>
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{slots.length}</div>
               <div className="tool-stat-label">
@@ -339,7 +339,7 @@ export default function AppointmentSlotGenerator() {
             </div>
           </div>
 
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <div className="tool-result-label">
               {slots.length === 1
                 ? "Your appointment slot"

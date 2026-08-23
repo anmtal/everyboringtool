@@ -152,12 +152,12 @@ export default function AmazonMarginCalculator() {
 
       {result ? (
         <>
-          <div className="tool-result">
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">Net profit per unit</p>
             <div className="tool-result-value">{usd.format(result.netProfit)}</div>
           </div>
 
-          <div className="tool-stat-grid">
+          <div className="tool-stat-grid" role="status" aria-live="polite">
             <div className="tool-stat">
               <div className="tool-stat-num">{pct(result.margin)}</div>
               <div className="tool-stat-label">Profit margin</div>
