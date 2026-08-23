@@ -5,6 +5,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { categories } from "../lib/tools";
 
+const WORD_GAMES = [
+  { href: "/unscramble", name: "Word Unscrambler" },
+  { href: "/anagram", name: "Anagram Solver" },
+  { href: "/wordle-solver", name: "Wordle Solver" },
+  { href: "/words-starting-with", name: "Words Starting With…" },
+  { href: "/words-ending-with", name: "Words Ending With…" },
+  { href: "/words-containing", name: "Words Containing…" },
+  { href: "/crossword-solver", name: "Crossword Solver" },
+  { href: "/5-letter-words", name: "5 Letter Words" },
+];
+
 export default function CategoryNav() {
   const [open, setOpen] = useState(null);
   const ref = useRef(null);
@@ -37,6 +48,18 @@ export default function CategoryNav() {
     <nav className="catnav" ref={ref} aria-label="Tool categories">
       <div className="catnav-wrap container">
         <div className="catnav-row">
+          <button
+            key="__wg"
+            type="button"
+            className={`catnav-btn ${open === "__wg" ? "is-open" : ""}`}
+            aria-expanded={open === "__wg"}
+            aria-haspopup="true"
+            onClick={() => setOpen(open === "__wg" ? null : "__wg")}
+          >
+            <span aria-hidden="true">🔤</span>
+            <span>Word Games</span>
+            <span className="caret" aria-hidden="true">▾</span>
+          </button>
           {categories.map((c) => {
             const isOpen = open === c.slug;
             return (
@@ -55,6 +78,17 @@ export default function CategoryNav() {
             );
           })}
         </div>
+
+        {open === "__wg" && (
+          <div className="catnav-panel">
+            <Link href="/unscramble" className="catnav-panel-head">All Word Games →</Link>
+            <div className="catnav-panel-grid">
+              {WORD_GAMES.map((l) => (
+                <Link key={l.href} href={l.href} className="catnav-panel-link">{l.name}</Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {current && (
           <div className="catnav-panel">

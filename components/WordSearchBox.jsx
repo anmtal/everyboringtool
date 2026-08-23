@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function WordSearchBox({ basePath = "/unscramble", placeholder = "Enter letters", buttonLabel = "Search", initial = "", allowWild = true, min = 1 }) {
+export default function WordSearchBox({ basePath = "/unscramble", placeholder = "Enter letters", buttonLabel = "Search", initial = "", allowWild = true, pattern = false, min = 1 }) {
   const [v, setV] = useState(initial);
   const router = useRouter();
 
   function go(e) {
     e.preventDefault();
+    if (pattern) {
+      const l = v.toLowerCase().replace(/[_.?\s]/g, "-").replace(/[^a-z-]/g, "").slice(0, 15);
+      if (l.length >= 2 && /[a-z]/.test(l)) router.push(`${basePath}/${l}`);
+      return;
+    }
     const re = allowWild ? /[^a-z?]/g : /[^a-z]/g;
     const l = v.toLowerCase().replace(re, "").slice(0, 15);
     if (l.replace(/\?/g, "").length >= min) router.push(`${basePath}/${l}`);

@@ -9,6 +9,8 @@ const nextConfig = {
       "/words-starting-with/[prefix]": ["./public/words/dict.txt"],
       "/words-ending-with/[suffix]": ["./public/words/dict.txt"],
       "/words-containing/[substr]": ["./public/words/dict.txt"],
+      "/[category]": ["./public/words/dict.txt"],
+      "/crossword-solver/[pattern]": ["./public/words/dict.txt"],
     },
   },
   webpack: (config) => {

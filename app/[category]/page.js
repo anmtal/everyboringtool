@@ -2,20 +2,44 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { categories, getCategory } from "../../lib/tools";
 import { toolContent } from "../../lib/toolContent";
+import { parseWordRoute, wordRouteLabel } from "../../lib/wordRoutes";
+import NLetterWordsView, { nLetterWords } from "../../components/NLetterWordsView";
+
+export const dynamicParams = true;
+export const revalidate = 604800;
 
 export function generateStaticParams() {
-  return categories.map((c) => ({ category: c.slug }));
+  const cats = categories.map((c) => ({ category: c.slug }));
+  const words = [];
+  for (let n = 2; n <= 9; n++) words.push({ category: `${n}-letter-words` });
+  for (const l of "abcdefghijklmnopqrstuvwxyz".split("")) words.push({ category: `5-letter-words-starting-with-${l}` });
+  return [...cats, ...words];
 }
 
 export function generateMetadata({ params }) {
   const c = getCategory(params.category);
-  if (!c) return {};
-  return { title: c.name, description: c.description };
+  if (c) return { title: c.name, description: c.description };
+  const route = parseWordRoute(params.category);
+  if (route) {
+    const label = wordRouteLabel(route);
+    const count = nLetterWords(route).length;
+    return {
+      title: `${label} — ${count} words | Every Boring Tool`,
+      description: `A full list of ${count} ${label.toLowerCase()}, with Scrabble scores. Free — perfect for Wordle, Scrabble, Words With Friends and crosswords.`,
+      alternates: { canonical: `/${params.category}` },
+    };
+  }
+  return {};
 }
 
 export default function CategoryPage({ params }) {
   const c = getCategory(params.category);
-  if (!c) notFound();
+
+  if (!c) {
+    const route = parseWordRoute(params.category);
+    if (route) return <NLetterWordsView route={route} />;
+    notFound();
+  }
 
   return (
     <>
