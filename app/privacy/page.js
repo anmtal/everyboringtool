@@ -67,6 +67,12 @@ export default function Privacy() {
           happens locally — but jsDelivr will see your IP address as part of serving those files.
         </p>
         <p>
+          <strong>Video & Audio to Text.</strong> Like the OCR tool, the first time you use it your
+          browser downloads a speech-recognition model from a third-party content delivery network
+          (Hugging Face). Your audio or video is <em>not</em> sent there — transcription happens
+          entirely on your device — but the CDN will see your IP address while it serves the model.
+        </p>
+        <p>
           <strong>YouTube Thumbnail tool.</strong> Thumbnails are fetched directly from Google&apos;s
           servers, so the video ID you enter is sent to Google and Google will see your IP address.
           Google&apos;s own privacy policy governs that request.

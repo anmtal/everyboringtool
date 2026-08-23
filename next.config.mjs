@@ -51,7 +51,14 @@ const nextConfig = {
   webpack: (config) => {
     // pdfjs-dist (used by PDF → Word) references Node's optional `canvas` package,
     // which isn't needed in the browser. Alias it away so the client bundle builds.
-    config.resolve.alias = { ...(config.resolve.alias || {}), canvas: false };
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      canvas: false,
+      // transformers.js optional Node-only backends — never used in the browser.
+      "onnxruntime-node": false,
+      sharp: false,
+    };
+    config.resolve.fallback = { ...(config.resolve.fallback || {}), fs: false, path: false, crypto: false };
     return config;
   },
 };
