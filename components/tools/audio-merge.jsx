@@ -54,8 +54,12 @@ export default function AudioMerge() {
       setStatus("Merging…");
       const args = [];
       names.forEach((n) => args.push("-i", n));
-      const streams = names.map((_, i) => `[${i}:a]`).join("");
-      args.push("-filter_complex", `${streams}concat=n=${names.length}:v=0:a=1[out]`, "-map", "[out]", "output.mp3");
+      // Normalize every input to 44.1 kHz stereo FIRST, so files with different
+      // formats, sample rates or channel counts concatenate cleanly (the concat
+      // filter otherwise requires all inputs to share the same parameters).
+      const pre = names.map((_, i) => `[${i}:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a${i}]`).join(";");
+      const labels = names.map((_, i) => `[a${i}]`).join("");
+      args.push("-filter_complex", `${pre};${labels}concat=n=${names.length}:v=0:a=1[out]`, "-map", "[out]", "output.mp3");
       await ff.exec(args);
       const data = await ff.readFile("output.mp3");
       for (const n of names) await ff.deleteFile(n).catch(() => {});

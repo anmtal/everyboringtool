@@ -47,30 +47,40 @@ export default function VideoMerge() {
       const names = [];
       setStatus("Reading your clips…");
       for (let i = 0; i < files.length; i++) {
-        const ext = reencode ? (files[i].name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0] : ".ts_input" + (files[i].name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0];
+        const ext = (files[i].name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0];
         const n = `in${i}${ext}`;
         await ff.writeFile(n, await fetchFile(files[i]));
         names.push(n);
       }
+      const firstExt = (files[0].name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0].toLowerCase();
+      const outExt = reencode ? ".mp4" : firstExt;
+      const outName = "output" + outExt;
       setStatus(reencode ? "Merging (re-encode — this can take a while)…" : "Merging…");
       if (reencode) {
         const args = [];
         names.forEach((n) => args.push("-i", n));
-        const parts = names.map((_, i) => `[${i}:v:0][${i}:a:0]`).join("");
-        args.push("-filter_complex", `${parts}concat=n=${names.length}:v=1:a=1[v][a]`,
-          "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "veryfast", "-c:a", "aac", "output.mp4");
+        // Normalize every clip to 1280x720 @30fps + 44.1 kHz stereo first, so clips
+        // of different resolutions, frame rates or formats concatenate cleanly.
+        const pre = names.map((_, i) =>
+          `[${i}:v:0]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30[v${i}];` +
+          `[${i}:a:0]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a${i}]`
+        ).join(";");
+        const labels = names.map((_, i) => `[v${i}][a${i}]`).join("");
+        args.push("-filter_complex", `${pre};${labels}concat=n=${names.length}:v=1:a=1[v][a]`,
+          "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "veryfast", "-c:a", "aac", outName);
         await ff.exec(args);
       } else {
         const list = names.map((n) => `file '${n}'`).join("\n");
         await ff.writeFile("list.txt", new TextEncoder().encode(list));
-        await ff.exec(["-f", "concat", "-safe", "0", "-i", "list.txt", "-c", "copy", "output.mp4"]);
+        await ff.exec(["-f", "concat", "-safe", "0", "-i", "list.txt", "-c", "copy", outName]);
         await ff.deleteFile("list.txt").catch(() => {});
       }
-      const data = await ff.readFile("output.mp4");
+      const data = await ff.readFile(outName);
       for (const n of names) await ff.deleteFile(n).catch(() => {});
-      await ff.deleteFile("output.mp4").catch(() => {});
-      const blob = new Blob([data.buffer], { type: "video/mp4" });
-      setResult({ url: URL.createObjectURL(blob), name: "merged.mp4", size: blob.size });
+      await ff.deleteFile(outName).catch(() => {});
+      const mimeByExt = { ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime", ".mkv": "video/x-matroska", ".m4v": "video/mp4" };
+      const blob = new Blob([data.buffer], { type: mimeByExt[outExt] || "video/mp4" });
+      setResult({ url: URL.createObjectURL(blob), name: `merged${outExt}`, size: blob.size });
       setStatus("");
     } catch {
       setError(
