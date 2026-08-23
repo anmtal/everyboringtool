@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { PDFDocument } from "pdf-lib";
+import { ENCRYPTED_MSG, isEncryptedError } from "../../lib/pdfLoad";
 
 // Number formatters — created once, reused on every render.
 const KB_FMT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
@@ -61,16 +62,14 @@ export default function CompressPdf() {
 
     try {
       const bytes = await file.arrayBuffer();
-      const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const doc = await PDFDocument.load(bytes);
       const out = await doc.save({ useObjectStreams: true });
       const blob = new Blob([out], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       outputUrlRef.current = url;
       setOutput({ url, size: blob.size });
-    } catch {
-      setError(
-        "Couldn't read that PDF — it may be corrupted, password-protected, or not a valid PDF."
-      );
+    } catch (e) {
+      setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Couldn't read that PDF — it may be corrupted, password-protected, or not a valid PDF.");
       setSource(null);
       resetOutput();
     } finally {

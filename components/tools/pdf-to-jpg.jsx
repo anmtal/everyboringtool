@@ -33,7 +33,9 @@ export default function PdfToJpg() {
       const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf");
       pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
       const data = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data }).promise;
+      // isEvalSupported must stay false: with it enabled, a crafted font in a
+      // malicious PDF can execute arbitrary JS on this origin (CVE-2024-4367).
+      const pdf = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
       const out = [];
       for (let p = 1; p <= pdf.numPages; p++) {
         setProgress(`Rendering page ${p} of ${pdf.numPages}…`);

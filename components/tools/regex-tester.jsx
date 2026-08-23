@@ -1,10 +1,51 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 
-// Cap how many matches we enumerate so a pathological pattern (e.g. an empty
-// match against a huge string) can never freeze the tab.
+// Cap how many matches we enumerate.
+// NOTE: this cap alone does NOT make the tool safe. A catastrophically
+// backtracking pattern (e.g. /(a+)+$/ against "aaaaaaaaaaaaaaaaaaaaaaaaaaa!")
+// never returns from a SINGLE exec() call, so no loop counter can help. The
+// regex is therefore executed inside a Web Worker that we terminate on timeout,
+// which is the only way to actually recover the tab.
 const MAX_MATCHES = 5000;
+const TIMEOUT_MS = 2000;
+
+// Self-contained worker: receives {pattern, flagStr, input}, returns the same
+// shape runRegex() does. Kept in sync with runRegex/describeMatch below, which
+// remain as the fallback for browsers without Worker support.
+const WORKER_SRC = `
+const MAX_MATCHES = ${MAX_MATCHES};
+function describeMatch(m) {
+  const groups = [];
+  for (let i = 1; i < m.length; i++) groups.push({ index: i, value: m[i] });
+  const named = m.groups ? Object.keys(m.groups).map((n) => ({ name: n, value: m.groups[n] })) : [];
+  return { text: m[0], index: m.index, end: m.index + m[0].length, groups, named };
+}
+self.onmessage = function (e) {
+  const { pattern, flagStr, input } = e.data;
+  if (!pattern) { self.postMessage({ ok: true, empty: true, matches: [], truncated: false }); return; }
+  let regex;
+  try { regex = new RegExp(pattern, flagStr); }
+  catch (err) { self.postMessage({ ok: false, error: err.message }); return; }
+  const matches = [];
+  let truncated = false;
+  try {
+    if (regex.global) {
+      let m; regex.lastIndex = 0;
+      while ((m = regex.exec(input)) !== null) {
+        matches.push(describeMatch(m));
+        if (m.index === regex.lastIndex) regex.lastIndex += 1;
+        if (matches.length >= MAX_MATCHES) { truncated = true; break; }
+      }
+    } else {
+      const m = regex.exec(input);
+      if (m !== null) matches.push(describeMatch(m));
+    }
+  } catch (err) { self.postMessage({ ok: false, error: err.message }); return; }
+  self.postMessage({ ok: true, empty: false, matches: matches, truncated: truncated });
+};
+`;
 
 const FLAG_DEFS = [
   { key: "g", label: "global (g)", hint: "Find all matches, not just the first" },
@@ -117,10 +158,48 @@ export default function RegexTester() {
 
   const flagStr = useMemo(() => buildFlagString(flags), [flags]);
 
-  const result = useMemo(
-    () => runRegex(pattern, flagStr, input),
-    [pattern, flagStr, input]
-  );
+  // Execute in a terminable worker so a runaway pattern can never freeze the tab.
+  const [result, setResult] = useState({ ok: true, empty: true, matches: [], truncated: false });
+  const workerRef = useRef(null);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    function kill() {
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+      if (workerRef.current) { workerRef.current.terminate(); workerRef.current = null; }
+    }
+    kill();
+
+    if (typeof window === "undefined" || typeof Worker === "undefined") {
+      setResult(runRegex(pattern, flagStr, input)); // legacy fallback
+      return;
+    }
+
+    let url;
+    try {
+      url = URL.createObjectURL(new Blob([WORKER_SRC], { type: "application/javascript" }));
+      const w = new Worker(url);
+      workerRef.current = w;
+      w.onmessage = (e) => { kill(); setResult(e.data); };
+      w.onerror = () => { kill(); setResult({ ok: false, error: "Couldn't run that pattern." }); };
+      timerRef.current = setTimeout(() => {
+        kill();
+        setResult({
+          ok: false,
+          error:
+            "That pattern took too long and was stopped (over " + TIMEOUT_MS / 1000 +
+            "s). It likely causes catastrophic backtracking — try making nested quantifiers like (a+)+ more specific.",
+        });
+      }, TIMEOUT_MS);
+      w.postMessage({ pattern, flagStr, input });
+    } catch {
+      setResult(runRegex(pattern, flagStr, input));
+    } finally {
+      if (url) URL.revokeObjectURL(url);
+    }
+
+    return kill;
+  }, [pattern, flagStr, input]);
 
   const segments = useMemo(() => {
     if (!result.ok || result.empty || result.matches.length === 0) return null;

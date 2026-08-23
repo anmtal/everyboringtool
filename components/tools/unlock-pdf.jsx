@@ -30,7 +30,7 @@ export default function UnlockPdf() {
     setBusy(true); setError(""); setResult(null);
     try {
       const bytes = await file.arrayBuffer();
-      const pdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const pdf = await PDFDocument.load(bytes);
       const out = await pdf.save();
       const blob = new Blob([out], { type: "application/pdf" });
       const base = file.name.replace(/\.pdf$/i, "") || "document";

@@ -9,6 +9,10 @@
   --faint: #9a978f;
   --border: #e6e3dc;
   --border-strong: #d6d2c8;
+  /* Success/confirm actions (Download, "Copied!"). Contrast with #fff = 4.96:1 (WCAG AA).
+     Must stay defined: .btn-success sets `background: var(--live)`, and an undefined
+     custom property makes that declaration invalid, rendering the button transparent. */
+  --live: #1a7f4b;
 
   --r-xs: 7px;
   --r-sm: 10px;
@@ -82,11 +86,25 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .brand-tagline { color: var(--muted); font-size: 13px; }
 @media (max-width: 600px) { .brand-tagline { display: none; } }
 
-/* category nav — single scrollable line + full-width dropdown panel */
+/* category nav — one scrollable line + full-width dropdown panel.
+   NOTE: must never wrap. With 19 categories, wrapping produced an 11-row / 510px
+   sticky header at 320px. A single scrolling row keeps the header ~48px at every
+   width; the right-edge fade signals there is more to scroll. */
 .catnav { border-top: 1px solid var(--border); }
 .catnav-wrap { position: relative; }
 .catnav-row {
-  display: flex; flex-wrap: wrap; gap: 2px; padding: 5px 0;
+  display: flex; flex-wrap: nowrap; gap: 2px; padding: 5px 0;
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  scroll-padding-inline: 16px;
+}
+.catnav-row::-webkit-scrollbar { display: none; }
+/* fade hint at the scrollable edge */
+.catnav-wrap::after {
+  content: ""; position: absolute; top: 0; right: 0; width: 28px; height: 100%;
+  pointer-events: none; z-index: 1;
+  background: linear-gradient(to right, transparent, var(--bg));
 }
 .catnav-btn {
   display: inline-flex; align-items: center; gap: 6px; min-height: 38px; flex: none;

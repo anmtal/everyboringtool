@@ -1,9 +1,9 @@
-import { categories } from "../lib/tools";
+import { categories, SITE } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
 import { POPULAR } from "../lib/wordPopular";
 
 export default function sitemap() {
-  const base = "https://everyboringtool.com";
+  const base = SITE.url;
   const urls = [{ url: base, priority: 1 }];
   // Word Games engine
   for (const u of ["/unscramble", "/anagram", "/wordle-solver", "/words-starting-with", "/words-ending-with", "/words-containing"]) {

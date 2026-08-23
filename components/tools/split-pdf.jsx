@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { PDFDocument } from "pdf-lib";
+import { ENCRYPTED_MSG, isEncryptedError } from "../../lib/pdfLoad";
 
 const NUM_FMT = new Intl.NumberFormat("en-US");
 
@@ -102,7 +103,7 @@ export default function SplitPdf() {
     setStatus("Reading PDF…");
     try {
       const bytes = await chosen.arrayBuffer();
-      const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const doc = await PDFDocument.load(bytes);
       const count = doc.getPageCount();
       if (!count) throw new Error("empty");
       setFile(chosen);
@@ -141,7 +142,7 @@ export default function SplitPdf() {
     setStatus("Building your PDF…");
     try {
       const bytes = await file.arrayBuffer();
-      const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const src = await PDFDocument.load(bytes);
       const out = await PDFDocument.create();
       const copied = await out.copyPages(
         src,
@@ -153,8 +154,8 @@ export default function SplitPdf() {
       const url = URL.createObjectURL(blob);
       extractUrlRef.current = url;
       setExtract({ url, count: pages.length });
-    } catch {
-      setError("Something went wrong building that PDF. Try a different range.");
+    } catch (e) {
+      setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Something went wrong building that PDF. Try a different range.");
     } finally {
       setBusy(false);
       setStatus("");
@@ -169,7 +170,7 @@ export default function SplitPdf() {
     setStatus("Generating one PDF per page…");
     try {
       const bytes = await file.arrayBuffer();
-      const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const src = await PDFDocument.load(bytes);
       const pad = String(pageCount).length;
       const outputs = [];
       for (let i = 0; i < pageCount; i++) {
@@ -193,8 +194,8 @@ export default function SplitPdf() {
         }…`
       );
       setTimeout(() => setStatus(""), outputs.length * 250 + 1500);
-    } catch {
-      setError("Couldn't split that PDF. It may be corrupted or protected.");
+    } catch (e) {
+      setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Couldn't split that PDF. It may be corrupted or protected.");
       setStatus("");
     } finally {
       setBusy(false);

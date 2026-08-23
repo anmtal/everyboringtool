@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 const SAMPLE = `# Markdown to HTML
 
@@ -22,9 +23,12 @@ export default function MarkdownToHtml() {
   const [view, setView] = useState("preview");
   const [copied, setCopied] = useState(false);
 
+  // Markdown allows raw HTML, so marked's output is untrusted. Sanitize before it
+  // is rendered into this page AND before the user copies it for their own site.
   const html = useMemo(() => {
     try {
-      return marked.parse(md || "", { gfm: true, breaks: true });
+      const raw = marked.parse(md || "", { gfm: true, breaks: true });
+      return DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } });
     } catch {
       return "";
     }

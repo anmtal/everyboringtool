@@ -1,6 +1,9 @@
+import { SITE } from "../lib/tools";
+
 export default function robots() {
   return {
     rules: { userAgent: "*", allow: "/" },
-    sitemap: "https://everyboringtool.com/sitemap.xml",
+    sitemap: `${SITE.url}/sitemap.xml`,
+    host: SITE.url,
   };
 }

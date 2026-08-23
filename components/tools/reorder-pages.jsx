@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { PDFDocument } from "pdf-lib";
+import { ENCRYPTED_MSG, isEncryptedError } from "../../lib/pdfLoad";
 
 const NUM_FMT = new Intl.NumberFormat("en-US");
 
@@ -57,7 +58,7 @@ export default function ReorderPages() {
     setStatus("Reading PDF…");
     try {
       const bytes = await chosen.arrayBuffer();
-      const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const doc = await PDFDocument.load(bytes);
       const count = doc.getPageCount();
       if (!count) throw new Error("empty");
       setFile(chosen);
@@ -118,7 +119,7 @@ export default function ReorderPages() {
     setStatus("Building your reordered PDF…");
     try {
       const bytes = await file.arrayBuffer();
-      const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const src = await PDFDocument.load(bytes);
       const out = await PDFDocument.create();
       const copied = await out.copyPages(src, order);
       copied.forEach((pg) => out.addPage(pg));
@@ -127,8 +128,8 @@ export default function ReorderPages() {
       downloadBlob(blob, `${baseName}-reordered.pdf`);
       setStatus("Downloaded your reordered PDF.");
       setTimeout(() => setStatus(""), 4000);
-    } catch {
-      setError("Something went wrong building that PDF. Please try again.");
+    } catch (e) {
+      setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Something went wrong building that PDF. Please try again.");
       setStatus("");
     } finally {
       setBusy(false);

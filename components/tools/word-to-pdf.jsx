@@ -2,6 +2,13 @@
 
 import { useState, useRef } from "react";
 import mammoth from "mammoth";
+import DOMPurify from "dompurify";
+
+// The uploaded file's name is attacker-controlled and gets written into the
+// print iframe's <title> via document.write.
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
 
 export default function WordToPdf() {
   const [html, setHtml] = useState("");
@@ -28,7 +35,14 @@ export default function WordToPdf() {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.convertToHtml({ arrayBuffer });
-      setHtml(result.value || "<p>(This document appears to be empty.)</p>");
+      // A .docx is untrusted input and mammoth does not sanitize: it passes through
+      // scripts/event handlers and does not validate link schemes (javascript:).
+      // This HTML is both rendered here and written into a same-origin iframe.
+      const safe = DOMPurify.sanitize(result.value || "", {
+        USE_PROFILES: { html: true },
+        ALLOWED_URI_REGEXP: /^(?:https?|mailto|tel):|^[^a-z]*$/i,
+      });
+      setHtml(safe || "<p>(This document appears to be empty.)</p>");
       setName(file.name.replace(/\.docx$/i, ""));
     } catch {
       setError("Couldn't read that Word file — it may be corrupted or not a real .docx.");
@@ -45,7 +59,7 @@ export default function WordToPdf() {
     const doc = iframe.contentWindow.document;
     doc.open();
     doc.write(
-      `<!doctype html><html><head><meta charset="utf-8"><title>${name}</title>` +
+      `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(name)}</title>` +
         "<style>@page{margin:20mm;}" +
         "body{font-family:Georgia,'Times New Roman',serif;color:#000;line-height:1.55;font-size:12pt;}" +
         "img{max-width:100%;}table{border-collapse:collapse;width:100%;}" +

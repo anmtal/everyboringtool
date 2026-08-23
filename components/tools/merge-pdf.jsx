@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { PDFDocument } from "pdf-lib";
+import { ENCRYPTED_MSG, isEncryptedError } from "../../lib/pdfLoad";
 
 export default function MergePdf() {
   const [files, setFiles] = useState([]); // { id, file, name }
@@ -61,15 +62,15 @@ export default function MergePdf() {
       const out = await PDFDocument.create();
       for (const item of files) {
         const bytes = await item.file.arrayBuffer();
-        const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+        const src = await PDFDocument.load(bytes);
         const pages = await out.copyPages(src, src.getPageIndices());
         pages.forEach((p) => out.addPage(p));
       }
       const mergedBytes = await out.save();
       const blob = new Blob([mergedBytes], { type: "application/pdf" });
       setDownloadUrl(URL.createObjectURL(blob));
-    } catch {
-      setError("Couldn't merge those files — one may be corrupted or password-protected.");
+    } catch (e) {
+      setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Couldn't merge those files — one may be corrupted or password-protected.");
     } finally {
       setBusy(false);
     }

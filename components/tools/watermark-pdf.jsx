@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
+import { ENCRYPTED_MSG, isEncryptedError } from "../../lib/pdfLoad";
 
 const NUM_FMT = new Intl.NumberFormat("en-US");
 
@@ -73,15 +74,13 @@ export default function WatermarkPdf() {
     setStatus("Reading PDF…");
     try {
       const bytes = await chosen.arrayBuffer();
-      const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const doc = await PDFDocument.load(bytes);
       const count = doc.getPageCount();
       if (!count) throw new Error("empty");
       setFile(chosen);
       setPageCount(count);
-    } catch {
-      setError(
-        "Couldn't read that PDF — it may be corrupted, password-protected, or not a valid PDF."
-      );
+    } catch (e) {
+      setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Couldn't read that PDF — it may be corrupted, password-protected, or not a valid PDF.");
       reset();
     } finally {
       setBusy(false);
@@ -107,7 +106,7 @@ export default function WatermarkPdf() {
       const alpha = clampNum(opacity, 0, 1, 0.3);
 
       const bytes = await file.arrayBuffer();
-      const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const doc = await PDFDocument.load(bytes);
       const font = await doc.embedFont(StandardFonts.Helvetica);
       const gray = rgb(0.5, 0.5, 0.5);
 
@@ -161,10 +160,8 @@ export default function WatermarkPdf() {
       const url = URL.createObjectURL(blob);
       resultUrlRef.current = url;
       setResult({ url });
-    } catch {
-      setError(
-        "Something went wrong stamping that PDF. It may be corrupted or protected."
-      );
+    } catch (e) {
+      setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Something went wrong stamping that PDF. It may be corrupted or protected.");
     } finally {
       setBusy(false);
       setStatus("");

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { PDFDocument, degrees } from "pdf-lib";
+import { ENCRYPTED_MSG, isEncryptedError } from "../../lib/pdfLoad";
 
 const NUM_FMT = new Intl.NumberFormat("en-US");
 
@@ -63,15 +64,13 @@ export default function RotatePdf() {
     setStatus("Reading PDF…");
     try {
       const bytes = await chosen.arrayBuffer();
-      const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const doc = await PDFDocument.load(bytes);
       const count = doc.getPageCount();
       if (!count) throw new Error("empty");
       setFile(chosen);
       setPageCount(count);
-    } catch {
-      setError(
-        "Couldn't read that PDF — it may be corrupted, password-protected, or not a valid PDF."
-      );
+    } catch (e) {
+      setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Couldn't read that PDF — it may be corrupted, password-protected, or not a valid PDF.");
       reset();
     } finally {
       setBusy(false);
@@ -89,7 +88,7 @@ export default function RotatePdf() {
     setStatus("Rotating pages…");
     try {
       const bytes = await file.arrayBuffer();
-      const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const doc = await PDFDocument.load(bytes);
       const pages = doc.getPages();
       for (const page of pages) {
         // Preserve any rotation the page already carries, then add ours.
@@ -103,10 +102,8 @@ export default function RotatePdf() {
       const url = URL.createObjectURL(blob);
       resultUrlRef.current = url;
       setResult({ url });
-    } catch {
-      setError(
-        "Something went wrong rotating that PDF. It may be corrupted or protected."
-      );
+    } catch (e) {
+      setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Something went wrong rotating that PDF. It may be corrupted or protected.");
     } finally {
       setBusy(false);
       setStatus("");

@@ -201,7 +201,15 @@ export default function Solitaire() {
               <div
                 key={ci}
                 onClick={() => { if (col.length === 0 && sel) tryMove({ type: "tableau", idx: ci }); }}
-                style={{ width: CARD_W, minHeight: CARD_H, position: "relative" }}
+                /* Cards below the first are absolutely positioned and contribute no
+                   height, so the column must reserve it explicitly — otherwise the
+                   board collapses to one card and the stack is clipped. */
+                style={{
+                  width: CARD_W,
+                  height: CARD_H + Math.max(0, col.length - 1) * OVERLAP,
+                  minHeight: CARD_H,
+                  position: "relative",
+                }}
               >
                 {col.length === 0 && <div style={slotStyle} />}
                 {col.map((card, i) => {
