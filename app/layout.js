@@ -86,6 +86,7 @@ export default function RootLayout({ children }) {
               <Link href="/about">About</Link>
               <Link href="/privacy">Privacy Policy</Link>
               <Link href="/terms">Terms of Use</Link>
+              <Link href="/contact">Contact</Link>
               <Link href="/unscramble">Word games</Link>
             </nav>
           </div>

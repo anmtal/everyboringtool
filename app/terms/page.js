@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 const UPDATED = "23 August 2026";
-const CONTACT = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "";
+const CONTACT = SITE.email;
 
 export default function Terms() {
   return (
