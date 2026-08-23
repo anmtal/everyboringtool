@@ -80,6 +80,13 @@ export default function RootLayout({ children }) {
                 <Link key={c.slug} href={`/${c.slug}`}>{c.name}</Link>
               ))}
             </nav>
+            <nav className="footer-col" aria-label="Site">
+              <h3 className="footer-h">Site</h3>
+              <Link href="/about">About</Link>
+              <Link href="/privacy">Privacy Policy</Link>
+              <Link href="/terms">Terms of Use</Link>
+              <Link href="/unscramble">Word games</Link>
+            </nav>
           </div>
           <div className="footer-bottom">
             <span>© {year} {SITE.name}</span>

@@ -3,6 +3,10 @@ import { categories, SITE } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
 import ToolSearch from "../components/ToolSearch";
 
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 export default function Home() {
   return (
     <>
@@ -10,11 +14,16 @@ export default function Home() {
         <h1 className="hero-title">Every boring tool.<br />One simple place.</h1>
         <p className="hero-sub">{SITE.description}</p>
         <ToolSearch />
+        {/* Keep these literally true. "Runs in your browser" was too broad as a
+            site-wide claim — the word-game tools look words up on the server. The
+            file claim is precise and verifiable: no tool uploads a file. */}
         <ul className="trust">
           <li>Free forever</li>
           <li>No sign-up</li>
-          <li>Runs in your browser</li>
-          <li>Files never leave your device</li>
+          <li>No usage limits</li>
+          <li>
+            <Link href="/privacy">Your files never leave your device</Link>
+          </li>
         </ul>
       </section>
 

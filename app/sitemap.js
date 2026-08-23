@@ -5,6 +5,7 @@ import { POPULAR } from "../lib/wordPopular";
 export default function sitemap() {
   const base = SITE.url;
   const urls = [{ url: base, priority: 1 }];
+  for (const u of ["/about", "/privacy", "/terms"]) urls.push({ url: `${base}${u}`, priority: 0.3 });
   // Word Games engine
   for (const u of ["/unscramble", "/anagram", "/wordle-solver", "/words-starting-with", "/words-ending-with", "/words-containing"]) {
     urls.push({ url: `${base}${u}`, priority: 0.9 });

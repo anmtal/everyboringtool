@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { matchPattern } from "../../../lib/wordEngine";
 import WordSearchBox from "../../../components/WordSearchBox";
 import WordListPage from "../../../components/WordListPage";
+import { wordRobots } from "../../../lib/wordSeo";
 
 export const dynamicParams = true;
 export const revalidate = 604800;
@@ -20,8 +21,9 @@ export function generateMetadata({ params }) {
   const shown = p.replace(/-/g, "_").toUpperCase();
   const count = matchPattern(p).length;
   return {
-    title: `Crossword answers for ${shown} — ${count} words | Every Boring Tool`,
+    title: `Crossword answers for ${shown} — ${count} words`,
     description: `Every word that fits the pattern ${shown} (use _ for unknown letters). ${count} matches with Scrabble scores. Free crossword solver.`,
+    robots: wordRobots(count),
     alternates: { canonical: `/crossword-solver/${p}` },
   };
 }

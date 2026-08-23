@@ -21,7 +21,8 @@ const UNIT_ORDER = ["ft", "in", "m", "cm"];
 
 // Approximate conversions / estimates.
 const CUBIC_YARDS_PER_M3 = 1.30795;
-const BAGS_PER_M3 = 60; // ~60 x 25kg bags per cubic meter
+const BAGS_PER_M3 = 85; // A 25 kg bag yields ~0.0116 m3, so ~85-86 bags fill 1 m3.
+// (Was 60, which under-ordered by ~30% — enough to leave a pour short.)
 
 function parseDimension(value) {
   if (value.trim() === "") return null;
@@ -178,7 +179,7 @@ export default function ConcreteCalculator() {
 
       <p className="tool-note">
         Enter length, width, and thickness with their units to estimate concrete
-        volume. Bag count assumes roughly 60 x 25 kg bags per cubic meter — add
+        volume. Bag count assumes roughly 85 x 25 kg bags per cubic meter — check the yield printed on your bags, and add
         5-10% extra to allow for spillage and uneven ground.
       </p>
     </div>

@@ -14,15 +14,32 @@ export function generateStaticParams() {
   return params;
 }
 
+// tools.js descriptions are ~23 chars on average — far too short for a meta
+// description, so Google rewrites them. Prefer the first sentence(s) of the
+// tool's About copy, trimmed to a sane length at a word boundary.
+function metaDescription(t, content) {
+  const about = (content && content.about ? content.about : "").replace(/\s+/g, " ").trim();
+  const base = about || `${t.description} Free, no sign-up, and it runs right in your browser.`;
+  if (base.length <= 158) return base;
+  const cut = base.slice(0, 158);
+  return cut.slice(0, cut.lastIndexOf(" ")) + "…";
+}
+
 export function generateMetadata({ params }) {
   const t = getTool(params.category, params.tool);
   if (!t) return {};
-  const built = !!toolContent[params.tool];
+  const content = toolContent[params.tool];
+  const built = !!content;
+  const url = `/${params.category}/${params.tool}`;
+  const description = metaDescription(t, content);
   return {
     title: t.name,
-    description: t.description,
+    description,
     // Coming-soon stubs stay out of the index until the tool actually works.
     robots: built ? { index: true, follow: true } : { index: false, follow: true },
+    alternates: { canonical: url },
+    openGraph: { type: "website", url, title: t.name, description },
+    twitter: { card: "summary_large_image", title: t.name, description },
   };
 }
 

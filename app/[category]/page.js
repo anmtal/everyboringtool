@@ -4,6 +4,7 @@ import { categories, getCategory } from "../../lib/tools";
 import { toolContent } from "../../lib/toolContent";
 import { parseWordRoute, wordRouteLabel } from "../../lib/wordRoutes";
 import NLetterWordsView, { nLetterWords } from "../../components/NLetterWordsView";
+import { wordRobots } from "../../lib/wordSeo";
 
 export const dynamicParams = true;
 export const revalidate = 604800;
@@ -18,14 +19,24 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }) {
   const c = getCategory(params.category);
-  if (c) return { title: c.name, description: c.description };
+  if (c) {
+    const built = c.tools.filter((t) => toolContent[t.slug]).length;
+    const description = `${c.description} ${built} free ${c.name.toLowerCase()} — no sign-up, and they run right in your browser.`;
+    return {
+      title: c.name,
+      description,
+      alternates: { canonical: `/${c.slug}` },
+      openGraph: { type: "website", url: `/${c.slug}`, title: c.name, description },
+    };
+  }
   const route = parseWordRoute(params.category);
   if (route) {
     const label = wordRouteLabel(route);
     const count = nLetterWords(route).length;
     return {
-      title: `${label} — ${count} words | Every Boring Tool`,
+      title: `${label} — ${count} words`,
       description: `A full list of ${count} ${label.toLowerCase()}, with Scrabble scores. Free — perfect for Wordle, Scrabble, Words With Friends and crosswords.`,
+      robots: wordRobots(count),
       alternates: { canonical: `/${params.category}` },
     };
   }

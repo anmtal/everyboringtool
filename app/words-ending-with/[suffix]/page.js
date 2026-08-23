@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { endingWith } from "../../../lib/wordEngine";
 import WordSearchBox from "../../../components/WordSearchBox";
 import WordListPage from "../../../components/WordListPage";
+import { wordRobots } from "../../../lib/wordSeo";
 
 export const dynamicParams = true;
 export const revalidate = 604800;
@@ -20,8 +21,9 @@ export function generateMetadata({ params }) {
   const up = p.toUpperCase();
   const count = endingWith(p).length;
   return {
-    title: `Words that end with ${up} — ${count} words | Every Boring Tool`,
+    title: `Words that end with ${up} — ${count} words`,
     description: `A complete list of ${count} words that end in ${up}, sorted by length with Scrabble scores. Free — great for Scrabble, Words With Friends and crosswords.`,
+    robots: wordRobots(count),
     alternates: { canonical: `/words-ending-with/${p}` },
   };
 }

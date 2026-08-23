@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { containing } from "../../../lib/wordEngine";
 import WordSearchBox from "../../../components/WordSearchBox";
 import WordListPage from "../../../components/WordListPage";
+import { wordRobots } from "../../../lib/wordSeo";
 
 export const dynamicParams = true;
 export const revalidate = 604800;
@@ -20,8 +21,9 @@ export function generateMetadata({ params }) {
   const up = p.toUpperCase();
   const count = containing(p).length;
   return {
-    title: `Words with ${up} in them — ${count} words | Every Boring Tool`,
+    title: `Words with ${up} in them — ${count} words`,
     description: `A complete list of ${count} words containing the letters ${up}, sorted by length with Scrabble scores. Free — great for Scrabble, Words With Friends and crosswords.`,
+    robots: wordRobots(count),
     alternates: { canonical: `/words-containing/${p}` },
   };
 }

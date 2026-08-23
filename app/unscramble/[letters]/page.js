@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { unscramble, scrabbleScore, groupByLength, cleanLetters } from "../../../lib/wordEngine";
 import { POPULAR } from "../../../lib/wordPopular";
 import UnscrambleBox from "../../../components/UnscrambleBox";
+import { wordRobots } from "../../../lib/wordSeo";
 
 export const dynamicParams = true;
 export const revalidate = 604800; // rebuild each page at most weekly (ISR)
@@ -19,6 +20,7 @@ export function generateMetadata({ params }) {
   return {
     title: `Unscramble ${up} — ${count} words made from these letters`,
     description: `All ${count} words you can make from the letters ${up}, grouped by length with Scrabble scores. Free word unscrambler and anagram solver — no sign-up.`,
+    robots: wordRobots(count),
     alternates: { canonical: `/unscramble/${letters}` },
   };
 }

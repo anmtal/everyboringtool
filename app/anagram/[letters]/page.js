@@ -4,6 +4,7 @@ import { anagrams, cleanLetters } from "../../../lib/wordEngine";
 import { POPULAR } from "../../../lib/wordPopular";
 import WordSearchBox from "../../../components/WordSearchBox";
 import WordListPage from "../../../components/WordListPage";
+import { wordRobots } from "../../../lib/wordSeo";
 
 export const dynamicParams = true;
 export const revalidate = 604800;
@@ -18,8 +19,9 @@ export function generateMetadata({ params }) {
   const up = letters.toUpperCase();
   const count = anagrams(letters).length;
   return {
-    title: `Anagrams of ${up} — ${count} words | Every Boring Tool`,
+    title: `Anagrams of ${up} — ${count} words`,
     description: `All ${count} anagrams of ${up} — words that use every letter. Free anagram solver for Scrabble, crosswords and word games.`,
+    robots: wordRobots(count),
     alternates: { canonical: `/anagram/${letters}` },
   };
 }
