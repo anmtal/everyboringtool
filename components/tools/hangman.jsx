@@ -266,8 +266,12 @@ export default function Hangman() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(38px, 1fr))",
+          // Fixed column count, not auto-fit: auto-fit resolved to 10 x 38px
+          // (434px) inside a 320px viewport and pushed the whole page sideways.
+          // minmax(0,1fr) lets the keys shrink instead of overflowing.
+          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
           gap: 6,
+          width: "100%",
           maxWidth: 460,
           margin: "18px auto 0",
         }}

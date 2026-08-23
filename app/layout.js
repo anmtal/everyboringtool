@@ -43,6 +43,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={inter.variable}>
       <body>
+        <a href="#main" className="skip-link">Skip to content</a>
         <header className="site-header">
           <div className="container header-inner">
             <Link href="/" className="brand" aria-label={`${SITE.name} home`}>
@@ -54,7 +55,7 @@ export default function RootLayout({ children }) {
           <CategoryNav />
         </header>
 
-        <main className="container main">{children}</main>
+        <main id="main" className="container main" tabIndex={-1}>{children}</main>
 
         <footer className="site-footer">
           <div className="footer-grid">

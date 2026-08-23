@@ -91,12 +91,7 @@ export default function QuoteCalculator() {
         {items.map((it, idx) => (
           <div
             key={it.id}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0,1fr) 70px 110px 100px 36px",
-              gap: 8,
-              alignItems: "center",
-            }}
+            className="lineitem-row"
           >
             <input
               className="tool-input"

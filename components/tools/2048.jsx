@@ -168,6 +168,7 @@ export default function Game2048() {
   const [state, dispatch] = useReducer(reducer, INITIAL);
   const [best, setBest] = useState(0);
   const touchRef = useRef(null);
+  const boardRef = useRef(null);
 
   // Deal the opening tiles on the client only, so server and first client
   // render agree on the empty board (no hydration mismatch from Math.random).
@@ -212,6 +213,16 @@ export default function Game2048() {
     const onKey = (e) => {
       const dir = KEY_DIRS[e.key];
       if (!dir) return;
+      // Don't steal keys from form fields, and don't block arrow-key scrolling
+      // once the board is off screen — this listener is on window, and the page
+      // is far taller than the game.
+      const el = document.activeElement;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable)) return;
+      const board = boardRef.current;
+      if (board) {
+        const r = board.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > window.innerHeight) return;
+      }
       e.preventDefault();
       dispatch({ type: "move", dir });
     };
@@ -297,6 +308,7 @@ export default function Game2048() {
         }}
       >
         <div
+          ref={boardRef}
           role="grid"
           aria-label="2048 board"
           onTouchStart={handleTouchStart}

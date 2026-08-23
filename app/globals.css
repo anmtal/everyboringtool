@@ -6,7 +6,7 @@
   --surface-2: #fbfaf8;
   --text: #14130f;
   --muted: #6a6862;
-  --faint: #9a978f;
+  --faint: #6f6c64; /* 4.88:1 on --bg (was #9a978f = 2.70:1, failed AA) */
   --border: #e6e3dc;
   --border-strong: #d6d2c8;
   /* Success/confirm actions (Download, "Copied!"). Contrast with #fff = 4.96:1 (WCAG AA).
@@ -35,7 +35,7 @@
     --surface-2: #201e1b;
     --text: #f3f1ec;
     --muted: #a6a29a;
-    --faint: #78756d;
+    --faint: #8b887f; /* 5.31:1 on dark --bg (was #78756d = 4.02:1, failed AA) */
     --border: #2b2925;
     --border-strong: #383530;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -68,6 +68,15 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 22px; }
 .muted { color: var(--muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+/* Skip link: 20 focusable elements (brand + 19 nav buttons) precede <main> on
+   every page, so keyboard users need a way past them. Hidden until focused. */
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+  padding: 10px 16px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-md);
+}
+.skip-link:focus { left: 12px; top: 12px; }
 
 /* header */
 .site-header {
@@ -310,6 +319,21 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .tool-stat-num { font-size: 22px; font-weight: 660; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .tool-stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .tool-note { font-size: 13px; color: var(--faint); margin: 0; }
+
+/* Invoice / estimate / quote / receipt line-item rows.
+   The fixed columns total 348px, which overflowed the page below ~360px and
+   pushed the delete button off screen. Below 560px the description takes its own
+   row and the numeric fields share the next one. */
+.lineitem-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 70px 110px 100px 36px;
+  gap: 8px;
+  align-items: center;
+}
+@media (max-width: 560px) {
+  .lineitem-row { grid-template-columns: 1fr 1fr 1fr 36px; }
+  .lineitem-row > :first-child { grid-column: 1 / -1; }
+}
 .tool-output { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
 
 /* document preview (Word to PDF) — always a white "paper" sheet, theme-neutral */

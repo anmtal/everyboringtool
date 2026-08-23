@@ -16,8 +16,10 @@ function slugify(text, { separator = "-", lowercase = true } = {}) {
 
   if (lowercase) result = result.toLowerCase();
 
-  // Replace whitespace and underscores with a placeholder space first.
-  result = result.replace(/[\s_]+/g, " ").trim();
+  // Turn every word-separating character into a space FIRST. Hyphens and slashes
+  // must be included: otherwise the strip step below deletes them outright and
+  // "state-of-the-art" collapses to "stateoftheart" instead of "state-of-the-art".
+  result = result.replace(/[\s_\-‐-―/\\.,:;|]+/g, " ").trim();
 
   // Remove any character that is not a letter, number, or space.
   result = result.replace(/[^a-zA-Z0-9\s]+/g, "");

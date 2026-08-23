@@ -344,6 +344,10 @@ export default function ScientificCalculator() {
   const onKeyDown = useCallback(
     (ev) => {
       const k = ev.key;
+      // This handler sits on the container, so it also sees keys pressed while a
+      // keypad button has focus. Enter/Space there must activate that button —
+      // swallowing them made every key on the pad behave as "=" for keyboard users.
+      if (ev.target instanceof HTMLButtonElement && (k === "Enter" || k === " ")) return;
       if (/^[0-9]$/.test(k)) append(k);
       else if (k === ".") append(".");
       else if (["+", "-", "*", "/", "(", ")", "^", "%", "!"].includes(k)) append(k);
