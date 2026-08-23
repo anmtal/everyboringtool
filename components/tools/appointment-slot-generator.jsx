@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Parse an "HH:MM" 24-hour time string into minutes since midnight.
 // Returns null when the value is missing or not a valid time.
@@ -162,7 +163,7 @@ export default function AppointmentSlotGenerator() {
   async function handleCopy() {
     if (lines.length === 0) return;
     try {
-      await navigator.clipboard.writeText(joined);
+      await copyText(joined);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

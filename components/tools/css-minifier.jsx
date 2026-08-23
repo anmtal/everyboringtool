@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Split CSS into segments that are either a preserved string literal
 // (single- or double-quoted) or a normal chunk of CSS to be minified.
@@ -129,7 +130,7 @@ export default function CssMinifier() {
   async function handleCopy() {
     if (!data.output) return;
     try {
-      await navigator.clipboard.writeText(data.output);
+      await copyText(data.output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

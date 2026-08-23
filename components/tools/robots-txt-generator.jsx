@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 function normalizePath(raw) {
   const p = String(raw).trim();
@@ -103,7 +104,7 @@ export default function RobotsTxtGenerator() {
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

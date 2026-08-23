@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 import QRCode from "qrcode";
 
 // Escape a vCard 3.0 text value: backslash, comma, semicolon and newlines
@@ -144,7 +145,7 @@ export default function VcardQrGenerator() {
   async function handleCopyVcard() {
     if (!hasContent) return;
     try {
-      await navigator.clipboard.writeText(vcard);
+      await copyText(vcard);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

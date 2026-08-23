@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 const MAX_COUNT = 100;
 
@@ -107,7 +108,7 @@ export default function UuidGenerator() {
   async function handleCopy() {
     if (formatted.length === 0) return;
     try {
-      await navigator.clipboard.writeText(joined);
+      await copyText(joined);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

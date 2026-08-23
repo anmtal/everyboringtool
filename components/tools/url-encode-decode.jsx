@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { copyText } from "../../lib/copyText";
 
 export default function UrlEncodeDecode() {
   const [input, setInput] = useState("");
@@ -38,7 +39,7 @@ export default function UrlEncodeDecode() {
   function handleCopy() {
     if (!output) return;
     try {
-      navigator.clipboard.writeText(output);
+      copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Escape a string so it can be used as a literal inside a RegExp.
 function escapeRegex(str) {
@@ -100,7 +101,7 @@ export default function FindAndReplace() {
   async function handleCopy() {
     if (!result.ok || !result.output) return;
     try {
-      await navigator.clipboard.writeText(result.output);
+      await copyText(result.output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

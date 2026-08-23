@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Turn a single cell value into its CSV string representation.
 // Objects/arrays are JSON-encoded; null/undefined become empty strings.
@@ -133,7 +134,7 @@ export default function JsonToCsv() {
   async function handleCopy() {
     if (!result.output) return;
     try {
-      await navigator.clipboard.writeText(result.output);
+      await copyText(result.output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

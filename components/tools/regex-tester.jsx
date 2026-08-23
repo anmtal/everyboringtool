@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Cap how many matches we enumerate.
 // NOTE: this cap alone does NOT make the tool safe. A catastrophically
@@ -242,7 +243,7 @@ export default function RegexTester() {
   async function handleCopy() {
     if (!copyText) return;
     try {
-      await navigator.clipboard.writeText(copyText);
+      await copyText(copyText);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // A single blank link row. Section lets you group links under a ## heading.
 function emptyLink() {
@@ -110,7 +111,7 @@ export default function LlmsTxtGenerator() {
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

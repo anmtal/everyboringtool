@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { copyText } from "../../lib/copyText";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 
@@ -36,7 +37,7 @@ export default function MarkdownToHtml() {
 
   const copy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(html);
+      await copyText(html);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch { /* ignore */ }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Reverse a string by Unicode code points (not UTF-16 units) so that
 // emoji and other astral-plane characters are not split into broken halves.
@@ -105,7 +106,7 @@ export default function TextReverser() {
   async function handleCopy(key, value) {
     if (!value) return;
     try {
-      await navigator.clipboard.writeText(value);
+      await copyText(value);
       setCopiedKey(key);
       setTimeout(() => setCopiedKey(""), 1500);
     } catch (e) {

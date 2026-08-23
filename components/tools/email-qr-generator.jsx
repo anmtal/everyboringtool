@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { copyText } from "../../lib/copyText";
 import QRCode from "qrcode";
 
 // Basic, forgiving email check. We only require something@something.tld shape.
@@ -77,7 +78,7 @@ export default function EmailQrGenerator() {
   const handleCopy = useCallback(async () => {
     if (!mailtoLink) return;
     try {
-      await navigator.clipboard.writeText(mailtoLink);
+      await copyText(mailtoLink);
       setCopied(true);
       if (copyTimer.current) clearTimeout(copyTimer.current);
       copyTimer.current = setTimeout(() => setCopied(false), 1600);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Clamp any value into a 0-255 integer channel; never returns NaN.
 function clampByte(n) {
@@ -147,7 +148,7 @@ export default function ColorPicker() {
 
   async function copy(text, key) {
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       setCopied(key);
       setTimeout(() => setCopied(""), 1200);
     } catch {

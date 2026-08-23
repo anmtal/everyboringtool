@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 function parseNum(value) {
   if (value === null || value === undefined) return 0;
@@ -78,16 +79,8 @@ export default function EngagementRateCalculator() {
     ].filter(Boolean);
     const text = lines.join("\n");
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-      }
+      // copyText already handles the execCommand fallback internally.
+      await copyText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

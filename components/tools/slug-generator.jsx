@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { copyText } from "../../lib/copyText";
 
 function slugify(text, { separator = "-", lowercase = true } = {}) {
   if (typeof text !== "string" || text.length === 0) return "";
@@ -60,7 +61,7 @@ export default function SlugGenerator() {
   const handleCopy = useCallback(async () => {
     if (!slug) return;
     try {
-      await navigator.clipboard.writeText(slug);
+      await copyText(slug);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

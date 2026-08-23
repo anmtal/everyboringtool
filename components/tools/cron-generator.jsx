@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Cron field order: minute hour day-of-month month day-of-week
 const MONTH_NAMES = [
@@ -237,7 +238,7 @@ export default function CronGenerator() {
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(cron);
+      await copyText(cron);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

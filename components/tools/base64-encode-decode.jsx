@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 export default function Base64EncodeDecode() {
   const [mode, setMode] = useState("encode");
@@ -68,7 +69,7 @@ export default function Base64EncodeDecode() {
   async function handleCopy() {
     if (!result.output) return;
     try {
-      await navigator.clipboard.writeText(result.output);
+      await copyText(result.output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

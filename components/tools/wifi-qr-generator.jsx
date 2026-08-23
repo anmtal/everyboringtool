@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 import QRCode from "qrcode";
 
 // Escape the WIFI: payload special characters (\ ; , : ") with a backslash.
@@ -88,7 +89,7 @@ export default function WifiQrGenerator() {
   async function handleCopyPayload() {
     if (!trimmedSsid) return;
     try {
-      await navigator.clipboard.writeText(payload);
+      await copyText(payload);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

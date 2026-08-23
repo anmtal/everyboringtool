@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 function escapeHtml(value) {
   return String(value)
@@ -73,7 +74,7 @@ export default function MetaTagGenerator() {
   async function handleCopy() {
     if (!tags) return;
     try {
-      await navigator.clipboard.writeText(tags);
+      await copyText(tags);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

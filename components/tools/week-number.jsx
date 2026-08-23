@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { copyText } from "../../lib/copyText";
 
 const DAY_NAMES = [
   "Sunday",
@@ -192,15 +193,15 @@ export default function WeekNumber() {
     const text = `ISO week ${forward.week}, ${forward.isoYear} (${formatShortDate(
       forward.monday
     )} to ${formatShortDate(forward.sunday)})`;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(
-        () => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        },
-        () => {}
-      );
-    }
+    // No feature guard: gating on navigator.clipboard meant the copy silently
+    // did nothing where that API is absent. copyText falls back on its own.
+    copyText(text).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      },
+      () => {}
+    );
   }
 
   const dateInvalid = dateValue && !parseDateInput(dateValue);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Small helper: append or replace a query param on a URL without touching
 // existing params or the hash fragment. Values are encoded by URLSearchParams.
@@ -77,7 +78,7 @@ export default function UtmBuilder() {
   function handleCopy() {
     if (!output) return;
     try {
-      navigator.clipboard.writeText(output);
+      copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

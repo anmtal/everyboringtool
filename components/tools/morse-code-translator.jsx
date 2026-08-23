@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // International (ITU) Morse code map for letters, digits, and common punctuation.
 const TEXT_TO_MORSE = {
@@ -201,7 +202,7 @@ export default function MorseCodeTranslator() {
   async function handleCopy() {
     if (!output) return;
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Cap the LCS table size so pathological inputs can't freeze the tab.
 // (rows+1) * (cols+1) cells; ~4M keeps memory/time well bounded.
@@ -172,7 +173,7 @@ export default function TextDiff() {
   async function handleCopy() {
     if (!ops.length) return;
     try {
-      await navigator.clipboard.writeText(unifiedText);
+      await copyText(unifiedText);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

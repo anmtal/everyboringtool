@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // ---------------------------------------------------------------------------
 // Inline, dependency-free MD5. Operates on a Uint8Array of UTF-8 bytes so it
@@ -232,7 +233,7 @@ export default function HashGenerator() {
   async function handleCopy(key, value) {
     if (!value) return;
     try {
-      await navigator.clipboard.writeText(value);
+      await copyText(value);
       setCopiedKey(key);
       setTimeout(
         () => setCopiedKey((current) => (current === key ? "" : current)),

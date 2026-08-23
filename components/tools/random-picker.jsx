@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 const MAX_PICK = 1000;
 const TWO_32 = 0x100000000; // 2^32
@@ -108,7 +109,7 @@ export default function RandomPicker() {
   async function handleCopy() {
     if (picked.length === 0) return;
     try {
-      await navigator.clipboard.writeText(joined);
+      await copyText(joined);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

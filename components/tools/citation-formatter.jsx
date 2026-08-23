@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 const MONTHS = [
   "January",
@@ -294,7 +295,7 @@ export default function CitationFormatter() {
   async function handleCopy(key, text) {
     if (!text) return;
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       setCopied(key);
       setTimeout(() => setCopied(""), 1500);
     } catch (e) {

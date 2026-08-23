@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Character sets. Ambiguous glyphs (l, 1, I, O, 0) are removed when the
 // "exclude ambiguous" option is on so passwords are easier to read aloud.
@@ -166,7 +167,7 @@ export default function PasswordGenerator() {
   async function handleCopy() {
     if (!password) return;
     try {
-      await navigator.clipboard.writeText(password);
+      await copyText(password);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {

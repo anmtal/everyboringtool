@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { copyText } from "../../lib/copyText";
 
 export default function ImageToText() {
   const [file, setFile] = useState(null);
@@ -65,7 +66,7 @@ export default function ImageToText() {
 
   const copy = useCallback(async () => {
     if (!text) return;
-    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* ignore */ }
+    try { await copyText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* ignore */ }
   }, [text]);
 
   return (

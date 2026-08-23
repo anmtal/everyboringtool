@@ -62,11 +62,18 @@ export default function ToolSearch() {
           aria-label="Search tools"
           autoComplete="off"
           spellCheck="false"
+          /* The arrow-key highlight was expressed only as a CSS class, so screen
+             readers were never told the list existed or which item was current. */
+          role="combobox"
+          aria-expanded={!!query}
+          aria-controls="tool-search-results"
+          aria-autocomplete="list"
+          aria-activedescendant={query && results.length > 0 && active >= 0 ? `tool-search-opt-${active}` : undefined}
         />
       </div>
 
       {query && (
-        <div className="search-results" role="listbox">
+        <div className="search-results" id="tool-search-results" role="listbox" aria-label="Tool search results">
           {results.length === 0 ? (
             <div className="search-empty">
               No tool matches “{q}” yet — more are on the way.
@@ -76,6 +83,9 @@ export default function ToolSearch() {
               <Link
                 key={r.href}
                 href={r.href}
+                id={`tool-search-opt-${i}`}
+                role="option"
+                aria-selected={i === active}
                 className={`search-item ${i === active ? "is-active" : ""}`}
                 onMouseEnter={() => setActive(i)}
               >

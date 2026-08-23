@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Classic lorem ipsum word bank. Kept inline so the tool has no dependencies.
 const WORD_BANK = [
@@ -166,7 +167,7 @@ export default function LoremIpsumGenerator() {
   async function handleCopy() {
     if (!output) return;
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

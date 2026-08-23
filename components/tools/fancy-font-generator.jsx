@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Build a character map for a Unicode "font" style by taking a base code point
 // for A / a / 0 and adding the letter or digit offset, then applying overrides
@@ -127,7 +128,7 @@ export default function FancyFontGenerator() {
   async function handleCopy(id, value) {
     if (!value) return;
     try {
-      await navigator.clipboard.writeText(value);
+      await copyText(value);
       setCopiedId(id);
       setTimeout(() => setCopiedId(""), 1500);
     } catch (e) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { copyText } from "../../lib/copyText";
 
 function parseInteger(value) {
   if (value === null || value === undefined) return null;
@@ -132,7 +133,7 @@ export default function FractionCalculator() {
       result.improper !== result.mixed ? ` = ${result.mixed}` : ""
     } = ${result.decimal}`;
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

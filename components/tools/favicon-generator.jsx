@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Target favicon sizes. label + filename + the HTML each one goes into.
 const SIZES = [
@@ -198,7 +199,7 @@ export default function FaviconGenerator() {
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(SNIPPET);
+      await copyText(SNIPPET);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

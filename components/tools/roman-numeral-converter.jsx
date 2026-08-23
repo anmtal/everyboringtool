@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Subtractive pairs ordered high-to-low so the greedy encoder emits the
 // canonical (shortest / standard) Roman numeral for any value 1-3999.
@@ -114,7 +115,7 @@ export default function RomanNumeralConverter() {
   async function copy(text, key) {
     if (!text) return;
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       setCopied(key);
       setTimeout(() => setCopied(""), 1200);
     } catch {

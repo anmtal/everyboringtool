@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 const OPERATIONS = [
   { value: "az", label: "Sort A → Z" },
@@ -137,7 +138,7 @@ export default function SortLines() {
   async function handleCopy() {
     if (!output) return;
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {

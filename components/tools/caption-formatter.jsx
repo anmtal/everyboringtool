@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Braille Pattern Blank (U+2800) renders as an invisible, blank glyph but is a
 // real, non-whitespace character. Instagram trims lines that contain only
@@ -109,7 +110,7 @@ export default function CaptionFormatter() {
   async function handleCopy() {
     if (!output) return;
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

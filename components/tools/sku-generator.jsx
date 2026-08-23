@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 const MAX_ATTRIBUTES = 6;
 const MAX_SKUS = 20000;
@@ -189,7 +190,7 @@ export default function SkuGenerator() {
   async function handleCopy() {
     if (result.skus.length === 0) return;
     try {
-      await navigator.clipboard.writeText(joined);
+      await copyText(joined);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Turn a single line of text into a clean URL slug.
 // - NFD normalize + strip combining marks so accents become plain letters (é -> e)
@@ -96,7 +97,7 @@ export default function Slugify() {
   async function handleCopy() {
     if (!output) return;
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

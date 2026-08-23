@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { copyText } from "../../lib/copyText";
 import jsQR from "jsqr";
 
 export default function QrCodeScanner() {
@@ -100,7 +101,7 @@ export default function QrCodeScanner() {
   async function copy() {
     if (!result) return;
     try {
-      await navigator.clipboard.writeText(result);
+      await copyText(result);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

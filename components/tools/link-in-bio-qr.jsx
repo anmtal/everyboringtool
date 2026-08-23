@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { copyText } from "../../lib/copyText";
 import QRCode from "qrcode";
 
 // Quick-fill presets for common bio platforms. Each prefills the https:// prefix
@@ -120,7 +121,7 @@ export default function LinkInBioQr() {
   const handleCopy = useCallback(async () => {
     if (!normalized) return;
     try {
-      await navigator.clipboard.writeText(normalized);
+      await copyText(normalized);
       setCopied(true);
       if (copyTimer.current) clearTimeout(copyTimer.current);
       copyTimer.current = setTimeout(() => setCopied(false), 1600);

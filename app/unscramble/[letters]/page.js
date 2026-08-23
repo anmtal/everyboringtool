@@ -77,7 +77,7 @@ export default function UnscrambleLettersPage({ params }) {
           <h2 className="section-title" style={{ fontSize: "1.05rem" }}>{len}-letter words ({ws.length})</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {ws.map((w) => (
-              <Link key={w} href={`/unscramble/${w}`} className="badge" style={{ textDecoration: "none", fontSize: 14, padding: "4px 9px" }} title={`${scrabbleScore(w)} points`}>
+              <Link key={w} href={`/unscramble/${w}`} prefetch={false} className="badge" style={{ textDecoration: "none", fontSize: 14, padding: "4px 9px" }} title={`${scrabbleScore(w)} points`}>
                 {w} <span style={{ opacity: 0.55, fontSize: 11 }}>{scrabbleScore(w)}</span>
               </Link>
             ))}

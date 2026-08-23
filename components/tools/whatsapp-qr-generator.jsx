@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { copyText } from "../../lib/copyText";
 import QRCode from "qrcode";
 
 export default function WhatsappQrGenerator() {
@@ -65,7 +66,7 @@ export default function WhatsappQrGenerator() {
   const handleCopy = useCallback(async () => {
     if (!waLink) return;
     try {
-      await navigator.clipboard.writeText(waLink);
+      await copyText(waLink);
       setCopied(true);
       if (copyTimer.current) clearTimeout(copyTimer.current);
       copyTimer.current = setTimeout(() => setCopied(false), 1600);

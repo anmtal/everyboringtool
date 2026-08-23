@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Split text into lines, preserving the split so counts stay predictable.
 function splitLines(text) {
@@ -72,7 +73,7 @@ export default function RemoveDuplicateLines() {
   async function handleCopy() {
     if (!result.output) return;
     try {
-      await navigator.clipboard.writeText(result.output);
+      await copyText(result.output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

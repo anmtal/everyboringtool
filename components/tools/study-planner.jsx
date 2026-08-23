@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Default hours assumed for a topic when the user leaves "hours" blank.
 const DEFAULT_TOPIC_HOURS = 1;
@@ -230,7 +231,7 @@ export default function StudyPlanner() {
   const copySchedule = async () => {
     if (!scheduleText) return;
     try {
-      await navigator.clipboard.writeText(scheduleText);
+      await copyText(scheduleText);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {

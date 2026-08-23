@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Ordered digit alphabet; index === digit value (0-15 covers up to hex).
 const DIGITS = "0123456789abcdef";
@@ -102,7 +103,7 @@ export default function NumberBaseConverter() {
   async function copy(text, key) {
     if (!text) return;
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       setCopied(key);
       setTimeout(() => setCopied(""), 1200);
     } catch {

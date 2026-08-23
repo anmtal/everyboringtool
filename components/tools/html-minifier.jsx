@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Measure UTF-8 byte length so the size stats reflect real bytes, not char count.
 function byteLength(str) {
@@ -82,7 +83,7 @@ export default function HtmlMinifier() {
   async function handleCopy() {
     if (!hasOutput) return;
     try {
-      await navigator.clipboard.writeText(result.output);
+      await copyText(result.output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

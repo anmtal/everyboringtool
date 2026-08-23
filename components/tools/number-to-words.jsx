@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // 0-19 spelled out directly; 20-90 handled with TENS + a hyphenated one.
 const ONES = [
@@ -204,7 +205,7 @@ export default function NumberToWords() {
   async function copy() {
     if (!output) return;
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     } catch {

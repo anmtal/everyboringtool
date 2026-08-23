@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 // Conservative, string/template/regex-aware minifier.
 // Strips // line comments and /* */ block comments, trims leading/trailing
@@ -266,7 +267,7 @@ export default function JsMinifier() {
   async function handleCopy() {
     if (!output) return;
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {

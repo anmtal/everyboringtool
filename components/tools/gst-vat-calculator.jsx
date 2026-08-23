@@ -1,21 +1,41 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { copyText } from "../../lib/copyText";
 
 const PRESETS = [5, 12, 18, 28];
 
-const usd = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+// The rate presets above are India's GST slabs, but every amount was formatted
+// as US dollars — so the tool showed "$1,180.00" for a GST calculation. GST/VAT
+// applies in dozens of currencies, so let the user pick one.
+const CURRENCIES = [
+  { code: "INR", label: "₹ Indian rupee" },
+  { code: "USD", label: "$ US dollar" },
+  { code: "EUR", label: "€ Euro" },
+  { code: "GBP", label: "£ British pound" },
+  { code: "CAD", label: "$ Canadian dollar" },
+  { code: "AUD", label: "$ Australian dollar" },
+  { code: "SGD", label: "$ Singapore dollar" },
+  { code: "AED", label: "د.إ UAE dirham" },
+  { code: "ZAR", label: "R South African rand" },
+];
+
+function moneyFmt(code) {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: code,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
 export default function GstVatCalculator() {
   const [amount, setAmount] = useState("");
   const [rate, setRate] = useState("18");
   const [mode, setMode] = useState("add");
   const [copied, setCopied] = useState(false);
+  const [currency, setCurrency] = useState("INR");
+  const usd = useMemo(() => moneyFmt(currency), [currency]);
 
   const parsed = useMemo(() => {
     const amt = parseFloat(amount);
@@ -75,7 +95,7 @@ export default function GstVatCalculator() {
           ];
     const text = lines.join("\n");
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {
@@ -94,6 +114,12 @@ export default function GstVatCalculator() {
     <div className="tool">
       <div className="tool-fields">
         <div className="tool-row">
+          <div className="tool-field">
+            <label className="tool-label" htmlFor="gst-currency">Currency</label>
+            <select id="gst-currency" className="tool-select" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              {CURRENCIES.map((c) => (<option key={c.code} value={c.code}>{c.label}</option>))}
+            </select>
+          </div>
           <div className="tool-field">
             <label className="tool-label" htmlFor="gst-amount">
               {mode === "add" ? "Amount (excl. tax)" : "Amount (incl. tax)"}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { copyText } from "../../lib/copyText";
 
 export default function JsonFormatter() {
   const [input, setInput] = useState("");
@@ -46,7 +47,7 @@ export default function JsonFormatter() {
   async function handleCopy() {
     if (!output) return;
     try {
-      await navigator.clipboard.writeText(output);
+      await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {
