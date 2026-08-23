@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { categories, SITE } from "../lib/tools";
+import { toolContent } from "../lib/toolContent";
 import ToolSearch from "../components/ToolSearch";
 
 export default function Home() {
@@ -20,24 +21,30 @@ export default function Home() {
       <section className="block">
         <h2 className="section-title">Browse by category</h2>
         <div className="grid">
-          {categories.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/${c.slug}`}
-              className={`card cat-card ${c.status === "soon" ? "is-soon" : ""}`}
-            >
-              <span className="cat-emoji" aria-hidden="true">{c.emoji}</span>
-              <span className="cat-name">{c.name}</span>
-              <span className="cat-desc">{c.description}</span>
-              <span className="cat-meta">
-                {c.status === "soon" ? (
-                  <span className="badge">Coming soon</span>
-                ) : (
-                  <span className="badge badge-live">{c.tools.length} tools</span>
-                )}
-              </span>
-            </Link>
-          ))}
+          {categories.map((c) => {
+            const builtCount = c.tools.filter((t) => toolContent[t.slug]).length;
+            const live = builtCount > 0;
+            return (
+              <Link
+                key={c.slug}
+                href={`/${c.slug}`}
+                className={`card cat-card ${live ? "" : "is-soon"}`}
+              >
+                <span className="cat-emoji" aria-hidden="true">{c.emoji}</span>
+                <span className="cat-name">{c.name}</span>
+                <span className="cat-desc">{c.description}</span>
+                <span className="cat-meta">
+                  {live ? (
+                    <span className="badge badge-live">
+                      {builtCount} tool{builtCount === 1 ? "" : "s"}
+                    </span>
+                  ) : (
+                    <span className="badge">Coming soon</span>
+                  )}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </section>
     </>

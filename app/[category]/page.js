@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { categories, getCategory } from "../../lib/tools";
+import { toolContent } from "../../lib/toolContent";
 
 export function generateStaticParams() {
   return categories.map((c) => ({ category: c.slug }));
@@ -38,13 +39,26 @@ export default function CategoryPage({ params }) {
         </div>
       ) : (
         <div className="grid">
-          {c.tools.map((t) => (
-            <Link key={t.slug} href={`/${c.slug}/${t.slug}`} className="card tool-card">
-              <span className="tool-name">{t.name}</span>
-              <span className="tool-desc">{t.description}</span>
-              <span className="cat-meta"><span className="badge">Coming soon</span></span>
-            </Link>
-          ))}
+          {c.tools.map((t) => {
+            const built = !!toolContent[t.slug];
+            return (
+              <Link
+                key={t.slug}
+                href={`/${c.slug}/${t.slug}`}
+                className={`card tool-card ${built ? "" : "is-soon"}`}
+              >
+                <span className="tool-name">{t.name}</span>
+                <span className="tool-desc">{t.description}</span>
+                <span className="cat-meta">
+                  {built ? (
+                    <span className="badge badge-live">Open</span>
+                  ) : (
+                    <span className="badge">Coming soon</span>
+                  )}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       )}
     </>
