@@ -306,7 +306,7 @@ export default function MemoryMatch() {
 
       <div style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
         <div
-          role="grid"
+          role="group"
           aria-label="Memory match board"
           style={{
             width: "100%",
@@ -322,7 +322,7 @@ export default function MemoryMatch() {
               <button
                 key={card.id}
                 type="button"
-                role="gridcell"
+                role="presentation"
                 aria-label={cardLabel(index)}
                 aria-pressed={faceUp}
                 disabled={status === "won" || matched.has(index)}

@@ -14,7 +14,7 @@ export default function StartingWithHub() {
     <>
       <nav className="breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Words Starting With</span></nav>
       <header className="page-head">
-        <h1>🔠 Words That Start With…</h1>
+        <h1><span aria-hidden="true">🔠</span> Words That Start With…</h1>
         <p>Pick a starting letter, or type the first few letters, to see every word that begins with them — sorted by length with Scrabble scores.</p>
       </header>
       <div className="block" style={{ marginTop: 0 }}><WordSearchBox basePath="/words-starting-with" placeholder="Enter a starting letter or letters" buttonLabel="Find words" allowWild={false} min={1} /></div>

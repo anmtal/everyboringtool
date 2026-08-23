@@ -14,7 +14,7 @@ export default function ContainingHub() {
     <>
       <nav className="breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Words Containing</span></nav>
       <header className="page-head">
-        <h1>🔍 Words Containing…</h1>
+        <h1><span aria-hidden="true">🔍</span> Words Containing…</h1>
         <p>Type a sequence of letters to see every word that contains it anywhere — handy for crosswords, Scrabble and Words With Friends.</p>
       </header>
       <div className="block" style={{ marginTop: 0 }}><WordSearchBox basePath="/words-containing" placeholder="Enter letters to find inside words" buttonLabel="Find words" allowWild={false} min={1} /></div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { PDFDocument } from "pdf-lib";
 import { ENCRYPTED_MSG, isEncryptedError } from "../../lib/pdfLoad";
 
@@ -9,6 +9,13 @@ export default function MergePdf() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
+
+  // Free the previous merged PDF when a new merge replaces it, and on unmount.
+  useEffect(() => {
+    return () => {
+      if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    };
+  }, [downloadUrl]);
   const inputRef = useRef(null);
   const idRef = useRef(0);
 

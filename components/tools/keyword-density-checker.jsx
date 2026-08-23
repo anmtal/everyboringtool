@@ -22,7 +22,10 @@ export default function KeywordDensityChecker() {
   const [text, setText] = useState("");
 
   const analysis = useMemo(() => {
-    const tokens = text.toLowerCase().match(/[a-z0-9]+(?:'[a-z0-9]+)?/g) || [];
+    // Unicode-aware. [a-z0-9] split every accented word ("café" -> "caf") and
+    // every curly-apostrophe word ("don’t" -> "don" + "t"), which corrupted both
+    // the keyword list and the total used as the density denominator.
+    const tokens = text.toLowerCase().match(/[\p{L}\p{N}]+(?:['’’][\p{L}\p{N}]+)*/gu) || [];
     const totalWords = tokens.length;
 
     const counts = new Map();

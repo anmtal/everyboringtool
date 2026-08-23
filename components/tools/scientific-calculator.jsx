@@ -402,7 +402,8 @@ export default function ScientificCalculator() {
         tabIndex={0}
         role="group"
         aria-label="Scientific calculator"
-        style={{ outline: "none" }}
+        /* No inline outline:none — this container is tabbable (it's the surface
+           that receives typed keys), so it must show the site focus ring. */
       >
         {/* Angle mode toggle */}
         <div className="tool-row" style={{ alignItems: "center", gap: "0.75rem" }}>

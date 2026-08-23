@@ -10,6 +10,9 @@ const usd = new Intl.NumberFormat("en-US", {
 });
 
 function pct(value) {
+  // ACOS is null when revenue is zero; Intl would render that as "0.0%",
+  // which reads as a real (and very good) result rather than "not applicable".
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
   return `${new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 1,
     maximumFractionDigits: 2,
@@ -35,7 +38,8 @@ export default function RoasCalculator() {
     if (rev === null || rev < 0 || sp === null || sp <= 0) return null;
 
     const roas = rev / sp;
-    const acos = (sp / rev) * 100;
+    // ACOS is undefined at zero revenue — dividing anyway printed "∞%".
+    const acos = rev > 0 ? (sp / rev) * 100 : null;
 
     const hasMargin = mg !== null && mg > 0;
     const grossProfit = hasMargin ? rev * (mg / 100) : null;

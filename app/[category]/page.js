@@ -61,7 +61,7 @@ export default function CategoryPage({ params }) {
       </nav>
 
       <header className="page-head">
-        <h1>{c.emoji} {c.name}</h1>
+        <h1><span aria-hidden="true">{c.emoji}</span> {c.name}</h1>
         <p>{c.description}</p>
       </header>
 

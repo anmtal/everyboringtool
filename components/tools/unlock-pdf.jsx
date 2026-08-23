@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { PDFDocument } from "pdf-lib";
 
 function fmtBytes(n) {
@@ -14,6 +14,15 @@ export default function UnlockPdf() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+
+  // Release the previous output blob. React runs this cleanup before the next
+  // effect, so re-running a tool frees the old result instead of pinning every
+  // output (video results can be hundreds of MB) for the life of the tab.
+  useEffect(() => {
+    return () => {
+      if (result && result.url) URL.revokeObjectURL(result.url);
+    };
+  }, [result]);
   const inputRef = useRef(null);
 
   function onPick(e) {

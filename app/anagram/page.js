@@ -21,7 +21,7 @@ export default function AnagramHub() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <nav className="breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Anagram Solver</span></nav>
       <header className="page-head">
-        <h1>🔀 Anagram Solver</h1>
+        <h1><span aria-hidden="true">🔀</span> Anagram Solver</h1>
         <p>Enter your letters and find every anagram — the words that use all of them. Free, for Scrabble, crosswords and word puzzles.</p>
       </header>
       <div className="block" style={{ marginTop: 0 }}><WordSearchBox basePath="/anagram" placeholder="Enter letters to find anagrams" buttonLabel="Solve" min={2} /></div>

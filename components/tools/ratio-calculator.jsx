@@ -84,7 +84,12 @@ export default function RatioCalculator() {
     }
     if (blanks.length === 0) {
       // All four filled — verify whether the proportion holds.
-      const holds = values.a * values.d === values.b * values.c;
+      // Compare cross-products with a relative tolerance. Exact === declared
+      // true proportions false: 0.1:0.3 = 0.2:0.6 gives 0.06 vs
+      // 0.06000000000000001 in binary floating point.
+      const lhs = values.a * values.d;
+      const rhs = values.b * values.c;
+      const holds = Math.abs(lhs - rhs) <= 1e-9 * Math.max(1, Math.abs(lhs), Math.abs(rhs));
       return { status: "full", holds, values };
     }
     if (blanks.length > 1) {

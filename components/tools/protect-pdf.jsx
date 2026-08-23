@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { encryptPDF } from "@pdfsmaller/pdf-encrypt";
 
 function fmtBytes(n) {
@@ -19,6 +19,21 @@ export default function ProtectPdf() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+
+  // Release the previous output blob. React runs this cleanup before the next
+  // effect, so re-running a tool frees the old result instead of pinning it.
+  useEffect(() => {
+    return () => {
+      if (result && result.url) URL.revokeObjectURL(result.url);
+    };
+  }, [result]);
+
+  // Any change to the password or permissions invalidates an existing download.
+  // Leaving it on screen let people hand out a PDF locked with the password they
+  // had just replaced, believing it used the new one.
+  useEffect(() => {
+    setResult(null);
+  }, [password, ownerPassword, restrict, perms]);
   const inputRef = useRef(null);
 
   function onPick(e) {

@@ -22,7 +22,7 @@ export default function CrosswordHub() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <nav className="breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Crossword Solver</span></nav>
       <header className="page-head">
-        <h1>✏️ Crossword Solver</h1>
+        <h1><span aria-hidden="true">✏️</span> Crossword Solver</h1>
         <p>Enter the letters you know and an underscore ( _ ) for each blank — like <strong>c_t</strong> — to find every word that fits.</p>
       </header>
       <div className="block" style={{ marginTop: 0 }}><WordSearchBox basePath="/crossword-solver" placeholder="Enter a pattern, e.g. c_t" buttonLabel="Solve" pattern /></div>

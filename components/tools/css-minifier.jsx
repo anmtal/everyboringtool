@@ -62,8 +62,12 @@ function tokenize(css) {
 // listed punctuation, and drop redundant semicolons.
 function minifyChunk(text) {
   let out = text.replace(/\s+/g, " ");
-  // Remove spaces around { } : ; ,
-  out = out.replace(/\s*([{}:;,])\s*/g, "$1");
+  // Remove spaces around { } ; ,
+  out = out.replace(/\s*([{};,])\s*/g, "$1");
+  // Colons are handled separately: only the space AFTER one may be removed.
+  // Stripping the space before it rewrote descendant selectors — ".menu :hover"
+  // (any hovered descendant) silently became ".menu:hover" (the menu itself).
+  out = out.replace(/:\s+/g, ":");
   // Collapse duplicate semicolons and drop the last one before a closing brace.
   out = out.replace(/;{2,}/g, ";");
   out = out.replace(/;}/g, "}");

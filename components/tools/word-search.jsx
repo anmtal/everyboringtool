@@ -321,7 +321,7 @@ export default function WordSearch() {
 
       {ready && (
         <div
-          role="grid"
+          role="group"
           aria-label="Word search grid"
           style={{
             display: "grid",
@@ -346,7 +346,7 @@ export default function WordSearch() {
               return (
                 <div
                   key={`${r}-${c}`}
-                  role="gridcell"
+                  role="presentation"
                   aria-label={ch}
                   style={{
                     aspectRatio: "1 / 1",

@@ -57,6 +57,25 @@ function canToFoundation(card, pile) {
 
 const CARD_W = 44, CARD_H = 62, OVERLAP = 22;
 
+const SUIT_NAMES = { "♠": "spades", "♥": "hearts", "♦": "diamonds", "♣": "clubs" };
+const RANK_NAMES = ["", "ace", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king"];
+// Screen readers announce "♠" inconsistently (often as nothing), so cards need a
+// spoken name rather than the glyph.
+function describe(card) {
+  return `${RANK_NAMES[card.rank]} of ${SUIT_NAMES[card.suit]}`;
+}
+// The whole board was onClick-only divs with no tabIndex and no key handling —
+// completely unusable without a mouse.
+function keyActivate(fn) {
+  return (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      fn(e);
+    }
+  };
+}
+
 export default function Solitaire() {
   const [game, setGame] = useState(null);
   const [sel, setSel] = useState(null); // {type:'waste'} | {type:'tableau', col, idx}
@@ -176,11 +195,23 @@ export default function Solitaire() {
         <div style={{ minWidth: 7 * (CARD_W + 6) }}>
           {/* top row: stock, waste, foundations */}
           <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-            <div onClick={draw} style={game.stock.length ? backStyle : slotStyle} title="Draw" role="button" aria-label="Draw from stock" />
+            <div
+              onClick={draw}
+              onKeyDown={keyActivate(draw)}
+              tabIndex={0}
+              style={game.stock.length ? backStyle : slotStyle}
+              title="Draw"
+              role="button"
+              aria-label={`Draw from stock, ${game.stock.length} cards left`}
+            />
             <div
               onClick={() => wasteTop && setSel(selMatch("waste") ? null : { type: "waste" })}
+              onKeyDown={keyActivate(() => wasteTop && setSel(selMatch("waste") ? null : { type: "waste" }))}
+              tabIndex={wasteTop ? 0 : -1}
+              role="button"
+              aria-pressed={!!selMatch("waste")}
               style={wasteTop ? cardStyle(wasteTop, selMatch("waste")) : slotStyle}
-              aria-label="Waste pile"
+              aria-label={wasteTop ? `Waste pile, ${describe(wasteTop)}` : "Waste pile, empty"}
             >
               {wasteTop && face(wasteTop)}
             </div>
@@ -188,8 +219,16 @@ export default function Solitaire() {
             {game.foundations.map((f, i) => {
               const top = f[f.length - 1];
               return (
-                <div key={i} onClick={() => tryMove({ type: "foundation", idx: i })} style={top ? cardStyle(top, false) : slotStyle} aria-label={`Foundation ${i + 1}`}>
-                  {top ? face(top) : <span style={{ color: "rgba(128,128,128,0.7)", fontSize: 18, display: "grid", placeItems: "center", height: "100%" }}>A</span>}
+                <div
+                  key={i}
+                  onClick={() => tryMove({ type: "foundation", idx: i })}
+                  onKeyDown={keyActivate(() => tryMove({ type: "foundation", idx: i }))}
+                  tabIndex={0}
+                  role="button"
+                  style={top ? cardStyle(top, false) : slotStyle}
+                  aria-label={`Foundation ${i + 1}, ${top ? describe(top) : "empty"}`}
+                >
+                  {top ? face(top) : <span style={{ color: "rgba(128,128,128,0.7)", fontSize: 18, display: "grid", placeItems: "center", height: "100%" }} aria-hidden="true">A</span>}
                 </div>
               );
             })}
@@ -201,6 +240,10 @@ export default function Solitaire() {
               <div
                 key={ci}
                 onClick={() => { if (col.length === 0 && sel) tryMove({ type: "tableau", idx: ci }); }}
+                onKeyDown={col.length === 0 ? keyActivate(() => { if (sel) tryMove({ type: "tableau", idx: ci }); }) : undefined}
+                tabIndex={col.length === 0 ? 0 : -1}
+                role={col.length === 0 ? "button" : undefined}
+                aria-label={col.length === 0 ? `Column ${ci + 1}, empty` : undefined}
                 /* Cards below the first are absolutely positioned and contribute no
                    height, so the column must reserve it explicitly — otherwise the
                    board collapses to one card and the stack is clipped. */
@@ -225,8 +268,17 @@ export default function Solitaire() {
                     if (validRun(col.slice(i))) setSel(selected ? null : { type: "tableau", col: ci, idx: i });
                   };
                   return (
-                    <div key={i} onClick={onClick} style={{ position: i === 0 ? "relative" : "absolute", top: i * OVERLAP, left: 0 }}>
-                      {card.up ? <div style={cardStyle(card, selected)}>{face(card)}</div> : <div style={backStyle} />}
+                    <div
+                      key={i}
+                      onClick={onClick}
+                      onKeyDown={card.up ? keyActivate(onClick) : undefined}
+                      tabIndex={card.up ? 0 : -1}
+                      role={card.up ? "button" : undefined}
+                      aria-pressed={card.up ? selected : undefined}
+                      aria-label={card.up ? `Column ${ci + 1}, ${describe(card)}` : undefined}
+                      style={{ position: i === 0 ? "relative" : "absolute", top: i * OVERLAP, left: 0 }}
+                    >
+                      {card.up ? <div style={cardStyle(card, selected)}>{face(card)}</div> : <div style={backStyle} aria-hidden="true" />}
                     </div>
                   );
                 })}
@@ -237,7 +289,7 @@ export default function Solitaire() {
       </div>
 
       <p className="tool-note">
-        Klondike solitaire. Click the deck to draw. Click a face-up card to pick it up (it grabs the run below it), then
+        Klondike solitaire. Click or press Enter on the deck to draw. Click a face-up card to pick it up (it grabs the run below it), then
         click where it goes — a column, or a foundation (top-right, build each suit up from Ace to King). Build columns
         down in alternating colours. Free, and runs entirely in your browser.
       </p>

@@ -28,7 +28,7 @@ export default function Home() {
       </section>
 
       <section className="block">
-        <h2 className="section-title">🔤 Word Games</h2>
+        <h2 className="section-title"><span aria-hidden="true">🔤</span> Word Games</h2>
         <div className="grid">
           {[
             { href: "/unscramble", emoji: "🔤", name: "Word Unscrambler", desc: "Unscramble letters into words for Scrabble & Words With Friends." },

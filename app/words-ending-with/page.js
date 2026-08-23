@@ -14,7 +14,7 @@ export default function EndingWithHub() {
     <>
       <nav className="breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Words Ending With</span></nav>
       <header className="page-head">
-        <h1>🔡 Words That End With…</h1>
+        <h1><span aria-hidden="true">🔡</span> Words That End With…</h1>
         <p>Type an ending — like <strong>ing</strong>, <strong>ed</strong> or <strong>tion</strong> — to see every word that ends with it, sorted by length with Scrabble scores.</p>
       </header>
       <div className="block" style={{ marginTop: 0 }}><WordSearchBox basePath="/words-ending-with" placeholder="Enter an ending (e.g. ing)" buttonLabel="Find words" allowWild={false} min={1} /></div>

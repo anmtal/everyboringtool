@@ -81,8 +81,15 @@ export default function PdfToJpg() {
         className="dropzone"
         role="button"
         tabIndex={0}
-        onClick={() => inputRef.current?.click()}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), inputRef.current?.click())}
+        /* Locked while rendering: starting a second file mid-run called
+           revokeAll() on the first run's URLs, leaving broken thumbnails and a
+           busy flag that no longer matched what was actually happening. */
+        aria-disabled={busy}
+        onClick={() => !busy && inputRef.current?.click()}
+        onKeyDown={(e) =>
+          (e.key === "Enter" || e.key === " ") && !busy && (e.preventDefault(), inputRef.current?.click())
+        }
+        style={busy ? { opacity: 0.6, cursor: "progress" } : undefined}
       >
         <input ref={inputRef} type="file" accept="application/pdf" onChange={onFile} hidden />
         <p className="dropzone-title">{busy ? progress || "Working…" : "Choose a PDF file"}</p>

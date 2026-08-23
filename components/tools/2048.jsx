@@ -309,7 +309,7 @@ export default function Game2048() {
       >
         <div
           ref={boardRef}
-          role="grid"
+          role="group"
           aria-label="2048 board"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
@@ -331,7 +331,7 @@ export default function Game2048() {
             return (
               <div
                 key={idx}
-                role="gridcell"
+                role="presentation"
                 aria-label={value === 0 ? "empty" : String(value)}
                 style={{
                   display: "flex",

@@ -40,8 +40,10 @@ function minifyHtml(html) {
   // 3. Collapse every run of whitespace down to a single space.
   masked = masked.replace(/[ \t\r\n\f\v]+/g, " ");
 
-  // 4. Drop whitespace that sits directly between two tags.
-  masked = masked.replace(/>\s+</g, "><");
+  // 4. (Removed.) Deleting whitespace between tags changes how the page reads:
+  // between inline elements that space is rendering-significant, so
+  // "<span>one</span> <span>two</span>" became "onetwo". Step 3 has already
+  // collapsed each run to a single space, which is the safe minimum.
 
   // 5. Trim the document edges.
   masked = masked.trim();

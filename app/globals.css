@@ -221,7 +221,10 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 
 /* breadcrumb */
 .breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 20px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.breadcrumb a { transition: color 120ms ease-out; }
+/* Breadcrumb links were pixel-identical to the non-link current-page text —
+   same colour, weight and (absent) decoration — so nothing marked them as
+   clickable. Colour alone would not be sufficient anyway. */
+.breadcrumb a { transition: color 120ms ease-out; text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
 .breadcrumb a:hover { color: var(--text); }
 .breadcrumb .sep { color: var(--faint); }
 

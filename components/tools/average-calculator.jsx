@@ -51,7 +51,10 @@ function computeStats(numbers) {
     if (f > maxFreq) maxFreq = f;
   }
   let mode = null;
-  if (maxFreq > 1 && freq.size < count) {
+  const tieCount = [...freq.values()].filter((f) => f === maxFreq).length;
+  // If every distinct value occurs equally often there is no mode — listing all
+  // of them (e.g. "1, 2" for 1,1,2,2) is not what "most frequent" means.
+  if (maxFreq > 1 && freq.size < count && tieCount < freq.size) {
     const modes = [];
     for (const [value, f] of freq.entries()) {
       if (f === maxFreq) modes.push(value);

@@ -29,7 +29,7 @@ export default function UnscrambleHub() {
       </nav>
 
       <header className="page-head">
-        <h1>🔤 Word Unscrambler</h1>
+        <h1><span aria-hidden="true">🔤</span> Word Unscrambler</h1>
         <p>Enter your letters and instantly find every word you can make — sorted by length, with Scrabble scores. Free, and great for anagrams, Scrabble, Words With Friends and crosswords.</p>
       </header>
 
