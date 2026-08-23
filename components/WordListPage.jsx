@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { scrabbleScore, groupByLength } from "../lib/wordEngine";
+import { scrabbleScore, groupByLength, wordStats } from "../lib/wordEngine";
 
 const MAX_RENDER = 600;
 
 export default function WordListPage({ crumbs = [], h1, lead, box, words = [], linkBase = "/unscramble", faq = [], related = null, note = null }) {
   const groups = groupByLength(words.slice(0, MAX_RENDER));
+  const stats = wordStats(words);
   const faqLd = {
     "@context": "https://schema.org", "@type": "FAQPage",
     mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
@@ -26,6 +27,21 @@ export default function WordListPage({ crumbs = [], h1, lead, box, words = [], l
 
       {box && <div className="block" style={{ marginTop: 0 }}>{box}</div>}
       {note}
+
+      {stats && (
+        <>
+          <p className="tool-note" style={{ marginTop: 6 }}>
+            Longest: <strong>{stats.longest}</strong> ({stats.longestLen} letters) · highest-scoring:{" "}
+            <strong>{stats.best}</strong> ({stats.bestScore} pts){stats.two > 0 ? <> · {stats.two} two-letter word{stats.two === 1 ? "" : "s"} for tight spots</> : null}.
+          </p>
+          <div className="tool-stat-grid" role="status" aria-live="polite">
+            <div className="tool-stat"><div className="tool-stat-num">{stats.total}</div><div className="tool-stat-label">words</div></div>
+            <div className="tool-stat"><div className="tool-stat-num">{stats.longestLen}</div><div className="tool-stat-label">longest</div></div>
+            <div className="tool-stat"><div className="tool-stat-num">{stats.bestScore}</div><div className="tool-stat-label">top Scrabble</div></div>
+            <div className="tool-stat"><div className="tool-stat-num">{stats.two}</div><div className="tool-stat-label">2-letter</div></div>
+          </div>
+        </>
+      )}
 
       {groups.map(({ len, words: ws }) => (
         <section key={len} style={{ marginTop: 18 }}>

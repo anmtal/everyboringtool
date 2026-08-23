@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { anagrams, cleanLetters } from "../../../lib/wordEngine";
+import { anagrams, cleanLetters, canonicalLettersForm } from "../../../lib/wordEngine";
 import { POPULAR } from "../../../lib/wordPopular";
 import WordSearchBox from "../../../components/WordSearchBox";
 import WordListPage from "../../../components/WordListPage";
@@ -22,7 +22,7 @@ export function generateMetadata({ params }) {
     title: `Anagrams of ${up} — ${count} words`,
     description: `All ${count} anagrams of ${up} — words that use every letter. Free anagram solver for Scrabble, crosswords and word games.`,
     robots: wordRobots(count),
-    alternates: { canonical: `/anagram/${letters}` },
+    alternates: { canonical: `/anagram/${canonicalLettersForm(letters)}` },
   };
 }
 

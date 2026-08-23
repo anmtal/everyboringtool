@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { unscramble, scrabbleScore, groupByLength, cleanLetters } from "../../../lib/wordEngine";
+import { unscramble, scrabbleScore, groupByLength, cleanLetters, wordStats, canonicalLettersForm } from "../../../lib/wordEngine";
 import { POPULAR } from "../../../lib/wordPopular";
 import UnscrambleBox from "../../../components/UnscrambleBox";
 import { wordRobots } from "../../../lib/wordSeo";
@@ -21,7 +21,7 @@ export function generateMetadata({ params }) {
     title: `Unscramble ${up} — ${count} words made from these letters`,
     description: `All ${count} words you can make from the letters ${up}, grouped by length with Scrabble scores. Free word unscrambler and anagram solver — no sign-up.`,
     robots: wordRobots(count),
-    alternates: { canonical: `/unscramble/${letters}` },
+    alternates: { canonical: `/unscramble/${canonicalLettersForm(letters)}` },
   };
 }
 
@@ -35,6 +35,7 @@ export default function UnscrambleLettersPage({ params }) {
   const up = letters.toUpperCase();
   const groups = groupByLength(words.slice(0, MAX_RENDER));
   const best = words[0];
+  const stats = wordStats(words);
 
   const faq = [
     { q: `How many words can you make from ${up}?`, a: `You can make ${words.length} valid words from the letters ${up}, ranging from 2 letters up to ${best ? best.length : 0} letters long.` },
@@ -65,11 +66,19 @@ export default function UnscrambleLettersPage({ params }) {
         <UnscrambleBox initial={letters} />
       </div>
 
-      {best && (
-        <p className="tool-note" style={{ marginTop: 4 }}>
-          Longest word: <strong>{best}</strong> ({best.length} letters) · top Scrabble score:{" "}
-          <strong>{Math.max(...words.slice(0, 50).map(scrabbleScore))}</strong> points.
-        </p>
+      {stats && (
+        <>
+          <p className="tool-note" style={{ marginTop: 6 }}>
+            Longest word: <strong>{stats.longest}</strong> ({stats.longestLen} letters) · highest-scoring:{" "}
+            <strong>{stats.best}</strong> ({stats.bestScore} points){stats.two > 0 ? <> · {stats.two} two-letter word{stats.two === 1 ? "" : "s"}</> : null}.
+          </p>
+          <div className="tool-stat-grid" role="status" aria-live="polite">
+            <div className="tool-stat"><div className="tool-stat-num">{stats.total}</div><div className="tool-stat-label">words</div></div>
+            <div className="tool-stat"><div className="tool-stat-num">{stats.longestLen}</div><div className="tool-stat-label">longest</div></div>
+            <div className="tool-stat"><div className="tool-stat-num">{stats.bestScore}</div><div className="tool-stat-label">top Scrabble</div></div>
+            <div className="tool-stat"><div className="tool-stat-num">{stats.two}</div><div className="tool-stat-label">2-letter</div></div>
+          </div>
+        </>
       )}
 
       {groups.map(({ len, words: ws }) => (
@@ -89,15 +98,22 @@ export default function UnscrambleLettersPage({ params }) {
         <p className="tool-note" style={{ marginTop: 14 }}>Showing the first {MAX_RENDER} of {words.length} words.</p>
       )}
 
-      <section className="block">
-        <h2 className="section-title">About this word unscrambler</h2>
-        <p>
-          This free word unscrambler takes the jumbled letters <strong>{up}</strong> and finds every valid word you can
-          spell with them — sorted from longest to shortest, each with its Scrabble score. It's built for Scrabble,
-          Words With Friends, anagram puzzles and crosswords. Tap any word to see what <em>it</em> can unscramble into.
-          Everything is free, with no sign-up.
-        </p>
-      </section>
+      {stats && (
+        <section className="block">
+          <h2 className="section-title">Words from {up}, at a glance</h2>
+          <p>
+            The letters <strong>{up}</strong> unscramble into <strong>{stats.total}</strong>{" "}
+            valid word{stats.total === 1 ? "" : "s"}, from {best ? Math.min(...words.map((w) => w.length)) : 2} up to{" "}
+            {stats.longestLen} letters long. The longest is <strong>{stats.longest}</strong>, and the highest-scoring
+            play is <strong>{stats.best}</strong> at <strong>{stats.bestScore}</strong> points in Scrabble.
+            {stats.two > 0 ? (
+              <> There {stats.two === 1 ? "is" : "are"} also <strong>{stats.two}</strong> two-letter word
+                {stats.two === 1 ? "" : "s"} — the kind that squeeze into a crowded board.</>
+            ) : null}{" "}
+            Tap any word above to see what <em>it</em> unscrambles into. It all runs free, in your browser, with no sign-up.
+          </p>
+        </section>
+      )}
 
       <section className="block">
         <h2 className="section-title">Frequently asked questions</h2>
