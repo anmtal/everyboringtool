@@ -14,6 +14,10 @@ const PRESETS = [
   { name: "https://", prefix: "https://" },
 ];
 
+// Schemes a QR code may legitimately encode. Anything else (javascript:, data:,
+// file:, vbscript:) is rejected.
+const SAFE_SCHEMES = new Set(["http:", "https:", "mailto:", "tel:", "sms:"]);
+
 // Normalize a user-entered URL. If there is no scheme, assume https://.
 // Returns "" if there is nothing usable.
 function normalizeUrl(raw) {
@@ -34,8 +38,10 @@ function isValidUrl(normalized) {
     if (u.protocol === "http:" || u.protocol === "https:") {
       return /\./.test(u.hostname) && u.hostname.length > 2;
     }
-    // Allow other schemes (mailto, tel) to pass through as-is.
-    return true;
+    // Allowlist, not passthrough. Accepting any scheme meant javascript: and
+    // data: URLs were rendered as live anchors and encoded into a QR code that
+    // could then be printed and handed to someone.
+    return SAFE_SCHEMES.has(u.protocol);
   } catch {
     return false;
   }

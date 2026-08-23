@@ -243,7 +243,11 @@ export default function SchemaGenerator() {
   const jsonBody = useMemo(() => {
     if (!schema) return "";
     try {
-      return JSON.stringify(schema, null, 2);
+      // Escape "<" as <. JSON-LD is embedded inside a <script> block, so a
+      // value containing "</script>" would otherwise close the tag early — and
+      // the user pastes this snippet onto their own site, making it their XSS.
+      // < is valid JSON and parsers read it back as a plain "<".
+      return JSON.stringify(schema, null, 2).replace(/</g, "\\u003c");
     } catch (e) {
       return "";
     }
