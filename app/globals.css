@@ -86,10 +86,8 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .catnav { border-top: 1px solid var(--border); }
 .catnav-wrap { position: relative; }
 .catnav-row {
-  display: flex; gap: 2px; padding: 5px 0;
-  overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+  display: flex; flex-wrap: wrap; gap: 2px; padding: 5px 0;
 }
-.catnav-row::-webkit-scrollbar { display: none; }
 .catnav-btn {
   display: inline-flex; align-items: center; gap: 6px; min-height: 38px; flex: none;
   padding: 7px 11px; background: none; border: none; color: var(--text);

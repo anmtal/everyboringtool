@@ -1,10 +1,8 @@
 import Link from "next/link";
-import { categories, allTools, SITE } from "../lib/tools";
+import { categories, SITE } from "../lib/tools";
 import ToolSearch from "../components/ToolSearch";
 
 export default function Home() {
-  const popular = allTools().filter((t) => t.popular).slice(0, 6);
-
   return (
     <>
       <section className="hero">
@@ -18,20 +16,6 @@ export default function Home() {
           <li>Files never leave your device</li>
         </ul>
       </section>
-
-      {popular.length > 0 && (
-        <section className="block">
-          <h2 className="section-title">Popular tools</h2>
-          <div className="chips">
-            {popular.map((t) => (
-              <Link key={t.href} href={t.href} className="chip">
-                <span aria-hidden="true">{t.emoji}</span>
-                {t.name}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       <section className="block">
         <h2 className="section-title">Browse by category</h2>
