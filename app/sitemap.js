@@ -1,4 +1,5 @@
 import { categories } from "../lib/tools";
+import { toolContent } from "../lib/toolContent";
 
 export default function sitemap() {
   const base = "https://everyboringtool.com";
@@ -6,7 +7,8 @@ export default function sitemap() {
   for (const c of categories) {
     urls.push({ url: `${base}/${c.slug}` });
     for (const t of c.tools) {
-      if (t.built) urls.push({ url: `${base}/${c.slug}/${t.slug}` });
+      // Only list tools that are actually built.
+      if (toolContent[t.slug]) urls.push({ url: `${base}/${c.slug}/${t.slug}` });
     }
   }
   return urls;

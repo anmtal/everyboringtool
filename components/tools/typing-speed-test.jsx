@@ -1,0 +1,241 @@
+"use client";
+
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+
+const SAMPLES = [
+  "The quick brown fox jumps over the lazy dog while the sun rises slowly above the quiet hills. A gentle breeze moves through the tall grass as birds begin their morning songs across the valley.",
+  "Typing well is less about speed and more about rhythm. When your fingers learn the keys, your mind is free to focus on the words themselves. Practice a little each day and your pace will climb without effort.",
+  "Good writing starts with a clear idea and a simple sentence. Add detail slowly, cut the words you do not need, and read it aloud to hear the flow. The best pages feel easy because someone worked hard on them.",
+  "A small river winds between the old stone houses of the village. Children run along the bank, laughing at the ducks, while the baker opens his window and the smell of fresh bread drifts into the narrow street.",
+  "Every long journey begins with a single quiet step. You do not need to see the whole road ahead, only the next few meters in front of you. Keep moving, stay patient, and trust that the path will slowly reveal itself.",
+];
+
+function pickIndex(exclude) {
+  if (SAMPLES.length <= 1) return 0;
+  let i = Math.floor(Math.random() * SAMPLES.length);
+  while (i === exclude) {
+    i = Math.floor(Math.random() * SAMPLES.length);
+  }
+  return i;
+}
+
+export default function TypingSpeedTest() {
+  const [sampleIndex, setSampleIndex] = useState(0);
+  const [typed, setTyped] = useState("");
+  const [startTime, setStartTime] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+  const [now, setNow] = useState(0);
+  const textareaRef = useRef(null);
+
+  const sample = SAMPLES[sampleIndex] || "";
+  const finished = endTime !== null;
+
+  // Pick a random paragraph once, on the client, to avoid SSR hydration
+  // mismatches from Math.random() running during render.
+  useEffect(() => {
+    setSampleIndex(pickIndex(0));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Tick once per second only while the test is running; clean up on unmount,
+  // finish, or reset.
+  useEffect(() => {
+    if (startTime === null || finished) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [startTime, finished]);
+
+  const handleChange = useCallback(
+    (e) => {
+      if (finished) return;
+
+      let value = e.target.value;
+      if (value.length > sample.length) {
+        value = value.slice(0, sample.length);
+      }
+
+      // Start the clock on the very first typed character.
+      if (startTime === null && value.length > 0) {
+        const t = Date.now();
+        setStartTime(t);
+        setNow(t);
+      }
+
+      setTyped(value);
+
+      // Freeze the timer as soon as the typed length matches the sample.
+      if (sample.length > 0 && value.length === sample.length) {
+        setEndTime(Date.now());
+      }
+    },
+    [finished, sample.length, startTime]
+  );
+
+  const restart = useCallback(() => {
+    setSampleIndex((prev) => pickIndex(prev));
+    setTyped("");
+    setStartTime(null);
+    setEndTime(null);
+    setNow(0);
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        if (textareaRef.current) textareaRef.current.focus();
+      });
+    }
+  }, []);
+
+  const stats = useMemo(() => {
+    const typedChars = typed.length;
+    let correctChars = 0;
+    for (let i = 0; i < typedChars; i++) {
+      if (typed[i] === sample[i]) correctChars++;
+    }
+
+    const elapsedMs =
+      startTime === null ? 0 : (finished ? endTime : now) - startTime;
+    const safeMs = Number.isFinite(elapsedMs) && elapsedMs > 0 ? elapsedMs : 0;
+    const minutes = safeMs / 60000;
+
+    const wpm = minutes > 0 ? Math.round(correctChars / 5 / minutes) : 0;
+    const accuracy = typedChars > 0 ? (correctChars / typedChars) * 100 : 0;
+    const seconds = safeMs / 1000;
+
+    return { typedChars, correctChars, wpm, accuracy, seconds };
+  }, [typed, sample, startTime, endTime, now, finished]);
+
+  // Per-character highlighting. rgba colors keep it readable in light + dark.
+  const renderedSample = useMemo(() => {
+    const chars = sample.split("");
+    return chars.map((char, i) => {
+      const style = { borderRadius: "2px", padding: "0 0.5px" };
+
+      if (i < typed.length) {
+        const correct = typed[i] === char;
+        style.backgroundColor = correct
+          ? "rgba(34, 197, 94, 0.22)"
+          : "rgba(239, 68, 68, 0.30)";
+        style.color = correct ? "inherit" : "rgba(239, 68, 68, 1)";
+      } else if (i === typed.length && !finished) {
+        style.backgroundColor = "rgba(127, 127, 127, 0.16)";
+        style.borderBottom = "2px solid currentColor";
+      } else {
+        style.opacity = 0.6;
+      }
+
+      return (
+        <span key={i} style={style}>
+          {char}
+        </span>
+      );
+    });
+  }, [sample, typed, finished]);
+
+  const focusInput = useCallback(() => {
+    if (textareaRef.current) textareaRef.current.focus();
+  }, []);
+
+  const secondsDisplay = finished
+    ? stats.seconds.toFixed(1)
+    : String(Math.floor(stats.seconds));
+
+  return (
+    <div className="tool">
+      <div className="tool-fields">
+        <div className="tool-field">
+          <span className="tool-label">Sample text</span>
+          <div
+            className="tool-output"
+            onClick={focusInput}
+            style={{
+              fontSize: "16px",
+              lineHeight: 1.75,
+              padding: "16px 18px",
+              background: "var(--surface, rgba(127,127,127,0.06))",
+              border: "1px solid var(--border, rgba(127,127,127,0.3))",
+              borderRadius: "8px",
+              wordBreak: "normal",
+              overflowWrap: "break-word",
+              cursor: "text",
+            }}
+          >
+            {renderedSample}
+          </div>
+          <p className="tool-note">
+            Click the passage or the box below and start typing. The timer
+            starts on your first keystroke.
+          </p>
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label" htmlFor="tst-input">
+            Type here
+          </label>
+          <textarea
+            id="tst-input"
+            ref={textareaRef}
+            className="tool-textarea"
+            value={typed}
+            onChange={handleChange}
+            readOnly={finished}
+            spellCheck={false}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            rows={4}
+            placeholder="Start typing the passage above…"
+            style={{ minHeight: "110px" }}
+          />
+        </div>
+      </div>
+
+      <div className="tool-stat-grid">
+        <div className="tool-stat">
+          <div className="tool-stat-num">{stats.wpm}</div>
+          <div className="tool-stat-label">Words per minute</div>
+        </div>
+        <div className="tool-stat">
+          <div className="tool-stat-num">{Math.round(stats.accuracy)}%</div>
+          <div className="tool-stat-label">Accuracy</div>
+        </div>
+        <div className="tool-stat">
+          <div className="tool-stat-num">{secondsDisplay}s</div>
+          <div className="tool-stat-label">Time</div>
+        </div>
+        <div className="tool-stat">
+          <div className="tool-stat-num">
+            {stats.typedChars}/{sample.length}
+          </div>
+          <div className="tool-stat-label">Characters</div>
+        </div>
+      </div>
+
+      {finished && (
+        <div className="tool-result">
+          <p className="tool-result-label">Result</p>
+          <div className="tool-result-value">{stats.wpm} WPM</div>
+          <p className="tool-note">
+            You typed {stats.correctChars} correct characters in{" "}
+            {stats.seconds.toFixed(1)} seconds at{" "}
+            {Math.round(stats.accuracy)}% accuracy. Press Restart for a new
+            passage.
+          </p>
+        </div>
+      )}
+
+      <div className="tool-actions">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={restart}
+        >
+          {finished ? "Try another passage" : "Restart"}
+        </button>
+      </div>
+
+      <p className="tool-note">
+        WPM counts correct characters divided by five, over the elapsed minutes.
+        Everything runs in your browser — nothing you type is uploaded or saved.
+      </p>
+    </div>
+  );
+}
