@@ -41,6 +41,9 @@ export default function PipeSizeConverter() {
   const [mm, setMm] = useState("60");
 
   const isMeasure = sys === "odMm";
+  const opts = isMeasure ? [] : ROWS.map((r) => r[sys]);
+  // Coerce a carried-over `pick` to a valid option for the current system.
+  const pickSafe = opts.includes(pick) ? pick : opts[0];
   const row = useMemo(() => {
     if (isMeasure) {
       const v = parseFloat(mm);
@@ -49,10 +52,8 @@ export default function PipeSizeConverter() {
       for (const r of ROWS) if (Math.abs(r.odMm - v) < Math.abs(best.odMm - v)) best = r;
       return best;
     }
-    return ROWS.find((r) => r[sys] === pick) || null;
-  }, [sys, pick, mm, isMeasure]);
-
-  const opts = isMeasure ? [] : ROWS.map((r) => r[sys]);
+    return ROWS.find((r) => r[sys] === pickSafe) || null;
+  }, [sys, pickSafe, mm, isMeasure]);
 
   return (
     <div className="tool">
@@ -68,7 +69,7 @@ export default function PipeSizeConverter() {
           {isMeasure ? (
             <input id="pp-val" className="tool-input" type="number" step="0.1" min="0" value={mm} onChange={(e) => setMm(e.target.value)} />
           ) : (
-            <select id="pp-val" className="tool-input" value={pick} onChange={(e) => setPick(e.target.value)}>
+            <select id="pp-val" className="tool-input" value={pickSafe} onChange={(e) => setPick(e.target.value)}>
               {opts.map((o) => <option key={o} value={o}>{sys === "nps" ? `NPS ${o}` : `DN ${o}`}</option>)}
             </select>
           )}

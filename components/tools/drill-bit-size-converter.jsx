@@ -64,6 +64,11 @@ export default function DrillBitSizeConverter() {
   const [pick, setPick] = useState("1/4");
   const [measure, setMeasure] = useState("6");
 
+  const isMeasure = sys === "mm" || sys === "inch";
+  const options = sys === "frac" ? FRACS.map((r) => r.frac) : sys === "num" ? NUM_ROWS.map((r) => r.num) : sys === "letter" ? LETTER_ROWS.map((r) => r.letter) : [];
+  // Coerce a carried-over `pick` to a valid option for the current system.
+  const pickSafe = options.includes(pick) ? pick : options[0];
+
   const { row, exact, entered } = useMemo(() => {
     if (sys === "mm" || sys === "inch") {
       const val = parseFloat(measure);
@@ -73,12 +78,9 @@ export default function DrillBitSizeConverter() {
       for (const r of TABLE) if (Math.abs(r.dec - dec) < Math.abs(best.dec - dec)) best = r;
       return { row: best, exact: Math.abs(best.dec - dec) < 0.0005, entered: { dec, val, unit: sys === "mm" ? "mm" : "in" } };
     }
-    const r = TABLE.find((x) => x[sys] === pick) || null;
+    const r = TABLE.find((x) => x[sys] === pickSafe) || null;
     return { row: r, exact: true, entered: null };
-  }, [sys, pick, measure]);
-
-  const isMeasure = sys === "mm" || sys === "inch";
-  const options = sys === "frac" ? FRACS.map((r) => r.frac) : sys === "num" ? NUM_ROWS.map((r) => r.num) : sys === "letter" ? LETTER_ROWS.map((r) => r.letter) : [];
+  }, [sys, pickSafe, measure]);
 
   return (
     <div className="tool">
@@ -94,7 +96,7 @@ export default function DrillBitSizeConverter() {
           {isMeasure ? (
             <input id="db-val" className="tool-input" type="number" step="0.01" min="0" value={measure} onChange={(e) => setMeasure(e.target.value)} placeholder={sys === "mm" ? "e.g. 6.5" : "e.g. 0.25"} />
           ) : (
-            <select id="db-val" className="tool-input" value={pick} onChange={(e) => setPick(e.target.value)}>
+            <select id="db-val" className="tool-input" value={pickSafe} onChange={(e) => setPick(e.target.value)}>
               {options.map((o) => <option key={o} value={o}>{o}{sys === "frac" ? "″" : ""}</option>)}
             </select>
           )}

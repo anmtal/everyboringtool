@@ -16,7 +16,8 @@ export default function WordSearchBox({ basePath = "/unscramble", placeholder = 
     }
     const re = allowWild ? /[^a-z?]/g : /[^a-z]/g;
     const l = v.toLowerCase().replace(re, "").slice(0, 15);
-    if (l.replace(/\?/g, "").length >= min) router.push(`${basePath}/${l}`);
+    // encode so a "?" wildcard isn't parsed as the URL query delimiter
+    if (l.replace(/\?/g, "").length >= min) router.push(`${basePath}/${encodeURIComponent(l)}`);
   }
 
   return (

@@ -47,6 +47,7 @@ export default function FaviconGenerator() {
   const imgRef = useRef(null); // loaded HTMLImageElement
   const previewUrlRef = useRef("");
   const iconUrlsRef = useRef([]); // object URLs to revoke
+  const genRef = useRef(0); // re-entrancy token: only the latest generate() commits
 
   const revokeIcons = useCallback(() => {
     iconUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
@@ -111,27 +112,35 @@ export default function FaviconGenerator() {
 
   const generate = useCallback(
     async (image, useBg, color) => {
+      const myGen = ++genRef.current;
       setBusy(true);
       setError("");
-      revokeIcons();
+      // Build into a LOCAL url list so a superseding call can't revoke ours mid-flight.
+      const results = [];
+      const urls = [];
       try {
-        const results = [];
         for (const spec of SIZES) {
           // eslint-disable-next-line no-await-in-loop
           const blob = await renderSize(image, spec.size, useBg, color);
+          if (genRef.current !== myGen) { urls.forEach(URL.revokeObjectURL); return; }
           const url = URL.createObjectURL(blob);
-          iconUrlsRef.current.push(url);
+          urls.push(url);
           results.push({ ...spec, url, bytes: blob.size });
         }
+        if (genRef.current !== myGen) { urls.forEach(URL.revokeObjectURL); return; }
+        revokeIcons(); // release the previous committed icons, then adopt the new ones
+        iconUrlsRef.current = urls;
         setIcons(results);
       } catch (err) {
+        urls.forEach(URL.revokeObjectURL);
+        if (genRef.current !== myGen) return;
         revokeIcons();
         setIcons([]);
         setError(
           err && err.message ? err.message : "Something went wrong while generating favicons."
         );
       } finally {
-        setBusy(false);
+        if (genRef.current === myGen) setBusy(false);
       }
     },
     [renderSize, revokeIcons]

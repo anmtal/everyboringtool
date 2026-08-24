@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { copyText } from "../../lib/copyText";
+import { copyText as copyToClipboard } from "../../lib/copyText";
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
@@ -96,7 +96,7 @@ export default function ImageToBase64() {
   const copyText = useCallback(async (text, key) => {
     if (!text) return;
     try {
-      await copyText(text);
+      await copyToClipboard(text);
       setCopiedKey(key);
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
       copyTimerRef.current = setTimeout(() => setCopiedKey(""), 1500);

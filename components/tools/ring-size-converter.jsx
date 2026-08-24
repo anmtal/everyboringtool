@@ -43,6 +43,10 @@ export default function RingSizeConverter() {
   const [measure, setMeasure] = useState("17.3");
 
   const isMeasure = sys === "dia" || sys === "circ";
+  const options = isMeasure ? [] : ROWS.map((r) => r[sys]);
+  // Guard: when the system changes, the old `pick` may not exist in the new
+  // system's options — coerce it to a valid one so the result never vanishes.
+  const pickSafe = options.includes(pick) ? pick : options[0];
 
   const { row, exact, entered } = useMemo(() => {
     if (isMeasure) {
@@ -52,10 +56,8 @@ export default function RingSizeConverter() {
       for (const r of ROWS) if (Math.abs(r[sys] - val) < Math.abs(best[sys] - val)) best = r;
       return { row: best, exact: Math.abs(best[sys] - val) < 0.15, entered: val };
     }
-    return { row: ROWS.find((r) => r[sys] === pick) || null, exact: true, entered: null };
-  }, [sys, pick, measure, isMeasure]);
-
-  const options = isMeasure ? [] : ROWS.map((r) => r[sys]);
+    return { row: ROWS.find((r) => r[sys] === pickSafe) || null, exact: true, entered: null };
+  }, [sys, pickSafe, measure, isMeasure]);
 
   return (
     <div className="tool">
@@ -71,7 +73,7 @@ export default function RingSizeConverter() {
           {isMeasure ? (
             <input id="rs-val" className="tool-input" type="number" step="0.1" min="0" value={measure} onChange={(e) => setMeasure(e.target.value)} placeholder="e.g. 17.3" />
           ) : (
-            <select id="rs-val" className="tool-input" value={pick} onChange={(e) => setPick(e.target.value)}>
+            <select id="rs-val" className="tool-input" value={pickSafe} onChange={(e) => setPick(e.target.value)}>
               {options.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           )}

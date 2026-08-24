@@ -10,7 +10,8 @@ export default function UnscrambleBox({ initial = "" }) {
   function go(e) {
     e.preventDefault();
     const l = v.toLowerCase().replace(/[^a-z?]/g, "").slice(0, 15);
-    if (l.replace(/\?/g, "").length >= 2) router.push(`/unscramble/${l}`);
+    // encode so a "?" wildcard isn't parsed as the URL query delimiter
+    if (l.replace(/\?/g, "").length >= 2) router.push(`/unscramble/${encodeURIComponent(l)}`);
   }
 
   return (

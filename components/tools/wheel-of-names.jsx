@@ -81,7 +81,7 @@ export default function WheelOfNames() {
       <div className="tool-fields">
         <div className="tool-field">
           <label className="tool-label" htmlFor="won-names">Names or options (one per line)</label>
-          <textarea id="won-names" className="tool-input" rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder="Enter one name per line" style={{ resize: "vertical" }} />
+          <textarea id="won-names" className="tool-input" rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder="Enter one name per line" style={{ resize: "vertical" }} disabled={spinning} />
           <p className="tool-note" style={{ margin: "4px 0 0" }}>{N} entr{N === 1 ? "y" : "ies"}{N < 2 ? " — add at least 2 to spin" : ""}</p>
         </div>
       </div>

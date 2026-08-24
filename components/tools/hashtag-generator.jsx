@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { copyText } from "../../lib/copyText";
+import { copyText as copyToClipboard } from "../../lib/copyText";
 
 // Curated list of broadly popular engagement hashtags. These are appended to
 // every result so users always leave with a usable, discovery-friendly set.
@@ -128,7 +128,7 @@ export default function HashtagGenerator() {
 
   async function copyText(text) {
     try {
-      await copyText(text);
+      await copyToClipboard(text);
       return true;
     } catch (err) {
       return false;
