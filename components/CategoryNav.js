@@ -16,6 +16,18 @@ const WORD_GAMES = [
   { href: "/5-letter-words", name: "5 Letter Words" },
 ];
 
+// Menu order only (doesn't affect the homepage or footer): Word Games is the
+// hard-coded first button, then these categories are pinned next in this order,
+// then every other category follows in its natural order.
+const NAV_ORDER = ["games", "pdf", "converters"];
+const orderedCategories = categories
+  .map((c, i) => [c, i])
+  .sort(([a, ai], [b, bi]) => {
+    const rank = (slug) => NAV_ORDER.indexOf(slug) + 1 || NAV_ORDER.length + 1;
+    return rank(a.slug) - rank(b.slug) || ai - bi;
+  })
+  .map(([c]) => c);
+
 export default function CategoryNav() {
   const [open, setOpen] = useState(null);
   const ref = useRef(null);
@@ -60,7 +72,7 @@ export default function CategoryNav() {
             <span>Word Games</span>
             <span className="caret" aria-hidden="true">▾</span>
           </button>
-          {categories.map((c) => {
+          {orderedCategories.map((c) => {
             const isOpen = open === c.slug;
             return (
               <button
