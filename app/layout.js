@@ -1,6 +1,7 @@
 import "./globals.css";
 import Link from "next/link";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SITE, categories } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
 import CategoryNav from "../components/CategoryNav";
@@ -111,6 +112,7 @@ export default function RootLayout({ children }) {
             <span>Boring, but it works.</span>
           </div>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
