@@ -88,7 +88,6 @@ export default function YesNoWheel() {
           role="img"
           aria-label={result && !spinning ? `Wheel landed on ${result}` : "Yes or No spinning wheel — click to spin"}
         >
-          <polygon points="110,22 97,1 123,1" fill="var(--text)" />
           <g style={{ transform: `rotate(${rotation}deg)`, transformOrigin: "110px 110px", transition: spinning && !reduceMotion ? "transform 4s cubic-bezier(0.16,0.73,0.09,1)" : "none" }}>
             {SLICES.map((s, i) => (
               <g key={i}>
@@ -98,6 +97,9 @@ export default function YesNoWheel() {
             ))}
             <circle cx="110" cy="110" r="17" fill="var(--surface)" stroke="var(--border-strong)" strokeWidth="2" />
           </g>
+          {/* Pointer drawn AFTER the wheel so it sits in front of the rim, tip
+              dipping onto the top segment. Outline keeps it legible on any color. */}
+          <polygon points="110,28 94,2 126,2" fill="var(--text)" stroke="var(--surface)" strokeWidth="2" strokeLinejoin="round" />
         </svg>
       </div>
 
