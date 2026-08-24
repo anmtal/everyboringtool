@@ -137,6 +137,14 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .catnav-panel-link { padding: 8px 10px; border-radius: var(--r-xs); font-size: 14px; transition: background-color 120ms ease-out; }
 .catnav-panel-link:hover { background: var(--surface-2); }
 .catnav-panel-empty { padding: 6px 4px 2px; font-size: 14px; color: var(--faint); }
+/* Desktop & tablet: wrap the category row so EVERY category is visible, instead
+   of hiding the overflow behind a horizontal scroll a mouse can't reach. Phones
+   (<768px) keep the compact swipe strip, where wrapping 19 pills would be far
+   too tall. */
+@media (min-width: 768px) {
+  .catnav-row { flex-wrap: wrap; overflow: visible; }
+  .catnav-wrap::after { display: none; }
+}
 
 /* main */
 .main { padding: 44px 22px 0; min-height: 64vh; }
