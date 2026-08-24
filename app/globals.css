@@ -142,8 +142,11 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
    (<768px) keep the compact swipe strip, where wrapping 19 pills would be far
    too tall. */
 @media (min-width: 768px) {
-  .catnav-row { flex-wrap: wrap; overflow: visible; }
+  .catnav-row { flex-wrap: wrap; overflow: visible; row-gap: 0; }
   .catnav-wrap::after { display: none; }
+  /* Compact the pills when wrapped so 19 categories fit in ~2 rows, not 3. */
+  .catnav-btn { min-height: 32px; padding: 5px 8px; gap: 5px; font-size: 12.5px; }
+  .catnav-btn .caret { font-size: 8px; }
 }
 
 /* main */
