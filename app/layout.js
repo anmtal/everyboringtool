@@ -2,10 +2,16 @@ import "./globals.css";
 import Link from "next/link";
 import { Inter } from "next/font/google";
 import { SITE, categories } from "../lib/tools";
+import { toolContent } from "../lib/toolContent";
 import CategoryNav from "../components/CategoryNav";
 import BrandLogo from "../components/BrandLogo";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+
+// Count of built tools, rounded down to a tens boundary so "170+" stays honest.
+const TOTAL_TOOLS = Math.floor(
+  categories.reduce((n, c) => n + c.tools.filter((t) => toolContent[t.slug]).length, 0) / 10
+) * 10;
 
 export const metadata = {
   metadataBase: new URL(SITE.url),
@@ -67,28 +73,38 @@ export default function RootLayout({ children }) {
               <p className="footer-tag muted">
                 {SITE.tagline} No sign-up, no clutter — just tools that work, right in your browser.
               </p>
+              <p className="footer-count muted">{TOTAL_TOOLS}+ free tools · nothing to install</p>
             </div>
-            <nav className="footer-col" aria-label="Categories">
-              <h3 className="footer-h">Categories</h3>
-              {categories.slice(0, 6).map((c) => (
-                <Link key={c.slug} href={`/${c.slug}`}>{c.name}</Link>
-              ))}
-            </nav>
-            <nav className="footer-col" aria-label="More">
-              <h3 className="footer-h">More</h3>
-              <Link href="/">All tools</Link>
-              {categories.slice(6).map((c) => (
-                <Link key={c.slug} href={`/${c.slug}`}>{c.name}</Link>
-              ))}
-            </nav>
-            <nav className="footer-col" aria-label="Site">
-              <h3 className="footer-h">Site</h3>
-              <Link href="/about">About</Link>
-              <Link href="/privacy">Privacy Policy</Link>
-              <Link href="/terms">Terms of Use</Link>
-              <Link href="/contact">Contact</Link>
-              <Link href="/unscramble">Word games</Link>
-            </nav>
+
+            <div className="footer-links">
+              <nav className="footer-col footer-col-cats" aria-label="Tool categories">
+                <h3 className="footer-h">Categories</h3>
+                <div className="footer-cats">
+                  {categories.map((c) => (
+                    <Link key={c.slug} href={`/${c.slug}`}>{c.name}</Link>
+                  ))}
+                </div>
+              </nav>
+
+              <nav className="footer-col" aria-label="Word games">
+                <h3 className="footer-h">Word Games</h3>
+                <Link href="/unscramble">Word Unscrambler</Link>
+                <Link href="/anagram">Anagram Solver</Link>
+                <Link href="/wordle-solver">Wordle Solver</Link>
+                <Link href="/crossword-solver">Crossword Solver</Link>
+                <Link href="/words-starting-with">Words Starting With…</Link>
+                <Link href="/5-letter-words">5 Letter Words</Link>
+              </nav>
+
+              <nav className="footer-col" aria-label="Site">
+                <h3 className="footer-h">Site</h3>
+                <Link href="/">All tools</Link>
+                <Link href="/about">About</Link>
+                <Link href="/contact">Contact</Link>
+                <Link href="/privacy">Privacy Policy</Link>
+                <Link href="/terms">Terms of Use</Link>
+              </nav>
+            </div>
           </div>
           <div className="footer-bottom">
             <span>© {year} {SITE.name}</span>
