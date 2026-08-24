@@ -46,7 +46,10 @@ const nextConfig = {
     ];
   },
   async redirects() {
-    return [{ source: "/text/word-unscrambler", destination: "/unscramble", permanent: true }];
+    return [
+      { source: "/text/word-unscrambler", destination: "/unscramble", permanent: true },
+      { source: "/pdf/unlock-pdf", destination: "/pdf", permanent: true },
+    ];
   },
   webpack: (config) => {
     // pdfjs-dist (used by PDF → Word) references Node's optional `canvas` package,
