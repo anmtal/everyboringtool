@@ -145,7 +145,7 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
   .catnav-row { flex-wrap: wrap; overflow: visible; row-gap: 0; }
   .catnav-wrap::after { display: none; }
   /* Compact the pills when wrapped so 19 categories fit in ~2 rows, not 3. */
-  .catnav-btn { min-height: 32px; padding: 5px 8px; gap: 5px; font-size: 12.5px; }
+  .catnav-btn { min-height: 32px; padding: 5px 6px; gap: 4px; font-size: 12.5px; }
   .catnav-btn .caret { font-size: 8px; }
 }
 
