@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Inter } from "next/font/google";
 import { SITE, categories } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
-import Script from "next/script";
 import CategoryNav from "../components/CategoryNav";
 import BrandLogo from "../components/BrandLogo";
 
@@ -55,12 +54,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={inter.variable}>
       <body>
-        <Script
-          id="adsbygoogle-js"
+        {/* Raw <script> so the AdSense crawler sees it in the server HTML (a
+            next/script afterInteractive tag is JS-injected and invisible to the
+            non-JS verification crawler). async = non-blocking. */}
+        <script
           async
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+          crossOrigin="anonymous"
         />
         <a href="#main" className="skip-link">Skip to content</a>
         <header className="site-header">
