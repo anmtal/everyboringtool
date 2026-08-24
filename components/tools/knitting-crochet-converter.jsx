@@ -57,6 +57,18 @@ const SYSTEMS = [
   { key: "UK", label: "UK / Canadian" },
 ];
 
+// Craft Yarn Council 0–7 weight categories with the names used around the world.
+const YARN = [
+  ["0 — Lace", "Lace, cobweb, 2-ply", "1.5–2.25", "30–40"],
+  ["1 — Super Fine", "Fingering, sock, 4-ply (UK)", "2.25–3.25", "14"],
+  ["2 — Fine", "Sport, baby, 5-ply", "3.25–3.75", "12"],
+  ["3 — Light", "DK, light worsted, 8-ply", "3.75–4.5", "11"],
+  ["4 — Medium", "Worsted, aran, 10-ply", "4.5–5.5", "9"],
+  ["5 — Bulky", "Chunky, craft, 12-ply", "5.5–8", "7"],
+  ["6 — Super Bulky", "Super chunky, roving", "8–12.75", "5–6"],
+  ["7 — Jumbo", "Jumbo, roving", "12.75+", "1–4"],
+];
+
 export default function KnittingCrochetConverter() {
   const [type, setType] = useState("needles");
   const [sys, setSys] = useState("mm");
@@ -117,6 +129,20 @@ export default function KnittingCrochetConverter() {
           </tbody>
         </table>
       </div>
+
+      <section className="tool-about" style={{ marginTop: 26 }}>
+        <h2 className="tool-h2">Yarn weight guide</h2>
+        <div className="csc-table-wrap">
+          <table className="csc-table">
+            <thead><tr><th>Weight</th><th>Also called</th><th>Needle mm</th><th>WPI</th></tr></thead>
+            <tbody>{YARN.map((r, i) => (<tr key={i}><td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td></tr>))}</tbody>
+          </table>
+        </div>
+        <p className="tool-note" style={{ margin: "8px 0 0" }}>
+          Yarn weight names differ by country — UK/Australian ply, US terms and the Craft Yarn Council 0–7 numbers all
+          describe the same thicknesses. WPI (wraps per inch) is measured by wrapping the yarn snugly around a ruler.
+        </p>
+      </section>
 
       <p className="tool-note">
         Millimetres are the reliable reference — stamped US and UK sizes vary by manufacturer by about ±0.1–0.2 mm, and the
