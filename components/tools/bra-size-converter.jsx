@@ -91,9 +91,9 @@ export default function BraSizeConverter() {
       )}
 
       <p className="tool-note">
-        Band sizes convert exactly, but cup letters above D diverge between systems (a US DD is a UK DD, but a US G is a UK
-        FF) — this tool keeps them aligned by the true bust-minus-band measurement. Asian brands often run a cup smaller,
-        and fit varies by brand, so when a label publishes its own chart, trust it. Free, runs in your browser.
+        Band sizes convert exactly, but cup letters diverge between systems above a D (a US DD is a UK DD but an EU E) —
+        this tool keeps them aligned by the true bust-minus-band measurement. Asian brands often run a cup smaller, and
+        fit varies by brand, so when a label publishes its own chart, trust it. Free, runs in your browser.
       </p>
     </div>
   );
