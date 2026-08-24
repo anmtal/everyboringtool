@@ -5,7 +5,12 @@ import { useState, useRef, useCallback, useEffect } from "react";
 const N = 8;
 const SEG = 360 / N;
 const CX = 110, CY = 110, R = 100;
-const YES = "#2e9e6a", NO = "#d14b4b";
+// Two palettes on purpose: the WHEEL fills carry white labels (need 4.5:1 as
+// normal text — #1a7f4b=5.02:1, #b23b3b=5.86:1), while the big RESULT text sits
+// on the page background as large text (needs only 3:1), where the brighter
+// #2e9e6a / #d14b4b read better. Darkening the fills fixes WCAG 1.4.3.
+const WHEEL = { yes: "#1a7f4b", no: "#b23b3b" };
+const RESULT = { yes: "#2e9e6a", no: "#d14b4b" };
 
 function pt(r, aDeg) {
   const a = (aDeg - 90) * Math.PI / 180; // 0° = top, clockwise
@@ -22,7 +27,7 @@ const SLICES = Array.from({ length: N }, (_, i) => {
     d: `M ${CX} ${CY} L ${x0.toFixed(2)} ${y0.toFixed(2)} A ${R} ${R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z`,
     lx, ly,
     label: i % 2 === 0 ? "YES" : "NO",
-    fill: i % 2 === 0 ? YES : NO,
+    fill: i % 2 === 0 ? WHEEL.yes : WHEEL.no,
   };
 });
 
@@ -31,10 +36,22 @@ export default function YesNoWheel() {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
   const [question, setQuestion] = useState("");
+  const [reduceMotion, setReduceMotion] = useState(false);
   const pending = useRef(null);
   const timer = useRef(null);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  // Honour prefers-reduced-motion: skip the long spin animation AND the matching
+  // 4.1s result delay, so the outcome doesn't stall behind a frozen wheel.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduceMotion(mq.matches);
+    sync();
+    mq.addEventListener ? mq.addEventListener("change", sync) : mq.addListener(sync);
+    return () => { mq.removeEventListener ? mq.removeEventListener("change", sync) : mq.removeListener(sync); };
+  }, []);
 
   const spin = useCallback(() => {
     if (spinning) return;
@@ -49,8 +66,8 @@ export default function YesNoWheel() {
     if (delta < 0) delta += 360;
     setRotation(rotation + 360 * 5 + delta);
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => { setSpinning(false); setResult(pending.current); }, 4100);
-  }, [spinning, rotation]);
+    timer.current = setTimeout(() => { setSpinning(false); setResult(pending.current); }, reduceMotion ? 30 : 4100);
+  }, [spinning, rotation, reduceMotion]);
 
   return (
     <div className="tool">
@@ -72,7 +89,7 @@ export default function YesNoWheel() {
           aria-label={result && !spinning ? `Wheel landed on ${result}` : "Yes or No spinning wheel — click to spin"}
         >
           <polygon points="110,22 97,1 123,1" fill="var(--text)" />
-          <g style={{ transform: `rotate(${rotation}deg)`, transformOrigin: "110px 110px", transition: spinning ? "transform 4s cubic-bezier(0.16,0.73,0.09,1)" : "none" }}>
+          <g style={{ transform: `rotate(${rotation}deg)`, transformOrigin: "110px 110px", transition: spinning && !reduceMotion ? "transform 4s cubic-bezier(0.16,0.73,0.09,1)" : "none" }}>
             {SLICES.map((s, i) => (
               <g key={i}>
                 <path d={s.d} fill={s.fill} stroke="#ffffff" strokeWidth="1.5" />
@@ -90,10 +107,16 @@ export default function YesNoWheel() {
         </button>
       </div>
 
+      {/* Persistent live region — always in the DOM so AT reliably announce both
+          the spin start and the outcome (a region inserted with its text is not). */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {spinning ? "Spinning the wheel" : result ? `${question.trim() ? question.trim() + ": " : ""}${result}` : ""}
+      </div>
+
       {result && !spinning && (
-        <div className="tool-result" role="status" aria-live="polite" style={{ textAlign: "center" }}>
+        <div className="tool-result" style={{ textAlign: "center" }}>
           {question.trim() && <p className="tool-result-label">{question.trim()}</p>}
-          <p className="tool-result-value" style={{ fontSize: 36, fontWeight: 800, color: result === "YES" ? YES : NO }}>{result}</p>
+          <p className="tool-result-value" style={{ fontSize: 36, fontWeight: 800, color: result === "YES" ? RESULT.yes : RESULT.no }}>{result}</p>
         </div>
       )}
 

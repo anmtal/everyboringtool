@@ -293,7 +293,7 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .tool-error { color: #b3261e; font-size: 14px; margin: 0; }
 @media (prefers-color-scheme: dark) { .tool-error { color: #f2b8b5; } }
 
-.tool-about, .tool-faq { margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--border); }
+.tool-about, .tool-faq, .tool-related { margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--border); }
 .tool-h2 { font-size: 18px; font-weight: 640; letter-spacing: -0.01em; margin: 0 0 14px; }
 .tool-about p { color: var(--muted); margin: 0 0 12px; text-wrap: pretty; }
 .tool-faq dl { margin: 0; }

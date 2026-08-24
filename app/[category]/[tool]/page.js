@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { categories, getCategory, getTool } from "../../../lib/tools";
+import { categories, getCategory, getTool, SITE } from "../../../lib/tools";
 import { toolContent } from "../../../lib/toolContent";
 import ToolMount from "../../../components/ToolMount";
 
@@ -21,8 +21,10 @@ function metaDescription(t, content) {
   const about = (content && content.about ? content.about : "").replace(/\s+/g, " ").trim();
   const base = about || `${t.description} Free, no sign-up, and it runs right in your browser.`;
   if (base.length <= 158) return base;
-  const cut = base.slice(0, 158);
-  return cut.slice(0, cut.lastIndexOf(" ")) + "…";
+  const cut = base.slice(0, 158).slice(0, base.slice(0, 158).lastIndexOf(" "));
+  // If the trim already lands on a sentence end, leave it clean — appending an
+  // ellipsis after a period ("NO.…") reads as broken. Otherwise mark the cut.
+  return /[.!?]$/.test(cut) ? cut : cut.replace(/[\s,;:]+$/, "") + "…";
 }
 
 export function generateMetadata({ params }) {
@@ -32,14 +34,21 @@ export function generateMetadata({ params }) {
   const built = !!content;
   const url = `/${params.category}/${params.tool}`;
   const description = metaDescription(t, content);
+  // Optional per-tool SEO title (lib/toolContent seoTitle) for pages where the
+  // bare tool name leaves search intent on the table; falls back to the name.
+  const title = content && content.seoTitle ? content.seoTitle : t.name;
+  // Nested route segments do NOT inherit the root app/opengraph-image.js card,
+  // so tool shares rendered as blank cards. Point them at the generated card
+  // explicitly (metadataBase resolves it to an absolute URL).
+  const ogImage = "/opengraph-image";
   return {
-    title: t.name,
+    title,
     description,
     // Coming-soon stubs stay out of the index until the tool actually works.
     robots: built ? { index: true, follow: true } : { index: false, follow: true },
     alternates: { canonical: url },
-    openGraph: { type: "website", url, title: t.name, description },
-    twitter: { card: "summary_large_image", title: t.name, description },
+    openGraph: { type: "website", url, title, description, images: [ogImage] },
+    twitter: { card: "summary_large_image", title, description, images: [ogImage] },
   };
 }
 
@@ -77,18 +86,42 @@ export default function ToolPage({ params }) {
     );
   }
 
-  const faqSchema =
-    content.faq && content.faq.length
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: content.faq.map((f) => ({
-            "@type": "Question",
-            name: f.q,
-            acceptedAnswer: { "@type": "Answer", text: f.a },
-          })),
-        }
-      : null;
+  // One @graph carrying every JSON-LD type for the page: FAQPage (when present),
+  // BreadcrumbList (mirrors the visible breadcrumb) and a minimal WebApplication
+  // node describing the free browser tool. No aggregateRating without real data.
+  const abs = (p) => `${SITE.url}${p}`;
+  const graph = [];
+  if (content.faq && content.faq.length) {
+    graph.push({
+      "@type": "FAQPage",
+      mainEntity: content.faq.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    });
+  }
+  graph.push({
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE.url },
+      { "@type": "ListItem", position: 2, name: c.name, item: abs(`/${c.slug}`) },
+      { "@type": "ListItem", position: 3, name: t.name, item: abs(`/${c.slug}/${t.slug}`) },
+    ],
+  });
+  graph.push({
+    "@type": "WebApplication",
+    name: t.name,
+    url: abs(`/${c.slug}/${t.slug}`),
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Any",
+    browserRequirements: "Requires JavaScript",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  });
+  const jsonLd = { "@context": "https://schema.org", "@graph": graph };
+
+  // Contextual internal links: up to 6 built siblings in the same category.
+  const related = c.tools.filter((x) => x.slug !== t.slug && toolContent[x.slug]).slice(0, 6);
 
   return (
     <>
@@ -123,9 +156,20 @@ export default function ToolPage({ params }) {
         </section>
       )}
 
-      {faqSchema && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      {related.length > 0 && (
+        <section className="tool-related">
+          <h2 className="tool-h2">Related tools</h2>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {related.map((x) => (
+              <Link key={x.slug} href={`/${c.slug}/${x.slug}`} className="badge" style={{ textDecoration: "none" }} title={x.description}>
+                {x.name}
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );
 }
