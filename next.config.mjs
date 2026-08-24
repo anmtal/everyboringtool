@@ -55,9 +55,11 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "geolocation=(), microphone=(), payment=(), interest-cohort=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-          // Report-Only first: logs violations without blocking, so we can verify
-          // every tool still works before switching this to enforcing.
-          { key: "Content-Security-Policy-Report-Only", value: CSP },
+          // Enforcing. Verified Report-Only first: homepage inline scripts/styles/
+          // fonts, blob workers (regex), object URLs/data URIs, the iframe PDF
+          // preview, ffmpeg, and the OCR/transcribe CDNs (jsDelivr + Hugging Face)
+          // all pass; unknown origins are correctly blocked.
+          { key: "Content-Security-Policy", value: CSP },
         ],
       },
       {
