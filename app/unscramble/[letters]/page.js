@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { unscramble, scrabbleScore, groupByLength, cleanLetters, wordStats, canonicalLettersForm } from "../../../lib/wordEngine";
+import { unscramble, scrabbleScore, cleanLetters, wordStats, canonicalLettersForm } from "../../../lib/wordEngine";
 import { POPULAR } from "../../../lib/wordPopular";
 import UnscrambleBox from "../../../components/UnscrambleBox";
+import WordBadges from "../../../components/WordBadges";
 import { wordRobots } from "../../../lib/wordSeo";
 
 export const dynamicParams = true;
@@ -25,15 +26,12 @@ export function generateMetadata({ params }) {
   };
 }
 
-const MAX_RENDER = 600;
-
 export default function UnscrambleLettersPage({ params }) {
   const letters = cleanLetters(decodeURIComponent(params.letters || ""));
   if (letters.replace(/\?/g, "").length < 2) notFound();
 
   const words = unscramble(letters);
   const up = letters.toUpperCase();
-  const groups = groupByLength(words.slice(0, MAX_RENDER));
   const best = words[0];
   const stats = wordStats(words);
 
@@ -81,22 +79,7 @@ export default function UnscrambleLettersPage({ params }) {
         </>
       )}
 
-      {groups.map(({ len, words: ws }) => (
-        <section key={len} style={{ marginTop: 18 }}>
-          <h2 className="section-title" style={{ fontSize: "1.05rem" }}>{len}-letter words ({ws.length})</h2>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {ws.map((w) => (
-              <Link key={w} href={`/unscramble/${w}`} prefetch={false} className="badge" style={{ textDecoration: "none", fontSize: 14, padding: "4px 9px" }} title={`${scrabbleScore(w)} points`}>
-                {w} <span style={{ opacity: 0.55, fontSize: 11 }}>{scrabbleScore(w)}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ))}
-
-      {words.length > MAX_RENDER && (
-        <p className="tool-note" style={{ marginTop: 14 }}>Showing the first {MAX_RENDER} of {words.length} words.</p>
-      )}
+      <WordBadges words={words} linkBase="/unscramble" />
 
       {stats && (
         <section className="block">

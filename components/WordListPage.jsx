@@ -1,10 +1,8 @@
 import Link from "next/link";
-import { scrabbleScore, groupByLength, wordStats } from "../lib/wordEngine";
-
-const MAX_RENDER = 600;
+import { wordStats } from "../lib/wordEngine";
+import WordBadges from "./WordBadges";
 
 export default function WordListPage({ crumbs = [], h1, lead, box, words = [], linkBase = "/unscramble", faq = [], related = null, note = null }) {
-  const groups = groupByLength(words.slice(0, MAX_RENDER));
   const stats = wordStats(words);
   const faqLd = {
     "@context": "https://schema.org", "@type": "FAQPage",
@@ -43,20 +41,7 @@ export default function WordListPage({ crumbs = [], h1, lead, box, words = [], l
         </>
       )}
 
-      {groups.map(({ len, words: ws }) => (
-        <section key={len} style={{ marginTop: 18 }}>
-          <h2 className="section-title" style={{ fontSize: "1.05rem" }}>{len}-letter words ({ws.length})</h2>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {ws.map((w) => (
-              <Link key={w} href={`${linkBase}/${w}`} prefetch={false} className="badge" style={{ textDecoration: "none", fontSize: 14, padding: "4px 9px" }} title={`${scrabbleScore(w)} points`}>
-                {w} <span style={{ opacity: 0.55, fontSize: 11 }}>{scrabbleScore(w)}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ))}
-
-      {words.length > MAX_RENDER && <p className="tool-note" style={{ marginTop: 14 }}>Showing the first {MAX_RENDER} of {words.length} words.</p>}
+      <WordBadges words={words} linkBase={linkBase} />
 
       {faq.length > 0 && (
         <section className="block">
