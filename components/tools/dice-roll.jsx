@@ -65,7 +65,9 @@ export default function DiceRoll() {
     }, 650);
   }, [rolling, count, reduce]);
 
-  const total = values.reduce((a, b) => a + b, 0);
+  // Always render exactly `count` dice, independent of any transient values length.
+  const shown = Array.from({ length: count }, (_, i) => values[i] || 1);
+  const total = shown.reduce((a, b) => a + b, 0);
 
   return (
     <div className="tool">
@@ -81,10 +83,10 @@ export default function DiceRoll() {
       </div>
 
       <div className={`dice-stage ${rolling ? "is-rolling" : ""}`}>
-        {values.map((v, i) => <Die key={i} value={v} />)}
+        {shown.map((v, i) => <Die key={i} value={v} />)}
       </div>
 
-      <div className="sr-only" role="status" aria-live="polite">{rolling ? "Rolling" : rolled ? `Rolled ${values.join(", ")}${count > 1 ? `, total ${total}` : ""}` : ""}</div>
+      <div className="sr-only" role="status" aria-live="polite">{rolling ? "Rolling" : rolled ? `Rolled ${shown.join(", ")}${count > 1 ? `, total ${total}` : ""}` : ""}</div>
 
       <div className="tool-actions" style={{ justifyContent: "center" }}>
         <button type="button" className="btn btn-primary" onClick={roll} disabled={rolling}>{rolling ? "Rolling…" : rolled ? "Roll again" : "Roll dice"}</button>
