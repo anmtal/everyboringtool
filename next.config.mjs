@@ -1,3 +1,27 @@
+// Content-Security-Policy allowlisting exactly what the tools load: Next's inline
+// hydration scripts + inline style attributes ('unsafe-inline'), WebAssembly
+// (ffmpeg / tesseract / onnx-runtime via 'wasm-unsafe-eval'), blob: workers and
+// object URLs, data: URIs, an iframe PDF preview (blob:), and the two CDNs the
+// OCR/transcribe tools use by default — jsDelivr (worker/core/onnx-wasm) and
+// Hugging Face (Whisper models) — plus tesseract's language-data host.
+const CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'self'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob:",
+  "media-src 'self' data: blob:",
+  "connect-src 'self' data: blob: https://cdn.jsdelivr.net https://huggingface.co https://*.hf.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.huggingface.co https://tessdata.projectnaptha.com",
+  "worker-src 'self' blob:",
+  "child-src 'self' blob:",
+  "frame-src 'self' blob: data:",
+  "manifest-src 'self'",
+].join("; ");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // The word-game pages read public/words/dict.txt with fs at runtime (ISR). That
@@ -31,17 +55,22 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "geolocation=(), microphone=(), payment=(), interest-cohort=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          // Report-Only first: logs violations without blocking, so we can verify
+          // every tool still works before switching this to enforcing.
+          { key: "Content-Security-Policy-Report-Only", value: CSP },
         ],
       },
       {
-        // Immutable, content-addressed assets: cache hard instead of revalidating
-        // the 32 MB ffmpeg core and 1.1 MB pdf worker on every use.
+        // These files have STABLE names (not content-hashed), so `immutable` would
+        // pin a stale copy for a year if we ever update the dictionary or ffmpeg
+        // core. Cache hard for a day, then serve-stale-while-revalidating so a
+        // change propagates within ~24h at the cost of a cheap background 304.
         source: "/:path(ffmpeg|words)/:file*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       },
       {
         source: "/pdf.worker.min.js",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       },
     ];
   },
