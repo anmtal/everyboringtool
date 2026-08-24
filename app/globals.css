@@ -342,6 +342,36 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .tool-result { margin-top: 2px; padding: 18px 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r); }
 .tool-result-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; margin: 0 0 5px; }
 .tool-result-value { font-size: 28px; font-weight: 680; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; word-break: break-word; }
+
+/* Coin Flip */
+.coinflip-stage { display: flex; justify-content: center; padding: 26px 0 10px; perspective: 900px; }
+.coin { position: relative; width: 150px; height: 150px; transform-style: preserve-3d; }
+.coin-face { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; backface-visibility: hidden; font-weight: 800; font-size: 22px; letter-spacing: 0.02em; box-shadow: 0 8px 20px rgba(0,0,0,0.28); }
+.coin-heads { background: radial-gradient(circle at 34% 30%, #f7d873, #e2ab30 58%, #b8841c); color: #5b3d0a; border: 5px solid #cba638; }
+.coin-tails { background: radial-gradient(circle at 34% 30%, #e2e6eb, #b7bec7 58%, #949aa3); color: #3a3f45; border: 5px solid #aeb4bc; transform: rotateX(180deg); }
+
+/* Segmented toggle + dice */
+.seg-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 9px; overflow: hidden; }
+.seg-btn { padding: 8px 18px; background: var(--surface); border: none; border-right: 1px solid var(--border); color: var(--text); font-size: 14px; font-weight: 640; cursor: pointer; transition: background-color 120ms ease-out; }
+.seg-btn:last-child { border-right: none; }
+.seg-btn:hover:not(:disabled) { background: var(--surface-2); }
+.seg-btn.is-active { background: var(--text); color: var(--bg); }
+.dice-stage { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; padding: 22px 0 8px; }
+.die { filter: drop-shadow(0 4px 8px rgba(0,0,0,0.18)); }
+@keyframes diceShake { 0%,100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-4px) rotate(-6deg); } 75% { transform: translateY(-2px) rotate(6deg); } }
+.dice-stage.is-rolling .die { animation: diceShake 0.28s ease-in-out infinite; }
+
+/* Clothing size converter */
+.csc-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 8px; margin-top: 10px; }
+.csc-card { text-align: center; padding: 10px 8px; border: 1px solid var(--border); border-radius: var(--r-xs); background: var(--surface); }
+.csc-card.is-input { border-color: var(--text); background: var(--surface-2); }
+.csc-card-country { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.csc-card-size { font-size: 20px; font-weight: 800; margin-top: 2px; }
+.csc-table-wrap { margin-top: 20px; overflow-x: auto; }
+.csc-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 320px; }
+.csc-table th, .csc-table td { padding: 8px 10px; text-align: center; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.csc-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); }
+.csc-table tr.is-match td { background: var(--surface-2); font-weight: 700; }
 .tool-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
 .tool-stat { padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); }
 .tool-stat-num { font-size: 22px; font-weight: 660; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
