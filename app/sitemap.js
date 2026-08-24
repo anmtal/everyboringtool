@@ -10,17 +10,18 @@ export default function sitemap() {
   for (const u of ["/unscramble", "/anagram", "/wordle-solver", "/words-starting-with", "/words-ending-with", "/words-containing"]) {
     urls.push({ url: `${base}${u}`, priority: 0.9 });
   }
-  for (const l of POPULAR) {
-    urls.push({ url: `${base}/unscramble/${l}` });
-    urls.push({ url: `${base}/anagram/${l}` });
-  }
+  // CAUTIOUS RAMP: submit only the word hubs, the finite "browse" pages, and a
+  // small showcase of individual word pages — NOT all ~250 per-word URLs. On a
+  // brand-new domain, firehosing thousands of templated pages into the sitemap
+  // risks a site-wide quality hit. Every other word page stays live and crawlable
+  // via internal links; widen this list once the domain has earned some trust.
+  for (const l of POPULAR.slice(0, 12)) urls.push({ url: `${base}/unscramble/${l}` });
   for (const l of "abcdefghijklmnopqrstuvwxyz".split("")) urls.push({ url: `${base}/words-starting-with/${l}` });
-  for (const s of ["s", "e", "d", "y", "ing", "ed", "er", "ly", "ion", "ness", "ment", "able", "est", "ous", "ful"]) urls.push({ url: `${base}/words-ending-with/${s}` });
-  for (const s of ["qu", "zz", "oo", "ee", "th", "ch", "ph", "ck", "igh", "ough", "x", "z", "j"]) urls.push({ url: `${base}/words-containing/${s}` });
-  for (let n = 2; n <= 9; n++) urls.push({ url: `${base}/${n}-letter-words` });
-  for (const l of "abcdefghijklmnopqrstuvwxyz".split("")) urls.push({ url: `${base}/5-letter-words-starting-with-${l}` });
+  for (const s of ["ing", "ed", "tion", "ly", "ness", "ment", "able"]) urls.push({ url: `${base}/words-ending-with/${s}` });
+  for (const s of ["qu", "th", "ch", "oo", "igh", "ough"]) urls.push({ url: `${base}/words-containing/${s}` });
+  for (let n = 3; n <= 8; n++) urls.push({ url: `${base}/${n}-letter-words` });
   urls.push({ url: `${base}/crossword-solver`, priority: 0.9 });
-  for (const p of ["c-t", "-at", "s--e", "c--se", "p--nt", "w-rd", "-ing"]) urls.push({ url: `${base}/crossword-solver/${p}` });
+  for (const p of ["c-t", "-at", "s--e"]) urls.push({ url: `${base}/crossword-solver/${p}` });
   for (const c of categories) {
     urls.push({ url: `${base}/${c.slug}` });
     for (const t of c.tools) {
