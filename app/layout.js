@@ -3,10 +3,14 @@ import Link from "next/link";
 import { Inter } from "next/font/google";
 import { SITE, categories } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
+import Script from "next/script";
 import CategoryNav from "../components/CategoryNav";
 import BrandLogo from "../components/BrandLogo";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+
+// Google AdSense publisher (client) ID.
+const ADSENSE_CLIENT = "ca-pub-8757202685549420";
 
 // Count of built tools, rounded down to a tens boundary so "170+" stays honest.
 const TOTAL_TOOLS = Math.floor(
@@ -35,6 +39,8 @@ export const metadata = {
     description: SITE.description,
   },
   robots: { index: true, follow: true },
+  // Ownership verification for Google AdSense (renders the account meta tag).
+  verification: { other: { "google-adsense-account": ADSENSE_CLIENT } },
 };
 
 export const viewport = {
@@ -49,6 +55,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={inter.variable}>
       <body>
+        <Script
+          id="adsbygoogle-js"
+          async
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+        />
         <a href="#main" className="skip-link">Skip to content</a>
         <header className="site-header">
           <div className="container header-inner">

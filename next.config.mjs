@@ -4,21 +4,27 @@
 // object URLs, data: URIs, an iframe PDF preview (blob:), and the two CDNs the
 // OCR/transcribe tools use by default — jsDelivr (worker/core/onnx-wasm) and
 // Hugging Face (Whisper models) — plus tesseract's language-data host.
+// Google AdSense pulls scripts, iframes and creatives from its ad stack, so the
+// ad domains are allowlisted below. script-src stays bounded to Google (the key
+// protection); ad creatives (images/video) come from countless advertiser
+// domains, so img-/media-src open to https:. object-src 'none', base-uri,
+// frame-ancestors and form-action still lock down the highest-risk vectors.
+const GOOGLE_ADS = "https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://*.doubleclick.net https://*.google.com";
 const CSP = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'self'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net",
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net ${GOOGLE_ADS}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob:",
-  "media-src 'self' data: blob:",
-  "connect-src 'self' data: blob: https://cdn.jsdelivr.net https://huggingface.co https://*.hf.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.huggingface.co https://tessdata.projectnaptha.com",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' data: blob: https:",
+  `connect-src 'self' data: blob: https://cdn.jsdelivr.net https://huggingface.co https://*.hf.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.huggingface.co https://tessdata.projectnaptha.com ${GOOGLE_ADS} https://*.g.doubleclick.net`,
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
-  "frame-src 'self' blob: data:",
+  "frame-src 'self' blob: data: https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net https://*.googlesyndication.com https://www.google.com",
   "manifest-src 'self'",
 ].join("; ");
 
