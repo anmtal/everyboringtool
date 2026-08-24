@@ -19,7 +19,7 @@ export default function UnscrambleBox({ initial = "" }) {
         className="tool-input"
         value={v}
         onChange={(e) => setV(e.target.value)}
-        placeholder="Enter your letters (use ? for a blank tile)"
+        placeholder="Enter your letters"
         aria-label="Letters to unscramble"
         maxLength={15}
         autoComplete="off"

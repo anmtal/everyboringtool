@@ -11,7 +11,7 @@ export const metadata = {
 const faq = [
   { q: "What is a word unscrambler?", a: "A word unscrambler takes a set of jumbled or random letters and finds every valid word you can spell with them. It's the fastest way to solve anagrams or find high-scoring plays in Scrabble and Words With Friends." },
   { q: "Is it free?", a: "Yes — completely free, with no sign-up, no app to install, and no limits on how many searches you make." },
-  { q: "How do I use a blank tile?", a: "Type a “?” for each blank or wild tile. The unscrambler will treat it as any letter and include the extra possibilities in the results." },
+  { q: "How many letters can I enter?", a: "You can enter up to 15 letters at once. The unscrambler finds every valid word from two letters up to the full length of what you type." },
   { q: "Does it work for Scrabble and Words With Friends?", a: "Yes. Results are sorted from longest to shortest and show each word's Scrabble score, so you can quickly spot the best play." },
 ];
 
@@ -49,7 +49,7 @@ export default function UnscrambleHub() {
       <section className="block">
         <h2 className="section-title">How it works</h2>
         <p>
-          Type up to 15 letters (use a “?” for a blank tile) and the unscrambler checks them against a dictionary of
+          Type up to 15 letters and the unscrambler checks them against a dictionary of
           over 168,000 words, returning every word you can spell — longest first, each with its Scrabble value. Tap any
           result to unscramble <em>its</em> letters too. It all runs instantly, free, with no sign-up.
         </p>

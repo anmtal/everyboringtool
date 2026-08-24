@@ -40,7 +40,7 @@ export default function UnscrambleLettersPage({ params }) {
   const faq = [
     { q: `How many words can you make from ${up}?`, a: `You can make ${words.length} valid words from the letters ${up}, ranging from 2 letters up to ${best ? best.length : 0} letters long.` },
     { q: `What is the longest word from ${up}?`, a: best ? `The longest word is "${best}" (${best.length} letters), worth ${scrabbleScore(best)} points in Scrabble.` : `No words could be found from those letters.` },
-    { q: `How does the word unscrambler work?`, a: `Type in your jumbled letters and it instantly finds every dictionary word that can be spelled with them — perfect for Scrabble, Words With Friends, anagrams and crosswords. Use a “?” for a blank tile.` },
+    { q: `How does the word unscrambler work?`, a: `Type in your jumbled letters and it instantly finds every dictionary word that can be spelled with them — perfect for Scrabble, Words With Friends, anagrams and crosswords.` },
   ];
   const faqLd = {
     "@context": "https://schema.org", "@type": "FAQPage",
