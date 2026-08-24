@@ -2,7 +2,7 @@ import Link from "next/link";
 import WordSearchBox from "../../components/WordSearchBox";
 
 export const metadata = {
-  title: "Words That Start With… — free word finder by first letters",
+  title: { absolute: "Words That Start With… — free word finder by first letters" },
   description: "Find every word that starts with any letter or letters. Free lists sorted by length with Scrabble scores — great for Scrabble, Words With Friends and crosswords.",
   alternates: { canonical: "/words-starting-with" },
 };

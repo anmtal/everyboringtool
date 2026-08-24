@@ -2,7 +2,7 @@ import Link from "next/link";
 import WordSearchBox from "../../components/WordSearchBox";
 
 export const metadata = {
-  title: "Words Containing… — free word finder by letters inside",
+  title: { absolute: "Words Containing… — free word finder by letters inside" },
   description: "Find every word that contains a sequence of letters, like QU or OUGH. Free lists sorted by length with Scrabble scores for Scrabble, Words With Friends and crosswords.",
   alternates: { canonical: "/words-containing" },
 };

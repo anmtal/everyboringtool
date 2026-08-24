@@ -2,7 +2,7 @@ import Link from "next/link";
 import WordSearchBox from "../../components/WordSearchBox";
 
 export const metadata = {
-  title: "Crossword Solver — free crossword clue & pattern finder",
+  title: { absolute: "Crossword Solver — free crossword clue & pattern finder" },
   description: "Solve any crossword. Enter the letters you know and underscores for the blanks (like c_t) and get every word that fits. Free, with Scrabble scores, runs in your browser.",
   alternates: { canonical: "/crossword-solver" },
 };

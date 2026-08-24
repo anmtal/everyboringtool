@@ -3,7 +3,7 @@ import WordSearchBox from "../../components/WordSearchBox";
 import { POPULAR } from "../../lib/wordPopular";
 
 export const metadata = {
-  title: "Anagram Solver — free anagram generator & finder",
+  title: { absolute: "Anagram Solver — free anagram generator & finder" },
   description: "Find every anagram of your letters instantly. A free anagram solver for Scrabble, crosswords and word puzzles — enter letters and get all the words that use them.",
   alternates: { canonical: "/anagram" },
 };

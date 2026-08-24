@@ -2,7 +2,7 @@ import Link from "next/link";
 import WordSearchBox from "../../components/WordSearchBox";
 
 export const metadata = {
-  title: "Words That End With… — free word finder by ending",
+  title: { absolute: "Words That End With… — free word finder by ending" },
   description: "Find every word that ends with any letters — like -ing, -ed or -tion. Free lists sorted by length with Scrabble scores for Scrabble, Words With Friends and crosswords.",
   alternates: { canonical: "/words-ending-with" },
 };

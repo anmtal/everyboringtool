@@ -20,8 +20,8 @@ export function generateStaticParams() {
 function metaDescription(t, content) {
   const about = (content && content.about ? content.about : "").replace(/\s+/g, " ").trim();
   const base = about || `${t.description} Free, no sign-up, and it runs right in your browser.`;
-  if (base.length <= 158) return base;
-  const cut = base.slice(0, 158).slice(0, base.slice(0, 158).lastIndexOf(" "));
+  if (base.length <= 150) return base;
+  const cut = base.slice(0, 150).slice(0, base.slice(0, 150).lastIndexOf(" "));
   // If the trim already lands on a sentence end, leave it clean — appending an
   // ellipsis after a period ("NO.…") reads as broken. Otherwise mark the cut.
   return /[.!?]$/.test(cut) ? cut : cut.replace(/[\s,;:]+$/, "") + "…";

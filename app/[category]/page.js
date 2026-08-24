@@ -34,7 +34,7 @@ export function generateMetadata({ params }) {
     const label = wordRouteLabel(route);
     const count = nLetterWords(route).length;
     return {
-      title: `${label} — ${count} words`,
+      title: { absolute: `${label} — ${count} words` },
       description: `A full list of ${count} ${label.toLowerCase()}, with Scrabble scores. Free — perfect for Wordle, Scrabble, Words With Friends and crosswords.`,
       robots: wordRobots(count),
       alternates: { canonical: `/${params.category}` },

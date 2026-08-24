@@ -2,7 +2,7 @@ import Link from "next/link";
 import WordleSolver from "../../components/WordleSolver";
 
 export const metadata = {
-  title: "Wordle Solver — free Wordle helper & answer finder",
+  title: { absolute: "Wordle Solver — free Wordle helper & answer finder" },
   description: "Solve today's Wordle. Enter your green, yellow and grey clues and instantly see every possible 5-letter answer. Free, no sign-up, runs in your browser.",
   alternates: { canonical: "/wordle-solver" },
 };

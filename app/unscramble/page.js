@@ -3,7 +3,7 @@ import UnscrambleBox from "../../components/UnscrambleBox";
 import { POPULAR } from "../../lib/wordPopular";
 
 export const metadata = {
-  title: "Word Unscrambler — free anagram & Scrabble word finder",
+  title: { absolute: "Word Unscrambler — free anagram & Scrabble word finder" },
   description: "Unscramble letters into words instantly. A free word unscrambler and anagram solver for Scrabble, Words With Friends and crosswords — enter your letters and get every word, with scores. No sign-up.",
   alternates: { canonical: "/unscramble" },
 };
