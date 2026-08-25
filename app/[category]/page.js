@@ -2,55 +2,30 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { categories, getCategory } from "../../lib/tools";
 import { toolContent } from "../../lib/toolContent";
-import { parseWordRoute, wordRouteLabel } from "../../lib/wordRoutes";
-import NLetterWordsView, { nLetterWords } from "../../components/NLetterWordsView";
-import { wordRobots } from "../../lib/wordSeo";
 
 export const dynamicParams = true;
 export const revalidate = 604800;
 
 export function generateStaticParams() {
-  const cats = categories.map((c) => ({ category: c.slug }));
-  const words = [];
-  for (let n = 2; n <= 9; n++) words.push({ category: `${n}-letter-words` });
-  for (const l of "abcdefghijklmnopqrstuvwxyz".split("")) words.push({ category: `5-letter-words-starting-with-${l}` });
-  return [...cats, ...words];
+  return categories.map((c) => ({ category: c.slug }));
 }
 
 export function generateMetadata({ params }) {
   const c = getCategory(params.category);
-  if (c) {
-    const built = c.tools.filter((t) => toolContent[t.slug]).length;
-    const description = `${c.description} ${built} free ${c.name.toLowerCase()} — no sign-up, and they run right in your browser.`;
-    return {
-      title: c.name,
-      description,
-      alternates: { canonical: `/${c.slug}` },
-      openGraph: { type: "website", url: `/${c.slug}`, title: c.name, description },
-    };
-  }
-  const route = parseWordRoute(params.category);
-  if (route) {
-    const label = wordRouteLabel(route);
-    const count = nLetterWords(route).length;
-    return {
-      title: { absolute: `${label} — ${count} words` },
-      description: `A full list of ${count} ${label.toLowerCase()}, with Scrabble scores. Free — perfect for Wordle, Scrabble, Words With Friends and crosswords.`,
-      robots: wordRobots(count),
-      alternates: { canonical: `/${params.category}` },
-    };
-  }
-  return {};
+  if (!c) return {};
+  const built = c.tools.filter((t) => toolContent[t.slug]).length;
+  const description = `${c.description} ${built} free ${c.name.toLowerCase()} — no sign-up, and they run right in your browser.`;
+  return {
+    title: c.name,
+    description,
+    alternates: { canonical: `/${c.slug}` },
+    openGraph: { type: "website", url: `/${c.slug}`, title: c.name, description },
+  };
 }
 
 export default function CategoryPage({ params }) {
   const c = getCategory(params.category);
-
-  if (!c) {
-    const route = parseWordRoute(params.category);
-    if (route) return <NLetterWordsView route={route} />;
-    notFound();
-  }
+  if (!c) notFound();
 
   return (
     <>

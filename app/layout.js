@@ -106,7 +106,7 @@ export default function RootLayout({ children }) {
                 <Link href="/wordle-solver">Wordle Solver</Link>
                 <Link href="/crossword-solver">Crossword Solver</Link>
                 <Link href="/words-starting-with">Words Starting With…</Link>
-                <Link href="/5-letter-words">5 Letter Words</Link>
+                <Link href="/words-ending-with">Words Ending With…</Link>
               </nav>
 
               <nav className="footer-col" aria-label="Site">

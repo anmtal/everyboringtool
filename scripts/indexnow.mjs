@@ -37,10 +37,8 @@ function fullUrls(sitemap) {
   for (const w of words) { u.add(`${ORIGIN}/unscramble/${w}`); u.add(`${ORIGIN}/anagram/${w}`); }
   const az = "abcdefghijklmnopqrstuvwxyz".split("");
   az.forEach((l) => u.add(`${ORIGIN}/words-starting-with/${l}`));
-  az.forEach((l) => u.add(`${ORIGIN}/5-letter-words-starting-with-${l}`));
   ["s", "e", "d", "y", "ing", "ed", "er", "ly", "ion", "ness", "ment", "able", "est", "ous", "ful"].forEach((s) => u.add(`${ORIGIN}/words-ending-with/${s}`));
   ["qu", "zz", "oo", "ee", "th", "ch", "ph", "ck", "igh", "ough", "x", "z", "j"].forEach((s) => u.add(`${ORIGIN}/words-containing/${s}`));
-  for (let n = 2; n <= 9; n++) u.add(`${ORIGIN}/${n}-letter-words`);
   ["c-t", "-at", "s--e", "c--se", "p--nt", "w-rd", "-ing"].forEach((p) => u.add(`${ORIGIN}/crossword-solver/${p}`));
   return [...u];
 }

@@ -13,7 +13,6 @@ const WORD_GAMES = [
   { href: "/words-ending-with", name: "Words Ending With…" },
   { href: "/words-containing", name: "Words Containing…" },
   { href: "/crossword-solver", name: "Crossword Solver" },
-  { href: "/5-letter-words", name: "5 Letter Words" },
 ];
 
 export default function CategoryNav() {

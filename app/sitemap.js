@@ -19,7 +19,6 @@ export default function sitemap() {
   for (const l of "abcdefghijklmnopqrstuvwxyz".split("")) urls.push({ url: `${base}/words-starting-with/${l}` });
   for (const s of ["ing", "ed", "tion", "ly", "ness", "ment", "able"]) urls.push({ url: `${base}/words-ending-with/${s}` });
   for (const s of ["qu", "th", "ch", "oo", "igh", "ough"]) urls.push({ url: `${base}/words-containing/${s}` });
-  for (let n = 3; n <= 8; n++) urls.push({ url: `${base}/${n}-letter-words` });
   urls.push({ url: `${base}/crossword-solver`, priority: 0.9 });
   for (const p of ["c-t", "-at", "s--e"]) urls.push({ url: `${base}/crossword-solver/${p}` });
   for (const c of categories) {

@@ -86,6 +86,10 @@ const nextConfig = {
     return [
       { source: "/text/word-unscrambler", destination: "/unscramble", permanent: true },
       { source: "/pdf/unlock-pdf", destination: "/pdf", permanent: true },
+      // The N-letter-words tool was retired; 301 its indexed URLs
+      // (e.g. /5-letter-words, /7-letter-words-starting-with-a) to the unscrambler.
+      { source: "/:n(\\d\\d?-letter-words)", destination: "/unscramble", permanent: true },
+      { source: "/:n(\\d\\d?-letter-words-[a-z-]+)", destination: "/unscramble", permanent: true },
     ];
   },
   webpack: (config) => {
