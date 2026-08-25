@@ -11,10 +11,8 @@ function pt(r, aDeg) {
   return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
 }
 
-const DEFAULT = "Alice\nBen\nChloe\nDiego\nEmma\nFinn";
-
 export default function WheelOfNames() {
-  const [text, setText] = useState(DEFAULT);
+  const [text, setText] = useState("");
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState(null);
