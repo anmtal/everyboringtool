@@ -329,7 +329,10 @@ export default function TicTacToe() {
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: 8,
-          maxWidth: 360,
+          // A definite width — NOT max-width — because `.tool` is a flex column
+          // and the auto side-margins below disable the default stretch, which
+          // would otherwise let the 1fr columns collapse to min-content (~0).
+          width: "min(360px, 100%)",
           marginLeft: "auto",
           marginRight: "auto",
         }}
