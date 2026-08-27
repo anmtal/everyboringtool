@@ -58,6 +58,18 @@ export default function ConvertHub() {
         ))}
       </div>
 
+      <section className="tool-related" style={{ marginTop: 40 }}>
+        <h2 className="tool-h2">More audio &amp; video tools</h2>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <Link href="/audio-video" className="badge" style={{ textDecoration: "none" }}>All Audio &amp; Video tools</Link>
+          <Link href="/audio-video/compress-video" className="badge" style={{ textDecoration: "none" }}>Compress Video</Link>
+          <Link href="/audio-video/video-trim" className="badge" style={{ textDecoration: "none" }}>Trim Video</Link>
+          <Link href="/audio-video/video-to-gif" className="badge" style={{ textDecoration: "none" }}>Video to GIF</Link>
+          <Link href="/audio-video/mute-video" className="badge" style={{ textDecoration: "none" }}>Mute Video</Link>
+          <Link href="/audio-video/add-subtitles" className="badge" style={{ textDecoration: "none" }}>Add Subtitles</Link>
+        </div>
+      </section>
+
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );
