@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { categories, getCategory, getTool, SITE } from "../../../lib/tools";
 import { toolContent } from "../../../lib/toolContent";
 import ToolMount from "../../../components/ToolMount";
+import AdSlot from "../../../components/AdSlot";
+import { ymylNote } from "../../../lib/ymyl";
 
 export function generateStaticParams() {
   const params = [];
@@ -122,6 +124,8 @@ export default function ToolPage({ params }) {
 
   // Contextual internal links: up to 6 built siblings in the same category.
   const related = c.tools.filter((x) => x.slug !== t.slug && toolContent[x.slug]).slice(0, 6);
+  // On-page YMYL trust note for finance/tax/health calculators (null otherwise).
+  const disclaimer = ymylNote(t.slug);
 
   return (
     <>
@@ -132,6 +136,10 @@ export default function ToolPage({ params }) {
       </header>
 
       <ToolMount slug={t.slug} />
+
+      {disclaimer && (
+        <p className="tool-note tool-disclaimer" role="note">{disclaimer}</p>
+      )}
 
       {content.about && (
         <section className="tool-about">
@@ -168,6 +176,8 @@ export default function ToolPage({ params }) {
           </div>
         </section>
       )}
+
+      <AdSlot slot={process.env.NEXT_PUBLIC_ADSLOT_TOOL} minHeight={280} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>

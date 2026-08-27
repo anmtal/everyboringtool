@@ -287,8 +287,12 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 }
 
 /* ---- built tools ---- */
-.tool-shell { margin: 6px 0 4px; }
+/* Reserve height so swapping the "Loading tool…" placeholder for the hydrated
+   tool (ssr:false dynamic import) doesn't shove the About/FAQ/Related content
+   below it — i.e. avoid layout shift (CLS). Tunable. */
+.tool-shell { margin: 6px 0 4px; min-height: 320px; }
 .tool-loading { padding: 40px; text-align: center; color: var(--muted); }
+.tool-disclaimer { border-left: 3px solid var(--border-strong); padding-left: 12px; margin-top: 14px; }
 .tool { display: flex; flex-direction: column; gap: 16px; }
 
 .dropzone {

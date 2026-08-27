@@ -51,12 +51,8 @@ export default function CategoryPage({ params }) {
         <div className="grid">
           {c.tools.map((t) => {
             const built = !!toolContent[t.slug];
-            return (
-              <Link
-                key={t.slug}
-                href={`/${c.slug}/${t.slug}`}
-                className={`card tool-card ${built ? "" : "is-soon"}`}
-              >
+            const inner = (
+              <>
                 <span className="tool-name">{t.name}</span>
                 <span className="tool-desc">{t.description}</span>
                 <span className="cat-meta">
@@ -66,7 +62,18 @@ export default function CategoryPage({ params }) {
                     <span className="badge">Coming soon</span>
                   )}
                 </span>
+              </>
+            );
+            // Built tools link to their page; "coming soon" stubs render as a
+            // non-clickable card so they're not crawlable dead-ends that look live.
+            return built ? (
+              <Link key={t.slug} href={`/${c.slug}/${t.slug}`} className="card tool-card">
+                {inner}
               </Link>
+            ) : (
+              <div key={t.slug} className="card tool-card is-soon" aria-disabled="true">
+                {inner}
+              </div>
             );
           })}
         </div>

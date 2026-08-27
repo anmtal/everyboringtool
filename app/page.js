@@ -8,6 +8,12 @@ export const metadata = {
 };
 
 export default function Home() {
+  // Link the homepage DIRECTLY to the most popular individual tools (not just
+  // category hubs), so the highest-value pages get internal-link equity and
+  // aren't buried two clicks deep.
+  const popular = categories
+    .flatMap((c) => c.tools.filter((t) => t.popular && toolContent[t.slug]).map((t) => ({ t, cat: c.slug })))
+    .slice(0, 12);
   return (
     <>
       <section className="hero">
@@ -26,6 +32,22 @@ export default function Home() {
           </li>
         </ul>
       </section>
+
+      {popular.length > 0 && (
+        <section className="block">
+          <h2 className="section-title">Popular tools</h2>
+          <div className="grid">
+            {popular.map(({ t, cat }) => (
+              <Link key={`${cat}-${t.slug}`} href={`/${cat}/${t.slug}`} className="card cat-card">
+                <span className="cat-emoji" aria-hidden="true">⭐</span>
+                <span className="cat-name">{t.name}</span>
+                <span className="cat-desc">{t.description}</span>
+                <span className="cat-meta"><span className="badge badge-live">Open →</span></span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="block">
         <h2 className="section-title"><span aria-hidden="true">🔤</span> Word Games</h2>
