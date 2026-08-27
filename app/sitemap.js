@@ -1,6 +1,7 @@
 import { categories, SITE } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
 import { POPULAR } from "../lib/wordPopular";
+import { PAIRS } from "../lib/convertMatrix";
 
 export default function sitemap() {
   const base = SITE.url;
@@ -21,6 +22,11 @@ export default function sitemap() {
   for (const s of ["qu", "th", "ch", "oo", "igh", "ough"]) urls.push({ url: `${base}/words-containing/${s}` });
   urls.push({ url: `${base}/crossword-solver`, priority: 0.9 });
   for (const p of ["c-t", "-at", "s--e"]) urls.push({ url: `${base}/crossword-solver/${p}` });
+  // File-conversion engine: the hub, plus a CAUTIOUS curated subset of pairs
+  // (sitemap:true). The rest stay crawlable via the hub and internal links —
+  // widen convertMatrix's sitemap flags as the domain earns trust.
+  urls.push({ url: `${base}/convert`, priority: 0.6 });
+  for (const p of PAIRS) if (p.sitemap) urls.push({ url: `${base}/convert/${p.slug}`, priority: 0.7 });
   for (const c of categories) {
     urls.push({ url: `${base}/${c.slug}` });
     for (const t of c.tools) {

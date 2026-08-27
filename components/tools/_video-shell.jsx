@@ -16,7 +16,8 @@ export default function VideoToolShell({
   buildJob,
   renderOptions,
   defaultOptions = {},
-  resultKind = "video", // "video" | "image"
+  resultKind = "video", // "video" | "image" | "audio"
+  fileLabel = "Choose a video file",
   note,
 }) {
   const [file, setFile] = useState(null);
@@ -75,7 +76,7 @@ export default function VideoToolShell({
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && !busy && (e.preventDefault(), inputRef.current?.click())}
       >
         <input ref={inputRef} type="file" accept={accept} onChange={onPick} hidden />
-        <p className="dropzone-title">{file ? file.name : "Choose a video file"}</p>
+        <p className="dropzone-title">{file ? file.name : fileLabel}</p>
         <p className="dropzone-sub">
           {file ? fmtBytes(file.size) + " — runs in your browser, nothing uploaded" : hint}
         </p>
@@ -107,6 +108,8 @@ export default function VideoToolShell({
           <p className="tool-result-label">Done — {fmtBytes(result.size)}</p>
           {resultKind === "image" ? (
             <img src={result.url} alt="Result" style={{ maxWidth: "100%", marginTop: 8, borderRadius: 8 }} />
+          ) : resultKind === "audio" ? (
+            <audio controls src={result.url} style={{ width: "100%", marginTop: 8 }} />
           ) : (
             <video controls src={result.url} style={{ width: "100%", marginTop: 8, borderRadius: 8 }} />
           )}
