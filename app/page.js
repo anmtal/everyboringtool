@@ -13,7 +13,7 @@ export default function Home() {
   // aren't buried two clicks deep.
   const popular = categories
     .flatMap((c) => c.tools.filter((t) => t.popular && toolContent[t.slug]).map((t) => ({ t, cat: c.slug })))
-    .slice(0, 12);
+    .slice(0, 6);
   return (
     <>
       <section className="hero">
