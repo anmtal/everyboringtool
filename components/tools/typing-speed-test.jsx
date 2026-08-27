@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-
-const SAMPLES = [
-  "The quick brown fox jumps over the lazy dog while the sun rises slowly above the quiet hills. A gentle breeze moves through the tall grass as birds begin their morning songs across the valley.",
-  "Typing well is less about speed and more about rhythm. When your fingers learn the keys, your mind is free to focus on the words themselves. Practice a little each day and your pace will climb without effort.",
-  "Good writing starts with a clear idea and a simple sentence. Add detail slowly, cut the words you do not need, and read it aloud to hear the flow. The best pages feel easy because someone worked hard on them.",
-  "A small river winds between the old stone houses of the village. Children run along the bank, laughing at the ducks, while the baker opens his window and the smell of fresh bread drifts into the narrow street.",
-  "Every long journey begins with a single quiet step. You do not need to see the whole road ahead, only the next few meters in front of you. Keep moving, stay patient, and trust that the path will slowly reveal itself.",
-];
+import { TYPING_PASSAGES as SAMPLES } from "../../lib/typingPassages";
 
 function pickIndex(exclude) {
   if (SAMPLES.length <= 1) return 0;
@@ -71,8 +64,7 @@ export default function TypingSpeedTest() {
     [finished, sample.length, startTime]
   );
 
-  const restart = useCallback(() => {
-    setSampleIndex((prev) => pickIndex(prev));
+  const resetState = useCallback(() => {
     setTyped("");
     setStartTime(null);
     setEndTime(null);
@@ -83,6 +75,17 @@ export default function TypingSpeedTest() {
       });
     }
   }, []);
+
+  // New text = a fresh random passage (never the current one). Restart = retry
+  // the same passage.
+  const newText = useCallback(() => {
+    setSampleIndex((prev) => pickIndex(prev));
+    resetState();
+  }, [resetState]);
+
+  const restartSame = useCallback(() => {
+    resetState();
+  }, [resetState]);
 
   const stats = useMemo(() => {
     const typedChars = typed.length;
@@ -142,7 +145,12 @@ export default function TypingSpeedTest() {
     <div className="tool">
       <div className="tool-fields">
         <div className="tool-field">
-          <span className="tool-label">Sample text</span>
+          <span className="tool-label">
+            Sample text{" "}
+            <span style={{ opacity: 0.55, fontWeight: 400, fontSize: "0.85em" }}>
+              #{sampleIndex + 1} of {SAMPLES.length}
+            </span>
+          </span>
           <div
             className="tool-output"
             onClick={focusInput}
@@ -216,19 +224,18 @@ export default function TypingSpeedTest() {
           <p className="tool-note">
             You typed {stats.correctChars} correct characters in{" "}
             {stats.seconds.toFixed(1)} seconds at{" "}
-            {Math.round(stats.accuracy)}% accuracy. Press Restart for a new
+            {Math.round(stats.accuracy)}% accuracy. Press New text for a fresh
             passage.
           </p>
         </div>
       )}
 
       <div className="tool-actions">
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={restart}
-        >
-          {finished ? "Try another passage" : "Restart"}
+        <button type="button" className="btn btn-primary" onClick={newText}>
+          ↻ New text
+        </button>
+        <button type="button" className="btn" onClick={restartSame}>
+          Restart
         </button>
       </div>
 
