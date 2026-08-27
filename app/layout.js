@@ -49,6 +49,31 @@ export const viewport = {
   ],
 };
 
+// Sitewide brand entity for E-E-A-T. Anonymity-safe: the publisher is the brand
+// "Every Boring Tool", never a person. Establishes a consistent Organization +
+// WebSite entity that per-page WebApplication schema can attribute to.
+const ORG_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE.url}/#org`,
+      name: SITE.name,
+      url: SITE.url,
+      logo: `${SITE.url}/icon.svg`,
+      description: SITE.description,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE.url}/#website`,
+      name: SITE.name,
+      url: SITE.url,
+      inLanguage: "en",
+      publisher: { "@id": `${SITE.url}/#org` },
+    },
+  ],
+};
+
 export default function RootLayout({ children }) {
   const year = new Date().getFullYear();
   return (
@@ -61,6 +86,10 @@ export default function RootLayout({ children }) {
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           crossOrigin="anonymous"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_LD) }}
         />
         <a href="#main" className="skip-link">Skip to content</a>
         <header className="site-header">
