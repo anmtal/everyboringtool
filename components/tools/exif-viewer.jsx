@@ -24,7 +24,8 @@ export default function ExifViewer() {
     if (!f) return;
     setBusy(true); setError(""); setRows(null); setGps(null); setName(f.name);
     try {
-      const exifr = (await import("exifr")).default;
+      const ex = await import("exifr");
+      const exifr = ex.default || ex;
       const meta = await exifr.parse(f, true).catch(() => null);
       if (!meta || Object.keys(meta).length === 0) {
         setError("No EXIF metadata found. Screenshots — and photos shared through chat apps or social media — usually have their metadata removed.");

@@ -27,7 +27,8 @@ export default function CreateZip() {
     if (files.length === 0) { setError("Choose one or more files."); return; }
     setBusy(true); setError(""); setResult(null);
     try {
-      const JSZip = (await import("jszip")).default;
+      const jz = await import("jszip");
+      const JSZip = jz.default || jz;
       const zip = new JSZip();
       const used = new Set();
       for (const f of files) {

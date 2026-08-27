@@ -43,7 +43,8 @@ export default function ImageSplitter() {
       const tw = Math.floor(img.naturalWidth / C);
       const th = Math.floor(img.naturalHeight / R);
       if (tw < 1 || th < 1) throw new Error("The image is too small for that many tiles.");
-      const JSZip = (await import("jszip")).default;
+      const jz = await import("jszip");
+      const JSZip = jz.default || jz;
       const zip = new JSZip();
       const canvas = document.createElement("canvas");
       canvas.width = tw; canvas.height = th;

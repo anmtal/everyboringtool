@@ -1,12 +1,12 @@
 "use client";
-import yaml from "js-yaml";
+import { load } from "js-yaml";
 import TextConvert from "./_text-convert";
 
 function transform(input) {
   const s = (input || "").trim();
   if (!s) throw new Error("Paste some YAML to convert.");
   let data;
-  try { data = yaml.load(s); } catch { throw new Error("That doesn't look like valid YAML — check the indentation."); }
+  try { data = load(s); } catch { throw new Error("That doesn't look like valid YAML — check the indentation."); }
   return JSON.stringify(data, null, 2);
 }
 

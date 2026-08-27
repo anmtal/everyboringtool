@@ -42,7 +42,8 @@ export default function ExtractPdfImages() {
       pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
       const data = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
-      const JSZip = (await import("jszip")).default;
+      const jz = await import("jszip");
+      const JSZip = jz.default || jz;
       const zip = new JSZip();
       let n = 0; const seen = new Set();
       for (let p = 1; p <= pdf.numPages; p++) {

@@ -27,7 +27,8 @@ export default function SplitCsv() {
     if (data.length === 0) { setError("There are no data rows to split."); return; }
     setBusy(true);
     try {
-      const JSZip = (await import("jszip")).default;
+      const jz = await import("jszip");
+      const JSZip = jz.default || jz;
       const zip = new JSZip();
       let part = 0;
       for (let i = 0; i < data.length; i += per) {
