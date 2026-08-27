@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { categories, getCategory, getTool, SITE } from "../../../lib/tools";
+import { categories, getCategory, getTool, getToolBySlug, SITE } from "../../../lib/tools";
 import { toolContent } from "../../../lib/toolContent";
+import { relatedSlugs } from "../../../lib/related";
 import ToolMount from "../../../components/ToolMount";
 import AdSlot from "../../../components/AdSlot";
 import { ymylNote } from "../../../lib/ymyl";
@@ -122,8 +123,20 @@ export default function ToolPage({ params }) {
   });
   const jsonLd = { "@context": "https://schema.org", "@graph": graph };
 
-  // Contextual internal links: up to 6 built siblings in the same category.
-  const related = c.tools.filter((x) => x.slug !== t.slug && toolContent[x.slug]).slice(0, 6);
+  // Contextual internal links: genuinely related tools from the same topical
+  // cluster (often cross-category, e.g. cake-pan -> yeast), filtered to built
+  // tools. Falls back to same-category siblings if the tool isn't clustered.
+  let related = relatedSlugs(t.slug)
+    .map((s) => getToolBySlug(s))
+    .filter((r) => r && toolContent[r.tool.slug])
+    .map((r) => ({ slug: r.tool.slug, name: r.tool.name, description: r.tool.description, cat: r.category.slug }))
+    .slice(0, 6);
+  if (related.length === 0) {
+    related = c.tools
+      .filter((x) => x.slug !== t.slug && toolContent[x.slug])
+      .slice(0, 6)
+      .map((x) => ({ slug: x.slug, name: x.name, description: x.description, cat: c.slug }));
+  }
   // On-page YMYL trust note for finance/tax/health calculators (null otherwise).
   const disclaimer = ymylNote(t.slug);
 
@@ -142,7 +155,7 @@ export default function ToolPage({ params }) {
       )}
 
       {related[0] && (
-        <Link href={`/${c.slug}/${related[0].slug}`} className="tool-next">
+        <Link href={`/${related[0].cat}/${related[0].slug}`} className="tool-next">
           <span className="tool-next-eyebrow">Try next →</span>
           <span className="tool-next-name">{related[0].name}</span>
           <span className="tool-next-desc">{related[0].description}</span>
@@ -177,7 +190,7 @@ export default function ToolPage({ params }) {
           <h2 className="tool-h2">Related tools</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {related.map((x) => (
-              <Link key={x.slug} href={`/${c.slug}/${x.slug}`} className="badge" style={{ textDecoration: "none" }} title={x.description}>
+              <Link key={x.slug} href={`/${x.cat}/${x.slug}`} className="badge" style={{ textDecoration: "none" }} title={x.description}>
                 {x.name}
               </Link>
             ))}
