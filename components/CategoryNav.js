@@ -43,6 +43,20 @@ export default function CategoryNav() {
 
   const current = open ? categories.find((c) => c.slug === open) : null;
 
+  // Long tool names wrap to two lines in the panel grid and make their whole row
+  // tall, which breaks the alignment. Push the long ones to the END of the list
+  // (keeping the rest in their original order) so the earlier rows stay tidy and
+  // single-line, and the two-line ones cluster in the last row.
+  const PANEL_WRAP = 24; // names longer than this wrap in the ~180px grid cells
+  const panelTools = current
+    ? current.tools
+        .map((t, i) => [t, i])
+        .sort(([a, ai], [b, bi]) =>
+          (a.name.length > PANEL_WRAP ? 1 : 0) - (b.name.length > PANEL_WRAP ? 1 : 0) || ai - bi
+        )
+        .map(([t]) => t)
+    : [];
+
   return (
     <nav className="catnav" ref={ref} aria-label="Tool categories">
       <div className="catnav-wrap container">
@@ -98,7 +112,7 @@ export default function CategoryNav() {
               <div className="catnav-panel-empty">Coming soon</div>
             ) : (
               <div className="catnav-panel-grid">
-                {current.tools.map((t) => (
+                {panelTools.map((t) => (
                   <Link
                     key={t.slug}
                     href={`/${current.slug}/${t.slug}`}
