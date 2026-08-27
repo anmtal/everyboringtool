@@ -1,16 +1,21 @@
-export default function BrandLogo({ className = "brand-logo" }) {
+export default function BrandLogo({ className = "brand-logo", idKey = "1" }) {
+  // The face is punched out of a solid currentColor badge with an SVG mask
+  // (white = keep, black = hole). Because the eyes and mouth are true holes, the
+  // mark stays theme- AND surface-adaptive (header --bg-blur, footer --surface-2)
+  // while still letting each feature animate — the CSS blinks the eyes and, every
+  // so often, cracks a brief smile before returning to deadpan. A unique mask id
+  // per instance avoids collisions between the header and footer logos.
+  const maskId = `ebt-face-${idKey}`;
   return (
     <svg className={className} viewBox="0 0 100 100" aria-hidden="true">
-      {/* "Deadpan" — a bored face is the brand voice made visual: two dot eyes
-          and one flat line for a mouth (which doubles as a screw slot). One
-          evenodd path so the eyes/mouth are TRUE transparent cut-outs that adapt
-          to any background; the badge fills with currentColor (= --text), so it
-          stays theme-adaptive like the old mark with no hard-coded colours. */}
-      <path
-        className="badge"
-        fillRule="evenodd"
-        d="M29 7 H71 A22 22 0 0 1 93 29 V71 A22 22 0 0 1 71 93 H29 A22 22 0 0 1 7 71 V29 A22 22 0 0 1 29 7 Z M29 43 a6.5 6.5 0 1 0 13 0 a6.5 6.5 0 1 0 -13 0 Z M58 43 a6.5 6.5 0 1 0 13 0 a6.5 6.5 0 1 0 -13 0 Z M33 60 H67 A3.5 3.5 0 0 1 67 67 H33 A3.5 3.5 0 0 1 33 60 Z"
-      />
+      <mask id={maskId}>
+        <rect x="7" y="7" width="86" height="86" rx="22" fill="#fff" />
+        <circle className="eye" cx="35.5" cy="43" r="6.5" fill="#000" />
+        <circle className="eye" cx="64.5" cy="43" r="6.5" fill="#000" />
+        <rect className="mouth-flat" x="33" y="60" width="34" height="7" rx="3.5" fill="#000" />
+        <path className="mouth-smile" d="M31 60 Q50 65 69 60 Q50 71 31 60 Z" fill="#000" />
+      </mask>
+      <rect width="100" height="100" fill="currentColor" mask={`url(#${maskId})`} />
     </svg>
   );
 }

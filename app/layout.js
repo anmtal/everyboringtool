@@ -95,7 +95,7 @@ export default function RootLayout({ children }) {
         <header className="site-header">
           <div className="container header-inner">
             <Link href="/" className="brand" aria-label={`${SITE.name} home`}>
-              <BrandLogo />
+              <BrandLogo idKey="h" />
               <span className="brand-name">{SITE.name}</span>
             </Link>
             <span className="brand-tagline">{SITE.tagline}</span>
@@ -109,7 +109,7 @@ export default function RootLayout({ children }) {
           <div className="footer-grid">
             <div className="footer-brand">
               <Link href="/" className="brand" aria-label={`${SITE.name} home`}>
-                <BrandLogo />
+                <BrandLogo idKey="f" />
                 <span className="brand-name">{SITE.name}</span>
               </Link>
               <p className="footer-tag muted">
