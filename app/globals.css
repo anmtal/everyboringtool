@@ -293,6 +293,12 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .tool-shell { margin: 6px 0 4px; min-height: 320px; }
 .tool-loading { padding: 40px; text-align: center; color: var(--muted); }
 .tool-disclaimer { border-left: 3px solid var(--border-strong); padding-left: 12px; margin-top: 14px; }
+/* "Try next →" second-click CTA under each tool. */
+.tool-next { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 18px; padding: 13px 16px; border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface-2); text-decoration: none; color: var(--text); transition: border-color 120ms ease-out, background-color 120ms ease-out; }
+.tool-next:hover, .tool-next:focus-visible { border-color: var(--text); background: var(--surface); }
+.tool-next-eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); flex: none; }
+.tool-next-name { font-weight: 700; }
+.tool-next-desc { color: var(--muted); font-size: 14px; }
 .tool { display: flex; flex-direction: column; gap: 16px; }
 
 .dropzone {

@@ -21,17 +21,17 @@ const TYPES = {
     label: "Kids clothing",
     cols: ["US", "UK", "EU", "Age"],
     rows: [
-      { US: "2T", UK: "2", EU: "92", Age: "2y" },
-      { US: "3T", UK: "3", EU: "98", Age: "3y" },
-      { US: "4", UK: "4", EU: "104", Age: "4y" },
-      { US: "5", UK: "5", EU: "110", Age: "5y" },
-      { US: "6", UK: "6", EU: "116", Age: "6y" },
-      { US: "7", UK: "7", EU: "122", Age: "7y" },
-      { US: "8", UK: "8", EU: "128", Age: "8y" },
-      { US: "10", UK: "9–10", EU: "140", Age: "9–10y" },
-      { US: "12", UK: "11–12", EU: "152", Age: "11–12y" },
-      { US: "14", UK: "13", EU: "164", Age: "13y" },
-      { US: "16", UK: "14", EU: "176", Age: "14–15y" },
+      { US: "2T", UK: "2–3y", EU: "92", Age: "2y" },
+      { US: "3T", UK: "3–4y", EU: "98", Age: "3y" },
+      { US: "4", UK: "4–5y", EU: "104", Age: "4y" },
+      { US: "5", UK: "5–6y", EU: "110", Age: "5y" },
+      { US: "6", UK: "6–7y", EU: "116", Age: "6y" },
+      { US: "7", UK: "7–8y", EU: "122", Age: "7y" },
+      { US: "8", UK: "8–9y", EU: "128", Age: "8y" },
+      { US: "10", UK: "9–10y", EU: "140", Age: "9–10y" },
+      { US: "12", UK: "11–12y", EU: "152", Age: "11–12y" },
+      { US: "14", UK: "12–13y", EU: "164", Age: "13y" },
+      { US: "16", UK: "13–14y", EU: "176", Age: "14–15y" },
     ],
   },
   shoes: {
@@ -118,9 +118,10 @@ export default function KidsClothingSizeConverter() {
       </div>
 
       <p className="tool-note">
-        US and UK children's sizes are based on age, while EU sizes are the child's height in centimetres, so the best fit
-        comes from measuring height rather than trusting the label. Note the US "4T" and "4" share a chest/height but 4T is
-        cut roomier for a nappy. Sizes vary a lot between brands — always check the retailer's own chart. Free, runs in your browser.
+        US and UK children's sizes are based on age — the UK labels clothes as an age range (e.g. "4–5 years"), not a single
+        number — while EU sizes are the child's height in centimetres, so the best fit comes from measuring height rather than
+        trusting the label. The US "4T" and "4" share a chest/height but 4T is cut roomier for a nappy. Sizes vary a lot between
+        brands — always check the retailer's own chart. Free, runs in your browser.
       </p>
     </div>
   );

@@ -141,6 +141,14 @@ export default function ToolPage({ params }) {
         <p className="tool-note tool-disclaimer" role="note">{disclaimer}</p>
       )}
 
+      {related[0] && (
+        <Link href={`/${c.slug}/${related[0].slug}`} className="tool-next">
+          <span className="tool-next-eyebrow">Try next →</span>
+          <span className="tool-next-name">{related[0].name}</span>
+          <span className="tool-next-desc">{related[0].description}</span>
+        </Link>
+      )}
+
       {content.about && (
         <section className="tool-about">
           <h2 className="tool-h2">About {t.name}</h2>

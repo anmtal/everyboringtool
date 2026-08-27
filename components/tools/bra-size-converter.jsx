@@ -75,29 +75,42 @@ export default function BraSizeConverter() {
     if (!(u > 0) || !(b > 0)) return null;
 
     const toIn = (v) => (unit === "cm" ? v / CM_PER_IN : v);
+    const toCm = (v) => (unit === "cm" ? v : v * CM_PER_IN);
     const underIn = toIn(u);
     const bustIn = toIn(b);
+    const underCm = toCm(u);
 
-    // Standard band method: round underbust to the nearest inch, then +4 if even
-    // / +5 if odd (always lands on an even band). This is what published size
-    // charts assume, which is exactly why US↔UK↔EU↔FR line up in the table above.
-    const ubRound = Math.round(underIn);
-    const rawBand = ubRound + (ubRound % 2 === 0 ? 4 : 5);
-    const bandNum = clamp(rawBand, 28, 44);
-    const bandRow = BANDS.find((r) => r.US === String(bandNum));
+    // Modern "snug band" method: the band IS your ribcage — NO +4. The old +4
+    // method inflates the band (leaving it too loose) and, when the bust-ribcage
+    // difference is small, collapses the cup to AA. Derive each system's band
+    // straight from the ribcage in its own unit so every one is a true fit, then
+    // cup = bust minus ribcage (one letter per inch). This can differ from the
+    // "I know my size" converter, which follows the older printed-label charts.
+    const usBand = clamp(Math.round(underIn / 2) * 2, 26, 48);
+    const euBand = clamp(Math.round(underCm / 5) * 5, 55, 115);
+    const bandByKey = {
+      US: String(usBand),
+      UK: String(usBand),
+      EU: String(euBand),
+      FR: String(euBand + 15),
+      AU: String(usBand - 22),
+    };
 
-    // Cup: one letter per inch of bust-minus-band difference.
     const maxIdx = CUPS.US.length - 1;
-    const rawDiff = Math.round(bustIn) - bandNum;
+    const rawDiff = Math.round(bustIn - underIn);
     const cupIndex = clamp(rawDiff, 0, maxIdx);
 
-    const cards = buildCards(bandRow, cupIndex);
+    const cards = SYSTEMS.map((s) => ({
+      key: s.key,
+      label: s.label,
+      band: bandByKey[s.key],
+      cup: CUPS[s.key][cupIndex] || "—",
+    }));
     const us = cards.find((c) => c.key === "US");
     return {
       cards,
       usSize: `${us.band}${us.cup}`,
       warnSmallBust: rawDiff < 0,
-      warnBand: rawBand !== bandNum,
       warnCup: rawDiff > maxIdx,
     };
   }, [unit, under, bust]);
@@ -221,9 +234,6 @@ export default function BraSizeConverter() {
                   fullest part. We've shown the smallest cup for now.
                 </p>
               )}
-              {measure.warnBand && (
-                <p className="tool-note">That under-bust is outside our chart, so we've used the nearest band we cover.</p>
-              )}
               {measure.warnCup && (
                 <p className="tool-note">
                   That's a bigger cup than our chart lists — take the largest one shown as a guide and check the brand's own chart.
@@ -236,12 +246,12 @@ export default function BraSizeConverter() {
 
           <p className="tool-note">
             How this works: measure your under-bust snug around your ribcage and your bust around the fullest part, both level.
-            Your <strong>band</strong> is the under-bust rounded to the nearest inch, plus 4 (or 5 if that's odd) — the standard
-            method behind published size charts, which is why it lines up across countries. Your <strong>cup</strong> is the
-            bust-minus-band difference: each inch is one cup (1″ = A, 2″ = B, 3″ = C…). Some fitters prefer a snugger band taken
-            straight off the ribcage with no +4, which gives a smaller band and a bigger cup letter — if your band rides up or
-            feels loose, try one band down and one cup up. Fit varies by brand and Asian labels often run a cup smaller, so treat
-            this as a starting point. Nothing you type leaves your browser.
+            Your <strong>band</strong> is that ribcage measurement rounded to the nearest even inch (or nearest 5 cm) — the
+            modern “snug band” method that gives the best support. We don’t add 4 inches the way older calculators do; that
+            leaves the band too loose. Your <strong>cup</strong> is the bust-minus-ribcage difference: each inch is one cup
+            (1″ = A, 2″ = B, 3″ = C…). If you’re converting a size already printed on a bra label, use “I know my size” instead —
+            printed labels follow the older cross-country charts, so the two can differ. Fit varies by brand and Asian labels
+            often run a cup smaller, so treat this as a starting point. Nothing you type leaves your browser.
           </p>
         </>
       )}
