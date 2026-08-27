@@ -94,6 +94,8 @@ const nextConfig = {
       { source: "/seo-web/sitemap-checker", destination: "/seo-web", permanent: true },
       { source: "/seo-web/open-graph-preview", destination: "/seo-web", permanent: true },
       { source: "/seo-web/page-speed-image-estimator", destination: "/seo-web", permanent: true },
+      // Data-format converters moved from /converters/* to the new /data/* category.
+      { source: "/converters/:slug(csv-to-json|json-to-csv|markdown-to-html|xml-to-json|json-to-xml|xml-to-csv|csv-to-xml|csv-to-markdown|csv-to-html|html-table-to-csv|csv-to-excel|excel-to-csv|excel-to-json|json-to-excel|excel-to-html|split-csv|tsv-to-csv|csv-to-tsv|yaml-to-json|json-to-yaml)", destination: "/data/:slug", permanent: true },
       // The N-letter-words tool was retired; 301 its indexed URLs
       // (e.g. /5-letter-words, /7-letter-words-starting-with-a) to the unscrambler.
       { source: "/:n(\\d\\d?-letter-words)", destination: "/unscramble", permanent: true },
