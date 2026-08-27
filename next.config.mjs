@@ -86,6 +86,14 @@ const nextConfig = {
     return [
       { source: "/text/word-unscrambler", destination: "/unscramble", permanent: true },
       { source: "/pdf/unlock-pdf", destination: "/pdf", permanent: true },
+      // Retired the "coming soon" placeholders (need a paid API / server / model):
+      // parked in memory to build later. 301 their nav-linked URLs to the category.
+      { source: "/pdf/pdf-to-word", destination: "/pdf", permanent: true },
+      { source: "/converters/currency-converter", destination: "/converters", permanent: true },
+      { source: "/image/background-remover", destination: "/image", permanent: true },
+      { source: "/seo-web/sitemap-checker", destination: "/seo-web", permanent: true },
+      { source: "/seo-web/open-graph-preview", destination: "/seo-web", permanent: true },
+      { source: "/seo-web/page-speed-image-estimator", destination: "/seo-web", permanent: true },
       // The N-letter-words tool was retired; 301 its indexed URLs
       // (e.g. /5-letter-words, /7-letter-words-starting-with-a) to the unscrambler.
       { source: "/:n(\\d\\d?-letter-words)", destination: "/unscramble", permanent: true },
