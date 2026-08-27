@@ -45,7 +45,7 @@ export default function ImageTool({
     e.target.value = "";
     if (!f) return;
     setError(""); setResult(null);
-    if (!f.type.startsWith("image/")) { setError("Please choose an image file (PNG, JPG, WebP, etc.)."); return; }
+    if (!f.type.startsWith("image/") && !/\.(png|jpe?g|webp|gif|bmp|ico|avif|svg|tiff?)$/i.test(f.name)) { setError("Please choose an image file (PNG, JPG, WebP, etc.)."); return; }
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     const url = URL.createObjectURL(f); previewRef.current = url;
     const img = new Image();
