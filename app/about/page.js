@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SITE, categories } from "../../lib/tools";
-import { toolContent } from "../../lib/toolContent";
+import { TOOL_COUNT } from "../../lib/toolCount";
 
 export const metadata = {
   title: "About",
@@ -9,9 +9,48 @@ export const metadata = {
   alternates: { canonical: "/about" },
 };
 
-export default function About() {
-  const built = Object.keys(toolContent).length;
+// Brand-entity Q&A: the questions people (and AI answer engines) ask about the
+// SITE itself — free?, safe?, account?, limits? Kept factual and consistent with
+// the prose above and the Privacy Policy. Rendered visibly AND as FAQPage schema
+// so an AI asked "what is Every Boring Tool / is it safe" has a block to lift.
+const ENTITY_FAQ = [
+  {
+    q: "What is Every Boring Tool?",
+    a: "Every Boring Tool is a free collection of small, practical online utilities — PDF and image tools, unit and format converters, everyday calculators, developer and SEO helpers, word games and more. Each one does a single boring job well, with no account and no clutter.",
+  },
+  {
+    q: "Is it really free? Is there a catch?",
+    a: "Yes, it is free, with no paid tier and no subscription. It can stay free because the tools run on your own device rather than on expensive servers. We plan to add modest advertising to cover hosting and development time, and that will always be disclosed here and in the Privacy Policy.",
+  },
+  {
+    q: "Do I need to sign up or create an account?",
+    a: "No. There is no sign-up, no email and no login anywhere on the site. You open a tool and use it straight away.",
+  },
+  {
+    q: "Are my files and data private?",
+    a: "Almost every tool is client-side code, which means your browser does the work and nothing you select is transmitted anywhere. A few tools genuinely need to talk to something else — the word games use a dictionary on our server, and a couple fetch resources from a third party — and each of those is named individually in the Privacy Policy rather than hidden behind a blanket promise.",
+  },
+  {
+    q: "Are there any usage limits?",
+    a: "No. There are no daily caps, no file-count limits and no features held back behind a paywall. Use any tool as much as you need.",
+  },
+  {
+    q: "Do the tools work on a phone?",
+    a: "Yes. Everything runs in a normal web browser on desktop, tablet or phone, and there is nothing to install.",
+  },
+];
 
+const FAQ_LD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: ENTITY_FAQ.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+
+export default function About() {
   return (
     <>
       <nav className="breadcrumb">
@@ -32,8 +71,8 @@ export default function About() {
           files a day, or quietly uploading your documents to a server you know nothing about.
         </p>
         <p>
-          {SITE.name} is the opposite of that. {built} tools, no account, no upsell, and a deliberate
-          bias towards doing the work inside your own browser so your files stay with you.
+          {SITE.name} is the opposite of that. {TOOL_COUNT} tools, no account, no upsell, and a
+          deliberate bias towards doing the work inside your own browser so your files stay with you.
         </p>
       </section>
 
@@ -74,6 +113,18 @@ export default function About() {
         </p>
       </section>
 
+      <section className="tool-faq block">
+        <h2 className="section-title">Common questions</h2>
+        <dl>
+          {ENTITY_FAQ.map((f, i) => (
+            <div className="faq-item" key={i}>
+              <dt>{f.q}</dt>
+              <dd>{f.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
       <section className="block">
         <h2 className="section-title">What&apos;s here</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -84,6 +135,8 @@ export default function About() {
           ))}
         </div>
       </section>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_LD) }} />
     </>
   );
 }

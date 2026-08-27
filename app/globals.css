@@ -211,6 +211,10 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .page-head h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.1; letter-spacing: -0.03em; margin: 0 0 8px; font-weight: 670; text-wrap: balance; }
 .page-head p { font-size: 16px; color: var(--muted); margin: 0; max-width: 560px; text-wrap: pretty; }
 
+/* Category-hub lead paragraph: a fuller, quotable intro under the page head. */
+.cat-intro { margin: 0 0 30px; max-width: 64ch; }
+.cat-intro p { font-size: 15.5px; line-height: 1.65; color: var(--text); margin: 0; text-wrap: pretty; }
+
 /* chips (popular) */
 .chips { display: flex; flex-wrap: wrap; gap: 9px; }
 .chip {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { categories, getCategory, getTool, getToolBySlug, SITE } from "../../../lib/tools";
+import { categories, getCategory, getTool, getToolBySlug, SITE, LAST_UPDATED } from "../../../lib/tools";
 import { toolContent } from "../../../lib/toolContent";
 import { relatedSlugs } from "../../../lib/related";
 import ToolMount from "../../../components/ToolMount";
@@ -120,6 +120,13 @@ export default function ToolPage({ params }) {
     operatingSystem: "Any",
     browserRequirements: "Requires JavaScript",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    // Freshness + attribution signals for AI engines: an honest last-reviewed
+    // date and a publisher pointing at the site-wide Organization entity defined
+    // in the root layout's JSON-LD (@id "/#org"), plus membership of the WebSite.
+    dateModified: content.updated || LAST_UPDATED,
+    inLanguage: "en",
+    isPartOf: { "@id": `${SITE.url}/#website` },
+    publisher: { "@id": `${SITE.url}/#org` },
   });
   const jsonLd = { "@context": "https://schema.org", "@graph": graph };
 

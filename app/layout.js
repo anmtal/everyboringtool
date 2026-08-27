@@ -2,7 +2,7 @@ import "./globals.css";
 import Link from "next/link";
 import { Inter } from "next/font/google";
 import { SITE, categories } from "../lib/tools";
-import { toolContent } from "../lib/toolContent";
+import { TOOL_COUNT_LABEL } from "../lib/toolCount";
 import CategoryNav from "../components/CategoryNav";
 import BrandLogo from "../components/BrandLogo";
 
@@ -10,11 +10,6 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 
 // Google AdSense publisher (client) ID.
 const ADSENSE_CLIENT = "ca-pub-8757202685549420";
-
-// Count of built tools, rounded down to a tens boundary so "170+" stays honest.
-const TOTAL_TOOLS = Math.floor(
-  categories.reduce((n, c) => n + c.tools.filter((t) => toolContent[t.slug]).length, 0) / 10
-) * 10;
 
 export const metadata = {
   metadataBase: new URL(SITE.url),
@@ -115,7 +110,7 @@ export default function RootLayout({ children }) {
               <p className="footer-tag muted">
                 {SITE.tagline} No sign-up, no clutter — just tools that work, right in your browser.
               </p>
-              <p className="footer-count muted">{TOTAL_TOOLS}+ free tools · nothing to install</p>
+              <p className="footer-count muted">{TOOL_COUNT_LABEL} free tools · nothing to install</p>
             </div>
 
             <div className="footer-links">
