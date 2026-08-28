@@ -97,9 +97,9 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .brand-logo .eye { transform-box: fill-box; transform-origin: center; }
 .brand-logo .mouth-smile { opacity: 0; }
 @media (prefers-reduced-motion: no-preference) {
-  .brand-logo .eye { animation: ebt-blink 8s ease-in-out infinite; }
-  .brand-logo .mouth-flat { animation: ebt-mouth-flat 15s ease-in-out infinite; }
-  .brand-logo .mouth-smile { animation: ebt-mouth-smile 15s ease-in-out infinite; }
+  .brand-logo .eye { animation: ebt-blink 5s ease-in-out infinite; }
+  .brand-logo .mouth-flat { animation: ebt-mouth-flat 9s ease-in-out infinite; }
+  .brand-logo .mouth-smile { animation: ebt-mouth-smile 9s ease-in-out infinite; }
 }
 @keyframes ebt-blink {
   0%, 14%, 19%, 59%, 64%, 100% { transform: scaleY(1); }
