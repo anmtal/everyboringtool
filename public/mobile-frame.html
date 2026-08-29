@@ -8,8 +8,8 @@
 <style>
   html,body{height:100%;margin:0;background:#0f0f12;overflow:hidden;font-family:"IBM Plex Mono",ui-monospace,monospace}
   .stage{height:100vh;display:grid;place-items:center}
-  .phone{width:402px;height:714px;border-radius:28px;overflow:hidden;background:#fff;
-    box-shadow:0 24px 70px -24px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.06);transform-origin:center}
+  .phone{width:402px;height:714px;border-radius:0;overflow:hidden;background:#fff;
+    box-shadow:0 0 0 4px #ff00ff,0 24px 70px -24px rgba(0,0,0,.85);transform-origin:center}
   .phone iframe{width:402px;height:714px;border:0;display:block;background:#0d0a12}
   .hint{position:fixed;top:10px;left:0;right:0;text-align:center;color:#7c7c86;font-size:12px;letter-spacing:.02em;pointer-events:none}
   .hint b{color:#c9c9d2}
@@ -17,13 +17,24 @@
 </style>
 </head>
 <body>
-  <div class="hint" id="hint">clean 9:16 mobile frame &nbsp;·&nbsp; <b>F11</b> fullscreen &nbsp;·&nbsp; record this box &nbsp;·&nbsp; press <b>H</b> to hide this line</div>
+  <div class="hint" id="hint"><b>F11</b> fullscreen &nbsp;·&nbsp; the <b style="color:#ff00ff">magenta box</b> is the crop guide (auto-removed) &nbsp;·&nbsp; record full screen &nbsp;·&nbsp; press <b>H</b> to hide this line</div>
   <div class="stage"><div class="phone" id="phone"><iframe id="f" title="tool" allow="clipboard-write"></iframe></div></div>
 <script>
   // tool path comes from the hash, e.g.  mobile-frame.html#/pdf/merge-pdf
   var tool = decodeURIComponent((location.hash || '').replace(/^#/, '')).trim() || '/';
   if (!tool.startsWith('/')) tool = '/' + tool;
-  document.getElementById('f').src = tool;
+  var frame = document.getElementById('f');
+  // same-origin: trim the site's page gutter so tool content sits flush & consistent across tools
+  frame.addEventListener('load', function () {
+    try {
+      var doc = frame.contentDocument;
+      var st = doc.createElement('style');
+      st.textContent = '.container{padding-left:12px!important;padding-right:12px!important}' +
+                       '.main{padding-left:12px!important;padding-right:12px!important}';
+      doc.head.appendChild(st);
+    } catch (e) {}
+  });
+  frame.src = tool;
   function fit(){
     var s = Math.min((window.innerHeight - 36) / 714, (window.innerWidth - 24) / 402);
     s = Math.max(0.4, Math.min(s, 2.2));
