@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mobile Frame — record a tool in 9:16</title>
+<style>
+  html,body{height:100%;margin:0;background:#0f0f12;overflow:hidden;font-family:"IBM Plex Mono",ui-monospace,monospace}
+  .stage{height:100vh;display:grid;place-items:center}
+  .phone{width:402px;height:714px;border-radius:28px;overflow:hidden;background:#fff;
+    box-shadow:0 24px 70px -24px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.06);transform-origin:center}
+  .phone iframe{width:402px;height:714px;border:0;display:block;background:#0d0a12}
+  .hint{position:fixed;top:10px;left:0;right:0;text-align:center;color:#7c7c86;font-size:12px;letter-spacing:.02em;pointer-events:none}
+  .hint b{color:#c9c9d2}
+  .hint.hide{display:none}
+</style>
+</head>
+<body>
+  <div class="hint" id="hint">clean 9:16 mobile frame &nbsp;·&nbsp; <b>F11</b> fullscreen &nbsp;·&nbsp; record this box &nbsp;·&nbsp; press <b>H</b> to hide this line</div>
+  <div class="stage"><div class="phone" id="phone"><iframe id="f" title="tool" allow="clipboard-write"></iframe></div></div>
+<script>
+  // tool path comes from the hash, e.g.  mobile-frame.html#/pdf/merge-pdf
+  var tool = decodeURIComponent((location.hash || '').replace(/^#/, '')).trim() || '/';
+  if (!tool.startsWith('/')) tool = '/' + tool;
+  document.getElementById('f').src = tool;
+  function fit(){
+    var s = Math.min((window.innerHeight - 36) / 714, (window.innerWidth - 24) / 402);
+    s = Math.max(0.4, Math.min(s, 2.2));
+    document.getElementById('phone').style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+  window.addEventListener('hashchange', function(){ location.reload(); });
+  window.addEventListener('keydown', function(e){ if (e.key === 'h' || e.key === 'H') document.getElementById('hint').classList.toggle('hide'); });
+</script>
+</body>
+</html>
