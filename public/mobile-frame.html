@@ -6,21 +6,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mobile Frame — record a tool in 9:16</title>
 <style>
-  html,body{height:100%;margin:0;background:#0f0f12;overflow:hidden;font-family:"IBM Plex Mono",ui-monospace,monospace}
+  html,body{height:100%;margin:0;background:#000;overflow:hidden;font-family:"IBM Plex Mono",ui-monospace,monospace}
   .stage{height:100vh;display:grid;place-items:center}
-  .phone{width:402px;height:714px;border-radius:0;overflow:hidden;background:#fff;
-    box-shadow:0 0 0 4px #ff00ff,0 24px 70px -24px rgba(0,0,0,.85);transform-origin:center}
-  .phone iframe{width:402px;height:714px;border:0;display:block;background:#0d0a12}
-  .hint{position:fixed;top:10px;left:0;right:0;text-align:center;color:#7c7c86;font-size:12px;letter-spacing:.02em;pointer-events:none}
-  .hint b{color:#c9c9d2}
-  .hint.hide{display:none}
+  /* pure black stage + a faint WHITE hairline = the crop guide (black & white, auto-removed in editing) */
+  .phone{width:402px;height:714px;border-radius:0;overflow:hidden;background:#000;
+    box-shadow:0 0 0 3px #ffffff;transform-origin:center}
+  .phone iframe{width:402px;height:714px;border:0;display:block;background:#000}
+  .hint{position:fixed;top:10px;left:0;right:0;text-align:center;color:#7c7c86;font-size:12px;letter-spacing:.02em;pointer-events:none;transition:opacity .4s}
+  .hint b{color:#e6e6ea}
+  .hint.hide{opacity:0}
 </style>
 </head>
 <body>
-  <div class="hint" id="hint"><b>F11</b> fullscreen &nbsp;·&nbsp; the <b style="color:#ff00ff">magenta box</b> is the crop guide (auto-removed) &nbsp;·&nbsp; record full screen &nbsp;·&nbsp; press <b>H</b> to hide this line</div>
+  <div class="hint" id="hint"><b>F11</b> fullscreen &nbsp;·&nbsp; the thin white frame is the crop guide (auto-removed) &nbsp;·&nbsp; record full screen &nbsp;·&nbsp; <b>H</b> hides this line</div>
   <div class="stage"><div class="phone" id="phone"><iframe id="f" title="tool" allow="clipboard-write"></iframe></div></div>
 <script>
-  // tool path comes from the hash, e.g.  mobile-frame.html#/pdf/merge-pdf
   var tool = decodeURIComponent((location.hash || '').replace(/^#/, '')).trim() || '/';
   if (!tool.startsWith('/')) tool = '/' + tool;
   var frame = document.getElementById('f');
@@ -42,7 +42,9 @@
   }
   window.addEventListener('resize', fit); fit();
   window.addEventListener('hashchange', function(){ location.reload(); });
-  window.addEventListener('keydown', function(e){ if (e.key === 'h' || e.key === 'H') document.getElementById('hint').classList.toggle('hide'); });
+  var hint = document.getElementById('hint');
+  window.addEventListener('keydown', function(e){ if (e.key === 'h' || e.key === 'H') hint.classList.toggle('hide'); });
+  setTimeout(function(){ hint.classList.add('hide'); }, 4500);   // auto-hide so it never interferes with the crop
 </script>
 </body>
 </html>
