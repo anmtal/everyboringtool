@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { categories, getCategory, getTool, getToolBySlug, SITE, LAST_UPDATED } from "../../../lib/tools";
 import { toolContent } from "../../../lib/toolContent";
+import { toolHowto } from "../../../lib/toolHowto";
 import { relatedSlugs } from "../../../lib/related";
 import ToolMount from "../../../components/ToolMount";
 import AdSlot from "../../../components/AdSlot";
@@ -159,6 +160,17 @@ export default function ToolPage({ params }) {
 
       {disclaimer && (
         <p className="tool-note tool-disclaimer" role="note">{disclaimer}</p>
+      )}
+
+      {toolHowto[t.slug] && toolHowto[t.slug].length > 0 && (
+        <section className="tool-howto">
+          <h2 className="tool-h2">How to use {t.name}</h2>
+          <ol>
+            {toolHowto[t.slug].map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+        </section>
       )}
 
       {related[0] && (

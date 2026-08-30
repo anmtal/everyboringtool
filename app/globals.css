@@ -319,6 +319,11 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .tool-next-eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); flex: none; }
 .tool-next-name { font-weight: 700; }
 .tool-next-desc { color: var(--muted); font-size: 14px; }
+/* Numbered "How to use" steps — an ordered list Google can lift into a featured snippet. */
+.tool-howto { margin-top: 22px; }
+.tool-howto ol { margin: 12px 0 0; padding-left: 24px; display: flex; flex-direction: column; gap: 9px; }
+.tool-howto li { font-size: 15px; line-height: 1.55; color: var(--text); padding-left: 4px; }
+.tool-howto li::marker { color: var(--muted); font-weight: 700; }
 .tool { display: flex; flex-direction: column; gap: 16px; }
 
 .dropzone {
