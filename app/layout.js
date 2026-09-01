@@ -63,6 +63,7 @@ const ORG_LD = {
       // together across the web (E-E-A-T / entity signal for GEO + SEO).
       sameAs: [
         "https://www.youtube.com/channel/UCBUS0GlS5YbY45xtWuNcE7w",
+        "https://www.instagram.com/everyboringtool/",
         "https://www.producthunt.com/products/every-boring-tool",
       ],
     },
