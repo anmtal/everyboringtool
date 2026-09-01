@@ -10,6 +10,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 
 // Google AdSense publisher (client) ID.
 const ADSENSE_CLIENT = "ca-pub-8757202685549420";
+// Google Analytics 4 measurement ID (client-side, public — not a secret).
+const GA_ID = "G-4ES1CRH19C";
 
 export const metadata = {
   metadataBase: new URL(SITE.url),
@@ -81,6 +83,13 @@ export default function RootLayout({ children }) {
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           crossOrigin="anonymous"
+        />
+        {/* Google Analytics 4 (gtag.js) */}
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}');`,
+          }}
         />
         <script
           type="application/ld+json"
