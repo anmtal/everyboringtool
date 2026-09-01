@@ -59,6 +59,12 @@ const ORG_LD = {
       url: SITE.url,
       logo: `${SITE.url}/icon.svg`,
       description: SITE.description,
+      // Brand profiles for the same entity — helps Google/AI tie "Every Boring Tool"
+      // together across the web (E-E-A-T / entity signal for GEO + SEO).
+      sameAs: [
+        "https://www.youtube.com/channel/UCBUS0GlS5YbY45xtWuNcE7w",
+        "https://www.producthunt.com/products/every-boring-tool",
+      ],
     },
     {
       "@type": "WebSite",
