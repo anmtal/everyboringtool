@@ -65,8 +65,11 @@ export default function VideoTrim() {
       ff = await loadFFmpeg();
       ff.on("progress", onProg);
       const ext = (file.name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0];
+      // Precise mode re-encodes to H.264/AAC, which only muxes into an MP4-family
+      // container — force .mp4 output so precise-trimming a .webm/.mkv doesn't error.
+      const outExt = precise ? ".mp4" : ext;
       const inName = "input" + ext;
-      const outName = "trimmed" + ext;
+      const outName = "trimmed" + outExt;
       setStatus("Reading your video…");
       await ff.writeFile(inName, await fetchFile(file));
       setStatus(precise ? "Trimming (precise re-encode)…" : "Trimming…");
@@ -78,9 +81,9 @@ export default function VideoTrim() {
       const data = await ff.readFile(outName);
       await ff.deleteFile(inName).catch(() => {});
       await ff.deleteFile(outName).catch(() => {});
-      const blob = new Blob([data.buffer], { type: file.type || "video/mp4" });
+      const blob = new Blob([data.buffer], { type: precise ? "video/mp4" : (file.type || "video/mp4") });
       const base = file.name.replace(/\.[^.]+$/, "") || "video";
-      setResult({ url: URL.createObjectURL(blob), name: `${base}-trimmed${ext}`, size: blob.size });
+      setResult({ url: URL.createObjectURL(blob), name: `${base}-trimmed${outExt}`, size: blob.size });
       setStatus("");
     } catch {
       setError("Couldn't trim the video. Try the precise option, or a different file.");

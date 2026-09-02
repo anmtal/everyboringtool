@@ -21,8 +21,8 @@ export default function BrightnessContrast() {
       draw={(ctx, img, o, c) => {
         c.width = img.naturalWidth;
         c.height = img.naturalHeight;
-        const b = parseInt(o.brightness, 10) || 100;
-        const ct = parseInt(o.contrast, 10) || 100;
+        const pb = parseInt(o.brightness, 10), b = Number.isNaN(pb) ? 100 : pb; // 0 is valid (full black) — don't fall back to 100
+        const pc = parseInt(o.contrast, 10), ct = Number.isNaN(pc) ? 100 : pc;
         ctx.filter = `brightness(${b}%) contrast(${ct}%)`;
         ctx.drawImage(img, 0, 0);
       }}
