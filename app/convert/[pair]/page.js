@@ -18,7 +18,7 @@ export function generateMetadata({ params }) {
   return {
     title,
     description,
-    robots: { index: true, follow: true },
+    robots: { index: false, follow: true }, // noindexed with the word engine (AdSense low-value-content) — the /convert hub stays indexed
     alternates: { canonical: `/convert/${p.slug}` },
     openGraph: { type: "website", url: `/convert/${p.slug}`, title, description, images: ["/opengraph-image"] },
     twitter: { card: "summary_large_image", title, description, images: ["/opengraph-image"] },
