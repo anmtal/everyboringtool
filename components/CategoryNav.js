@@ -52,7 +52,8 @@ export default function CategoryNav() {
     ? current.tools
         .map((t, i) => [t, i])
         .sort(([a, ai], [b, bi]) =>
-          (a.name.length > PANEL_WRAP ? 1 : 0) - (b.name.length > PANEL_WRAP ? 1 : 0) || ai - bi
+          ((a.short || a.name).length > PANEL_WRAP ? 1 : 0) -
+            ((b.short || b.name).length > PANEL_WRAP ? 1 : 0) || ai - bi
         )
         .map(([t]) => t)
     : [];
@@ -118,7 +119,7 @@ export default function CategoryNav() {
                     href={`/${current.slug}/${t.slug}`}
                     className="catnav-panel-link"
                   >
-                    {t.name}
+                    {t.short || t.name}
                   </Link>
                 ))}
               </div>
