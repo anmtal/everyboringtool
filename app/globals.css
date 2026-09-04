@@ -150,7 +150,7 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .catnav-panel-head { display: inline-block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 12px; transition: color 120ms ease-out; }
 .catnav-panel-head:hover { color: var(--text); }
 .catnav-panel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px; align-items: start; }
-.catnav-panel-link { padding: 8px 10px; border-radius: var(--r-xs); font-size: 14px; transition: background-color 120ms ease-out; }
+.catnav-panel-link { display: flex; align-items: center; min-height: 54px; padding: 8px 10px; border-radius: var(--r-xs); font-size: 14px; line-height: 1.3; transition: background-color 120ms ease-out; }
 .catnav-panel-link:hover { background: var(--surface-2); }
 .catnav-panel-empty { padding: 6px 4px 2px; font-size: 14px; color: var(--faint); }
 /* Desktop & tablet: wrap the category row so EVERY category is visible, instead

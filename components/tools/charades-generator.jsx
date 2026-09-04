@@ -258,7 +258,7 @@ export default function CharadesGenerator() {
     if (choices.length === 0) choices = pool;
     const pick = shuffle(choices)[0];
     setCurrent(pick);
-    setRevealed(category !== "Anything" ? false : false);
+    setRevealed(false);
     setSeen((n) => n + 1);
     setRecent((prev) => {
       const next = [pick.text, ...prev];

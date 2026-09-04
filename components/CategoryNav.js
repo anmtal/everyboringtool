@@ -47,7 +47,7 @@ export default function CategoryNav() {
   // tall, which breaks the alignment. Push the long ones to the END of the list
   // (keeping the rest in their original order) so the earlier rows stay tidy and
   // single-line, and the two-line ones cluster in the last row.
-  const PANEL_WRAP = 24; // names longer than this wrap in the ~180px grid cells
+  const PANEL_WRAP = 21; // names longer than this tend to wrap in the ~180px grid cells
   const panelTools = current
     ? current.tools
         .map((t, i) => [t, i])

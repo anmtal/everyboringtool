@@ -77,11 +77,12 @@ export default function SpinTheBottle() {
     setAngle(finalAngle);
     setSpins((n) => n + 1);
 
-    // The pointer aims "up" (north). The bottle image points up at 0deg, so the
-    // tip lands at -finalAngle relative to the ring of names.
+    // The bottle points up at 0deg and rotate() is clockwise, so after the spin
+    // the tip lands at finalAngle (clockwise from north). Names are laid out
+    // clockwise from the top too, so the tip's angle maps straight to a name.
     timerRef.current = setTimeout(() => {
       setSpinning(false);
-      const pointing = ((-finalAngle % 360) + 360) % 360;
+      const pointing = ((finalAngle % 360) + 360) % 360;
       const direction = directionForAngle(pointing);
       if (names.length > 0) {
         // Which name sits closest to the top after the spin.
