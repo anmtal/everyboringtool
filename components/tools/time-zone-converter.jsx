@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // A curated list of common IANA time zones with friendly labels.
 const ZONES = [
@@ -150,6 +150,26 @@ function format24(instantMs, zone) {
   return dtf.format(new Date(instantMs));
 }
 
+// Live clock formatters (used by the auto-detected local-time display).
+function formatClock(date, zone) {
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: zone, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true,
+    }).format(date);
+  } catch (e) {
+    return "";
+  }
+}
+function formatClockDate(date, zone) {
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: zone, weekday: "long", month: "long", day: "numeric", year: "numeric",
+    }).format(date);
+  } catch (e) {
+    return "";
+  }
+}
+
 function formatOffset(ms) {
   const sign = ms < 0 ? "-" : "+";
   const abs = Math.abs(ms);
@@ -175,6 +195,22 @@ export default function TimeZoneConverter() {
     initialSource === "UTC" ? "America/New_York" : "UTC"
   );
   const [dt, setDt] = useState(() => nowInZone(initialSource));
+
+  // Live local clock — auto-detect the visitor's IANA time zone (the real one,
+  // not limited to the curated list) and tick every second.
+  const localZone = useMemo(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    } catch (e) {
+      return "UTC";
+    }
+  }, []);
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const localOffset = formatOffset(getOffsetMs(now.getTime(), localZone));
 
   const parsed = parseLocalInput(dt);
 
@@ -212,6 +248,24 @@ export default function TimeZoneConverter() {
 
   return (
     <div className="tool">
+      <div className="tool-result" role="status" aria-live="off" style={{ textAlign: "center" }}>
+        <p className="tool-result-label">
+          Your local time · {localZone} ({localOffset})
+        </p>
+        <div
+          style={{
+            fontSize: "2.4rem",
+            fontWeight: 700,
+            fontVariantNumeric: "tabular-nums",
+            lineHeight: 1.15,
+            margin: "2px 0",
+          }}
+        >
+          {formatClock(now, localZone)}
+        </div>
+        <p className="tool-note">{formatClockDate(now, localZone)}</p>
+      </div>
+
       <div className="tool-fields">
         <div className="tool-field">
           <label className="tool-label" htmlFor="tz-datetime">
