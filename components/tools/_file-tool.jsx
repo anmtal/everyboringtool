@@ -57,7 +57,7 @@ export default function FileTool({ accept = "", fileLabel = "Choose a file", hin
           )}
           <div className="tool-actions" style={{ marginTop: 8 }}>
             {result.text != null && <button type="button" className="btn" onClick={copy}>{copied ? "Copied ✓" : "Copy"}</button>}
-            {result.url && <a className="btn btn-success" href={result.url} download={result.name}>↓ Download {result.name}</a>}
+            {result.url && <a className="btn btn-success" href={result.url} download={result.name}>↓ Download {(result.name.split(".").pop() || "file").toUpperCase()}</a>}
           </div>
           {result.note && <p className="tool-note">{result.note}</p>}
         </div>

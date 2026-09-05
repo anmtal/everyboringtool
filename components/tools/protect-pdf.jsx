@@ -140,7 +140,7 @@ export default function ProtectPdf() {
         <div className="tool-result" role="status" aria-live="polite">
           <p className="tool-result-label">🔒 Protected with AES-256 — {fmtBytes(result.size)}</p>
           <div className="tool-actions" style={{ marginTop: 8 }}>
-            <a className="btn btn-success" href={result.url} download={result.name}>↓ Download {result.name}</a>
+            <a className="btn btn-success" href={result.url} download={result.name}>↓ Download {(result.name.split(".").pop() || "file").toUpperCase()}</a>
           </div>
         </div>
       )}

@@ -149,7 +149,7 @@ export default function VideoTrim() {
           <p className="tool-result-label">Done — {fmtBytes(result.size)}</p>
           <video controls src={result.url} style={{ width: "100%", maxWidth: 420, marginTop: 8, borderRadius: 8, background: "#000" }} />
           <div className="tool-actions" style={{ marginTop: 10 }}>
-            <a className="btn btn-success" href={result.url} download={result.name}>↓ Download {result.name}</a>
+            <a className="btn btn-success" href={result.url} download={result.name}>↓ Download {(result.name.split(".").pop() || "file").toUpperCase()}</a>
           </div>
         </div>
       )}
