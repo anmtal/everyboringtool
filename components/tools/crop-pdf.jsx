@@ -18,9 +18,16 @@ export default function CropPdf() {
         const m = Math.max(0, parseInt(o.margin, 10) || 0);
         if (m === 0) throw new Error("Set a margin greater than 0 to crop.");
         for (const page of doc.getPages()) {
-          const { width, height } = page.getSize();
-          const mm = Math.min(m, Math.floor(Math.min(width, height) / 2) - 1);
-          if (mm > 0) page.setCropBox(mm, mm, width - 2 * mm, height - 2 * mm);
+          // Crop relative to the page's visible box, not an assumed (0,0)-origin MediaBox:
+          // getCropBox() falls back to the MediaBox when no CropBox is set, and a page
+          // that already has a CropBox (or a non-zero origin) must be trimmed from that.
+          const base = page.getCropBox();
+          // Clamp so the resulting box keeps at least 1pt of width and height.
+          const limit = Math.max(0, Math.floor((Math.min(base.width, base.height) - 1) / 2));
+          const mm = Math.min(m, limit);
+          if (mm > 0) {
+            page.setCropBox(base.x + mm, base.y + mm, base.width - 2 * mm, base.height - 2 * mm);
+          }
         }
       }}
     />

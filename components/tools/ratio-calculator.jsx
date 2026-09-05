@@ -31,19 +31,20 @@ function gcd(a, b) {
   return a;
 }
 
-function decimalPlaces(n) {
-  if (!Number.isFinite(n)) return 0;
-  const s = String(n);
-  if (s.indexOf("e") !== -1 || s.indexOf("E") !== -1) return 0;
-  const dot = s.indexOf(".");
-  return dot === -1 ? 0 : s.length - dot - 1;
-}
-
 // Reduce a ratio A:B to lowest whole-number terms, coping with decimals.
 function simplifyRatio(a, b) {
   if (a === 0 && b === 0) return null;
-  const places = Math.min(9, Math.max(decimalPlaces(a), decimalPlaces(b)));
-  const scale = Math.pow(10, places);
+  // Counting decimal places off String(n) read 0 places for exponent-form
+  // values (0.0000001 prints as "1e-7"), so tiny decimals scaled by 1 and
+  // rounded straight to 0:1. Grow the scale until both sides are whole
+  // numbers instead, capped so the products stay inside safe-integer range.
+  let scale = 1;
+  while (
+    scale < 1e9 &&
+    (!Number.isInteger(a * scale) || !Number.isInteger(b * scale))
+  ) {
+    scale *= 10;
+  }
   let ia = Math.round(a * scale);
   let ib = Math.round(b * scale);
   const g = gcd(ia, ib);

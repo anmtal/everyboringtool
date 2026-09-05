@@ -4,7 +4,9 @@ import { categories, getCategory, SITE } from "../../lib/tools";
 import { toolContent } from "../../lib/toolContent";
 import { categoryContent } from "../../lib/categoryContent";
 
-export const dynamicParams = true;
+// The category list is a closed set defined in lib/tools — generateStaticParams
+// enumerates it, so anything else 404s instead of rendering an empty category.
+export const dynamicParams = false;
 export const revalidate = 604800;
 
 export function generateStaticParams() {
@@ -15,7 +17,13 @@ export function generateMetadata({ params }) {
   const c = getCategory(params.category);
   if (!c) return {};
   const built = c.tools.filter((t) => toolContent[t.slug]).length;
-  const description = `${c.description} ${built} free ${c.name.toLowerCase()} — no sign-up, and they run right in your browser.`;
+  // Category names aren't all nouns you can count ("Text & Writing", "Finance"),
+  // so "14 free text & writing" read as broken English. Names that already end in
+  // "Tools" are used verbatim; names that are already plural things you can count
+  // ("Calculators", "Party Games") stand alone; everything else gets " tools".
+  const label = (c.short || c.name).toLowerCase();
+  const noun = /tools$/i.test(c.name) ? c.name.toLowerCase() : /s$/.test(label) ? label : `${label} tools`;
+  const description = `${c.description} ${built} free ${noun} — no sign-up, and they run right in your browser.`;
   return {
     title: c.name,
     description,
@@ -72,7 +80,7 @@ export default function CategoryPage({ params }) {
 
   return (
     <>
-      <nav className="breadcrumb">
+      <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link href="/">Home</Link>
         <span className="sep">/</span>
         <span>{c.name}</span>

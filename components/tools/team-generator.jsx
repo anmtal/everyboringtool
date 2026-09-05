@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { copyText } from "../../lib/copyText";
 
 const TWO_32 = 0x100000000; // 2^32
@@ -66,6 +66,10 @@ export default function TeamGenerator() {
   const [countText, setCountText] = useState("2");
   const [teams, setTeams] = useState([]);
   const [copied, setCopied] = useState(false);
+  // One persistent live region (below) does the announcing. The results
+  // themselves mount already-populated, so a live region inside them never
+  // changes while a screen reader is watching and nothing is ever announced.
+  const [announcement, setAnnouncement] = useState("");
 
   const names = useMemo(() => {
     return text
@@ -75,6 +79,12 @@ export default function TeamGenerator() {
   }, [text]);
 
   const count = useMemo(() => parseIntOrNull(countText), [countText]);
+
+  // Editing the list makes any previous announcement stale — clear it so the
+  // next "Make teams" is heard as a fresh result.
+  useEffect(() => {
+    setAnnouncement("");
+  }, [text]);
 
   const error = useMemo(() => {
     if (names.length < 2) return null; // handled by the empty-state note
@@ -114,18 +124,25 @@ export default function TeamGenerator() {
     setCopied(false);
     if (!canMake) {
       setTeams([]);
+      setAnnouncement("");
       return;
     }
     const groupCount =
       mode === "teams" ? count : Math.max(1, Math.ceil(names.length / count));
     const shuffled = shuffle(names);
     setTeams(splitIntoTeams(shuffled, groupCount));
+    setAnnouncement(
+      `Made ${groupCount.toLocaleString("en-US")} ${
+        groupCount === 1 ? "team" : "teams"
+      } from ${names.length.toLocaleString("en-US")} names.`
+    );
   }, [canMake, mode, count, names]);
 
   const clearAll = useCallback(() => {
     setText("");
     setTeams([]);
     setCopied(false);
+    setAnnouncement("");
   }, []);
 
   const joined = useMemo(() => {
@@ -228,6 +245,27 @@ export default function TeamGenerator() {
         </button>
       </div>
 
+      {/* Always mounted so screen readers are watching it before the teams
+          appear. Visually hidden inline — globals.css is owned elsewhere. */}
+      <p
+        role="status"
+        aria-live="polite"
+        style={{
+          position: "absolute",
+          width: "1px",
+          height: "1px",
+          margin: "-1px",
+          padding: 0,
+          overflow: "hidden",
+          clip: "rect(0 0 0 0)",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
+          border: 0,
+        }}
+      >
+        {announcement}
+      </p>
+
       {error ? (
         <p className="tool-error" role="alert">
           {error}
@@ -249,7 +287,7 @@ export default function TeamGenerator() {
         </p>
       ) : (
         <>
-          <div className="tool-stat-grid" role="status" aria-live="polite">
+          <div className="tool-stat-grid">
             <div className="tool-stat">
               <div className="tool-stat-num">
                 {teams.length.toLocaleString("en-US")}
@@ -272,7 +310,6 @@ export default function TeamGenerator() {
 
           <div
             className="tool-result"
-            aria-live="polite"
             style={{
               display: "grid",
               gap: "0.75rem",

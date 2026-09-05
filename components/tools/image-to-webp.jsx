@@ -30,6 +30,7 @@ export default function ImageToWebp() {
   const imageRef = useRef(null);
   const fileInputRef = useRef(null);
   const downloadUrlRef = useRef("");
+  const qualityTimerRef = useRef(null);
 
   // Keep a ref of the current object URL so we can revoke it reliably.
   useEffect(() => {
@@ -40,6 +41,9 @@ export default function ImageToWebp() {
     return () => {
       if (downloadUrlRef.current) {
         URL.revokeObjectURL(downloadUrlRef.current);
+      }
+      if (qualityTimerRef.current) {
+        clearTimeout(qualityTimerRef.current);
       }
     };
   }, []);
@@ -77,6 +81,15 @@ export default function ImageToWebp() {
           if (!blob) {
             setError(
               "WebP export failed. This browser may not support WebP encoding."
+            );
+            setBusy(false);
+            return;
+          }
+          // Browsers that can't encode WebP silently hand back a PNG instead —
+          // don't let that get saved under a .webp name.
+          if (blob.type !== "image/webp") {
+            setError(
+              "This browser can't encode WebP (Safari/iOS). Try Chrome, Firefox or Edge."
             );
             setBusy(false);
             return;
@@ -155,10 +168,16 @@ export default function ImageToWebp() {
   const onQualityChange = (e) => {
     const raw = parseFloat(e.target.value);
     const q = Number.isFinite(raw) ? Math.min(1, Math.max(0.1, raw)) : 0.8;
+    // The label updates immediately; the (expensive) re-encode is debounced so
+    // dragging the slider doesn't queue up one encode per step.
     setQuality(q);
-    if (imageRef.current) {
-      encode(imageRef.current, q);
-    }
+    if (qualityTimerRef.current) clearTimeout(qualityTimerRef.current);
+    qualityTimerRef.current = setTimeout(() => {
+      qualityTimerRef.current = null;
+      if (imageRef.current) {
+        encode(imageRef.current, q);
+      }
+    }, 150);
   };
 
   const percentSaved =
@@ -272,9 +291,7 @@ export default function ImageToWebp() {
           </div>
           <div className="tool-stat">
             <div className="tool-stat-num">
-              {percentSaved >= 0
-                ? Math.round(percentSaved) + "%"
-                : Math.round(percentSaved) + "%"}
+              {Math.abs(Math.round(percentSaved)) + "%"}
             </div>
             <div className="tool-stat-label">
               {percentSaved >= 0 ? "Smaller" : "Larger"}
@@ -316,6 +333,10 @@ export default function ImageToWebp() {
           className="btn"
           onClick={() => {
             if (downloadUrlRef.current) URL.revokeObjectURL(downloadUrlRef.current);
+            if (qualityTimerRef.current) {
+              clearTimeout(qualityTimerRef.current);
+              qualityTimerRef.current = null;
+            }
             imageRef.current = null;
             setFileName("");
             setOriginalSize(0);

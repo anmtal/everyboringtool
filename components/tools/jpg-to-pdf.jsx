@@ -11,6 +11,35 @@ function isAcceptedImage(file) {
   return /\.(jpe?g|png|webp|bmp|gif)$/i.test(file.name || "");
 }
 
+// Decode a JPEG with its EXIF orientation applied and re-encode it upright.
+// pdf-lib's embedJpg embeds the raw bytes and ignores the EXIF Orientation tag,
+// so phone photos come out rotated. Returns null when the browser can't do this
+// (no createImageBitmap, no imageOrientation support, no canvas) so the caller
+// can fall back to embedding the original bytes.
+async function toUprightJpg(file) {
+  if (typeof createImageBitmap !== "function") return null;
+  let bmp = null;
+  try {
+    bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const width = bmp.width;
+    const height = bmp.height;
+    if (!width || !height) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(bmp, 0, 0, width, height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+    if (!blob) return null;
+    return new Uint8Array(await blob.arrayBuffer());
+  } catch {
+    return null;
+  } finally {
+    if (bmp && typeof bmp.close === "function") bmp.close();
+  }
+}
+
 // Load a File into an <img> and read its natural pixel dimensions.
 function loadImage(url) {
   return new Promise((resolve, reject) => {
@@ -162,7 +191,10 @@ export default function JpgToPdf() {
 
         let embedded;
         if (isJpg) {
-          const bytes = new Uint8Array(await item.file.arrayBuffer());
+          // Re-encode upright so EXIF-rotated phone photos land the right way up;
+          // fall back to the raw bytes if the browser can't apply the orientation.
+          const upright = await toUprightJpg(item.file);
+          const bytes = upright || new Uint8Array(await item.file.arrayBuffer());
           embedded = await pdf.embedJpg(bytes);
         } else if (isPng) {
           const bytes = new Uint8Array(await item.file.arrayBuffer());

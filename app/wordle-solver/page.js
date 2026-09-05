@@ -18,7 +18,7 @@ export default function WordleSolverPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
-      <nav className="breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Wordle Solver</span></nav>
+      <nav className="breadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Wordle Solver</span></nav>
       <header className="page-head">
         <h1><span aria-hidden="true">🟩</span> Wordle Solver</h1>
         <p>Stuck on today's Wordle? Enter your green, yellow and grey clues and see every possible answer instantly.</p>

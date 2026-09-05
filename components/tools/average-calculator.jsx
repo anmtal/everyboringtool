@@ -2,12 +2,20 @@
 
 import { useMemo, useState } from "react";
 
+// Plain decimal notation only: an optional sign, digits with an optional
+// decimal point, and an optional exponent. Number() on its own also swallows
+// "0x1f", "0b101" and "0o17" as finite numbers, so pasted hex or binary
+// strings were silently averaged as 31, 5 and 15 instead of being reported as
+// non-numeric tokens.
+const NUMBER_TOKEN = /^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i;
+
 function parseNumbers(text) {
   if (!text) return [];
   // Split on commas, whitespace, and new lines; keep only valid finite numbers.
   const tokens = text.split(/[\s,]+/).filter((t) => t.length > 0);
   const numbers = [];
   for (const token of tokens) {
+    if (!NUMBER_TOKEN.test(token)) continue;
     const n = Number(token);
     if (Number.isFinite(n)) numbers.push(n);
   }

@@ -14,10 +14,44 @@ function formatSize(bytes) {
   return `${KB_FMT.format(bytes / 1024)} KB`;
 }
 
+// The three output types canvas.toBlob supports across browsers.
+const FORMATS = {
+  "image/jpeg": { label: "JPEG", ext: "jpg", lossy: true },
+  "image/png": { label: "PNG", ext: "png", lossy: false },
+  "image/webp": { label: "WebP", ext: "webp", lossy: true },
+};
+
+function formatInfo(type) {
+  return FORMATS[type] || FORMATS["image/jpeg"];
+}
+
+// Does the image have any non-opaque pixel? Sampled at a small size so this
+// stays cheap on big photos — downscaling never invents transparency.
+function detectTransparency(img) {
+  try {
+    const w = Math.max(1, Math.min(256, img.naturalWidth || 1));
+    const h = Math.max(1, Math.min(256, img.naturalHeight || 1));
+    const probe = document.createElement("canvas");
+    probe.width = w;
+    probe.height = h;
+    const ctx = probe.getContext("2d");
+    if (!ctx) return false;
+    ctx.drawImage(img, 0, 0, w, h);
+    const data = ctx.getImageData(0, 0, w, h).data;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] < 255) return true;
+    }
+    return false;
+  } catch (err) {
+    return false;
+  }
+}
+
 export default function ImageCompressor() {
-  // { img, width, height, size, name }
+  // { img, width, height, size, name, hasAlpha }
   const [source, setSource] = useState(null);
   const [quality, setQuality] = useState(0.7);
+  const [format, setFormat] = useState("image/jpeg");
   // { url, size }
   const [output, setOutput] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -35,7 +69,7 @@ export default function ImageCompressor() {
     };
   }, []);
 
-  // Re-encode whenever the image or quality changes.
+  // Re-encode whenever the image, quality or output format changes.
   useEffect(() => {
     if (!source) return;
     const canvas = canvasRef.current;
@@ -47,9 +81,14 @@ export default function ImageCompressor() {
     canvas.width = source.width;
     canvas.height = source.height;
     const ctx = canvas.getContext("2d");
-    // JPEG has no transparency — paint white behind any alpha pixels.
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (format === "image/jpeg") {
+      // JPEG has no transparency — paint white behind any alpha pixels.
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+      // PNG and WebP keep the alpha channel, so start from a clear canvas.
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
     ctx.drawImage(source.img, 0, 0);
 
     canvas.toBlob(
@@ -63,17 +102,19 @@ export default function ImageCompressor() {
         if (outputUrlRef.current) URL.revokeObjectURL(outputUrlRef.current);
         const url = URL.createObjectURL(blob);
         outputUrlRef.current = url;
-        setOutput({ url, size: blob.size });
+        // Browsers that can't encode the chosen type quietly return a PNG;
+        // trust the blob's own type so the download name stays honest.
+        setOutput({ url, size: blob.size, type: blob.type || format });
         setBusy(false);
       },
-      "image/jpeg",
-      quality
+      format,
+      formatInfo(format).lossy ? quality : undefined
     );
 
     return () => {
       cancelled = true;
     };
-  }, [source, quality]);
+  }, [source, quality, format]);
 
   function onFile(e) {
     const file = e.target.files && e.target.files[0];
@@ -99,12 +140,17 @@ export default function ImageCompressor() {
 
     const img = new Image();
     img.onload = () => {
+      const hasAlpha = detectTransparency(img);
+      // Default the output to the input's own format when we can encode it;
+      // otherwise keep transparency (PNG) or fall back to JPEG.
+      setFormat(FORMATS[file.type] ? file.type : hasAlpha ? "image/png" : "image/jpeg");
       setSource({
         img,
         width: img.naturalWidth,
         height: img.naturalHeight,
         size: file.size,
         name: file.name,
+        hasAlpha,
       });
     };
     img.onerror = () => {
@@ -118,7 +164,10 @@ export default function ImageCompressor() {
     source && output && source.size > 0 ? (1 - output.size / source.size) * 100 : null;
 
   const baseName = source ? source.name.replace(/\.[^.]+$/, "") : "image";
-  const downloadName = `${baseName}-compressed.jpg`;
+  const outInfo = formatInfo(format);
+  const doneInfo = output ? formatInfo(output.type) : outInfo;
+  const downloadName = `${baseName}-compressed.${doneInfo.ext}`;
+  const flattening = !!source && source.hasAlpha && format === "image/jpeg";
 
   return (
     <div className="tool">
@@ -141,8 +190,28 @@ export default function ImageCompressor() {
         {source && (
           <div className="tool-row">
             <div className="tool-field">
+              <label className="tool-label" htmlFor="ic-format">
+                Output format
+              </label>
+              <select
+                className="tool-select"
+                id="ic-format"
+                value={format}
+                onChange={(e) => setFormat(e.target.value)}
+              >
+                <option value="image/jpeg">JPEG (.jpg)</option>
+                <option value="image/png">PNG (.png)</option>
+                <option value="image/webp">WebP (.webp)</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {source && outInfo.lossy && (
+          <div className="tool-row">
+            <div className="tool-field">
               <label className="tool-label" htmlFor="ic-quality">
-                {`JPEG quality: ${Math.round(quality * 100)}%`}
+                {`${outInfo.label} quality: ${Math.round(quality * 100)}%`}
               </label>
               <input
                 className="tool-input"
@@ -158,6 +227,17 @@ export default function ImageCompressor() {
           </div>
         )}
       </div>
+
+      {flattening && (
+        <p className="tool-note">Transparency will be flattened to white.</p>
+      )}
+
+      {source && !outInfo.lossy && (
+        <p className="tool-note">
+          PNG is lossless, so the quality slider doesn’t apply — pick JPEG or
+          WebP to trade quality for a smaller file.
+        </p>
+      )}
 
       {error && (
         <p className="tool-error" role="alert">
@@ -204,14 +284,14 @@ export default function ImageCompressor() {
           <p className="tool-note">
             {`Original dimensions: ${source.width} × ${source.height}px.`}
             {savings !== null && savings < 0
-              ? " This image is already well compressed — the JPEG is larger than the original at this quality. Try a lower quality."
+              ? ` This image is already well compressed — the ${doneInfo.label} is larger than the original at this setting. Try a lower quality or a different format.`
               : " Everything runs in your browser — your image is never uploaded."}
           </p>
 
           {output && (
             <div className="tool-actions">
               <a className="btn btn-success" href={output.url} download={downloadName}>
-                ↓ Download compressed JPEG
+                {`↓ Download compressed ${doneInfo.label}`}
               </a>
             </div>
           )}

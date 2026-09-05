@@ -79,6 +79,10 @@ function parseInteger(raw) {
     if (s[0] === "-") sign = -1;
     s = s.slice(1);
   }
+  // The note under the tool promises a leading $ is ignored, but Words mode
+  // rejected "$1,234" as invalid. Drop the currency symbol before the grouping
+  // separators come off.
+  s = s.replace(/^\$/, "");
   s = s.replace(/[,_\s]/g, "");
   if (s === "") return { error: "empty" };
   if (s.includes(".")) return { error: "decimal" };

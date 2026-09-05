@@ -13,11 +13,28 @@ export function generateStaticParams() {
   return POPULAR.map((letters) => ({ letters }));
 }
 
+// The URL space here is unbounded, so only serve a page for a segment that is a
+// genuine query: letters (plus "?" wildcards) only, 15 characters at most, and
+// yielding at least one anagram. Everything else 404s instead of returning a 200
+// "0 words" page. Sub-pages stay reachable by submitting the form.
+const MAX_LEN = 15;
+
+function parseParam(raw) {
+  let dec;
+  try { dec = decodeURIComponent(String(raw || "")); } catch (e) { return null; }
+  if (!dec || dec.length > MAX_LEN) return null;
+  if (!/^[A-Za-z?]+$/.test(dec)) return null;
+  const letters = cleanLetters(dec);
+  if (letters.replace(/\?/g, "").length < 2) return null;
+  return letters;
+}
+
 export function generateMetadata({ params }) {
-  const letters = cleanLetters(decodeURIComponent(params.letters || ""));
-  if (letters.replace(/\?/g, "").length < 2) return { title: "Anagram Solver" };
-  const up = letters.toUpperCase();
+  const letters = parseParam(params.letters);
+  if (!letters) return { title: "Anagram Solver", robots: { index: false, follow: false } };
   const count = anagrams(letters).length;
+  if (!count) return { title: "Anagram Solver", robots: { index: false, follow: false } };
+  const up = letters.toUpperCase();
   return {
     title: `Anagrams of ${up} — ${count} words`,
     description: `All ${count} anagrams of ${up} — words that use every letter. Free anagram solver for Scrabble, crosswords and word games.`,
@@ -27,10 +44,11 @@ export function generateMetadata({ params }) {
 }
 
 export default function AnagramLettersPage({ params }) {
-  const letters = cleanLetters(decodeURIComponent(params.letters || ""));
-  if (letters.replace(/\?/g, "").length < 2) notFound();
-  const up = letters.toUpperCase();
+  const letters = parseParam(params.letters);
+  if (!letters) notFound();
   const words = anagrams(letters);
+  if (!words.length) notFound();
+  const up = letters.toUpperCase();
 
   const faq = [
     { q: `How many anagrams does ${up} have?`, a: words.length ? `${up} has ${words.length} anagram${words.length === 1 ? "" : "s"} — word${words.length === 1 ? "" : "s"} that use all of its letters exactly once.` : `No anagrams were found for ${up}.` },

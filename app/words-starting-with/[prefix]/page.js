@@ -13,13 +13,26 @@ export function generateStaticParams() {
   return ALPHA.map((prefix) => ({ prefix }));
 }
 
-function clean(p) { return String(p || "").toLowerCase().replace(/[^a-z]/g, "").slice(0, 12); }
+// The URL space here is unbounded, so only serve a page for a segment that is a
+// genuine query: letters only, 15 characters at most, and matching at least one
+// word. Everything else 404s instead of returning a 200 "0 words" page.
+// Sub-pages stay reachable by submitting the form.
+const MAX_LEN = 15;
+
+function parseParam(raw) {
+  let dec;
+  try { dec = decodeURIComponent(String(raw || "")); } catch (e) { return null; }
+  if (!dec || dec.length > MAX_LEN) return null;
+  if (!/^[A-Za-z]+$/.test(dec)) return null;
+  return dec.toLowerCase();
+}
 
 export function generateMetadata({ params }) {
-  const p = clean(decodeURIComponent(params.prefix || ""));
-  if (!p) return { title: "Words That Start With…" };
-  const up = p.toUpperCase();
+  const p = parseParam(params.prefix);
+  if (!p) return { title: "Words That Start With…", robots: { index: false, follow: false } };
   const count = startingWith(p).length;
+  if (!count) return { title: "Words That Start With…", robots: { index: false, follow: false } };
+  const up = p.toUpperCase();
   return {
     title: `Words that start with ${up} — ${count} words`,
     description: `A complete list of ${count} words that start with ${up}, sorted by length with Scrabble scores. Free — great for Scrabble, Words With Friends and crosswords.`,
@@ -29,10 +42,11 @@ export function generateMetadata({ params }) {
 }
 
 export default function StartingWithPage({ params }) {
-  const p = clean(decodeURIComponent(params.prefix || ""));
+  const p = parseParam(params.prefix);
   if (!p) notFound();
-  const up = p.toUpperCase();
   const words = startingWith(p);
+  if (!words.length) notFound();
+  const up = p.toUpperCase();
 
   const faq = [
     { q: `How many words start with ${up}?`, a: words.length ? `There are ${words.length} words that start with ${up}, from ${words[0].length} letters up to ${words[words.length - 1].length} letters long.` : `No words start with ${up}.` },

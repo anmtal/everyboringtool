@@ -29,6 +29,22 @@ const MONTH_NAMES = [
 
 const MS_PER_DAY = 86400000;
 
+// new Date(y, m, d) and Date.UTC(y, m, d) map years 0-99 to 1900-1999, so a
+// half-typed year ("21", or a date input's "0021-03-04") silently became 1921.
+// setFullYear / setUTCFullYear have no such rule — build every date through
+// these two helpers instead of the constructor.
+function makeDate(y, m, d) {
+  const date = new Date(2000, 0, 1);
+  date.setFullYear(y, m, d);
+  return date;
+}
+
+function makeUTCDate(y, m, d) {
+  const date = new Date(Date.UTC(2000, 0, 1));
+  date.setUTCFullYear(y, m, d);
+  return date;
+}
+
 function todayString() {
   const now = new Date();
   const y = now.getFullYear();
@@ -47,7 +63,7 @@ function parseDateInput(value) {
   if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
     return null;
   }
-  const date = new Date(y, m - 1, d);
+  const date = makeDate(y, m - 1, d);
   // Reject rollovers like 2023-02-30 that spill into the next month.
   if (
     date.getFullYear() !== y ||
@@ -64,23 +80,25 @@ function parseDateInput(value) {
 // (equivalently the week that contains January 4th).
 function isoWeekData(date) {
   // Work in UTC on the date's calendar Y/M/D to sidestep DST arithmetic.
-  const d = new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-  );
+  const d = makeUTCDate(date.getFullYear(), date.getMonth(), date.getDate());
   // ISO weekday: Monday = 1 ... Sunday = 7.
   const dayNum = d.getUTCDay() === 0 ? 7 : d.getUTCDay();
   // Shift to the Thursday of the current week — the Thursday decides the year.
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const isoYear = d.getUTCFullYear();
-  const yearStart = new Date(Date.UTC(isoYear, 0, 1));
+  const yearStart = makeUTCDate(isoYear, 0, 1);
   const week = Math.ceil(((d - yearStart) / MS_PER_DAY + 1) / 7);
   return { week, isoYear };
 }
 
 // Day of the year, 1 for January 1st.
 function dayOfYear(date) {
-  const start = Date.UTC(date.getFullYear(), 0, 0);
-  const current = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const start = makeUTCDate(date.getFullYear(), 0, 0).getTime();
+  const current = makeUTCDate(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  ).getTime();
   return Math.round((current - start) / MS_PER_DAY);
 }
 
@@ -90,7 +108,7 @@ function isLeapYear(y) {
 
 // Monday of the calendar week (Monday-based) that contains this date.
 function mondayOf(date) {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const d = makeDate(date.getFullYear(), date.getMonth(), date.getDate());
   const day = d.getDay(); // 0 = Sunday ... 6 = Saturday
   const shift = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + shift);
@@ -98,7 +116,7 @@ function mondayOf(date) {
 }
 
 function addDays(date, n) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + n);
+  return makeDate(date.getFullYear(), date.getMonth(), date.getDate() + n);
 }
 
 // Number of ISO weeks (52 or 53) in a given ISO week-year.
@@ -115,14 +133,14 @@ function weeksInISOYear(year) {
 // The Monday that starts the given ISO week of the given ISO year.
 function isoWeekToMonday(isoYear, week) {
   // Week 1 always contains January 4th.
-  const jan4 = new Date(isoYear, 0, 4);
+  const jan4 = makeDate(isoYear, 0, 4);
   const jan4Day = jan4.getDay() === 0 ? 7 : jan4.getDay();
-  const week1Monday = new Date(
+  const week1Monday = makeDate(
     jan4.getFullYear(),
     jan4.getMonth(),
     jan4.getDate() - (jan4Day - 1)
   );
-  return new Date(
+  return makeDate(
     week1Monday.getFullYear(),
     week1Monday.getMonth(),
     week1Monday.getDate() + (week - 1) * 7
@@ -169,6 +187,12 @@ export default function WeekNumber() {
   }, [dateValue]);
 
   const reverse = useMemo(() => {
+    // An empty box is not a mistake — Number("") is 0, which used to trip the
+    // range check and show "the week number must be between 1 and 52" while the
+    // field was simply blank. Stay neutral until both boxes have something in.
+    if (String(yearValue).trim() === "" || String(weekValue).trim() === "") {
+      return { error: "empty" };
+    }
     const year = Number(yearValue);
     const week = Number(weekValue);
     if (

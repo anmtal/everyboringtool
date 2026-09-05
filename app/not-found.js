@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { categories } from "../lib/tools";
+import ToolSearch from "../components/ToolSearch";
 
 // Without this, Next renders its unstyled default 404, which inherits the
 // homepage title and the root layout's `robots: { index: true }`.
@@ -19,6 +20,10 @@ export default function NotFound() {
           Everything here is free and needs no sign-up, so try one of these instead.
         </p>
       </header>
+
+      {/* A mistyped tool URL is recoverable in one step: search the whole
+          catalogue right here rather than making the visitor go home first. */}
+      <ToolSearch />
 
       <div className="tool-actions">
         <Link href="/" className="btn btn-primary">← Back to all tools</Link>

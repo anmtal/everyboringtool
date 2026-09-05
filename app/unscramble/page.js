@@ -1,6 +1,5 @@
 import Link from "next/link";
 import UnscrambleBox from "../../components/UnscrambleBox";
-import { POPULAR } from "../../lib/wordPopular";
 
 export const metadata = {
   title: { absolute: "Word Unscrambler — free anagram & Scrabble word finder" },
@@ -24,7 +23,7 @@ export default function UnscrambleHub() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
 
-      <nav className="breadcrumb">
+      <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link href="/">Home</Link><span className="sep">/</span><span>Word Unscrambler</span>
       </nav>
 
@@ -36,15 +35,6 @@ export default function UnscrambleHub() {
       <div className="block" style={{ marginTop: 0 }}>
         <UnscrambleBox />
       </div>
-
-      <section className="block">
-        <h2 className="section-title">Popular searches</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {POPULAR.slice(0, 40).map((l) => (
-            <Link key={l} href={`/unscramble/${l}`} className="badge" style={{ textDecoration: "none" }}>{l.toUpperCase()}</Link>
-          ))}
-        </div>
-      </section>
 
       <section className="block">
         <h2 className="section-title">How it works</h2>

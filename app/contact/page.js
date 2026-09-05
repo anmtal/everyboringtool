@@ -13,7 +13,7 @@ const CONTACT = SITE.email;
 export default function Contact() {
   return (
     <>
-      <nav className="breadcrumb">
+      <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link href="/">Home</Link><span className="sep">/</span><span>Contact</span>
       </nav>
 

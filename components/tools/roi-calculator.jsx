@@ -76,8 +76,10 @@ export default function RoiCalculator() {
   }, [invested, returned, years]);
 
   const ready = results && !results.incomplete && !results.zeroInvested;
-  const showAnnualized =
-    ready && results.years !== null && results.years > 0;
+  // Show the tile only when there is a figure for it. Keying off the holding
+  // period alone left the tile rendering "—" for a zero-or-negative return,
+  // right beside the note saying annualized ROI could not be shown.
+  const showAnnualized = ready && results.annualized !== null;
 
   return (
     <div className="tool">

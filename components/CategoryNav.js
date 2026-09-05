@@ -15,23 +15,53 @@ const WORD_GAMES = [
   { href: "/crossword-solver", name: "Crossword Solver" },
 ];
 
+const PANEL_ID = "catnav-panel";
+
 export default function CategoryNav() {
   const [open, setOpen] = useState(null);
   const ref = useRef(null);
+  // The button that opened the current panel, so focus can go back to it when
+  // the panel closes instead of being dropped at the top of the document.
+  const triggerRef = useRef(null);
   const pathname = usePathname();
+
+  function closePanel(restoreFocus) {
+    const trigger = triggerRef.current;
+    triggerRef.current = null;
+    setOpen(null);
+    if (restoreFocus && trigger && document.contains(trigger)) {
+      trigger.focus();
+    }
+  }
+
+  function openPanel(key, trigger) {
+    triggerRef.current = trigger;
+    setOpen(key);
+  }
 
   // close the menu whenever the route changes
   useEffect(() => {
-    setOpen(null);
+    // The link that was clicked has just unmounted, so focus has fallen back to
+    // the body — hand it to the trigger. If the user moved focus somewhere else
+    // in the meantime, leave it alone.
+    const active = typeof document !== "undefined" ? document.activeElement : null;
+    closePanel(!active || active === document.body);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   // close on outside click or Escape
   useEffect(() => {
     function onDocClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(null);
+      if (!ref.current || ref.current.contains(e.target)) return;
+      // Only pull focus back if the click did not deliberately move it
+      // elsewhere (e.g. into another control on the page).
+      const active = document.activeElement;
+      const focusIsLoose =
+        !active || active === document.body || ref.current.contains(active);
+      closePanel(focusIsLoose);
     }
     function onEsc(e) {
-      if (e.key === "Escape") setOpen(null);
+      if (e.key === "Escape") closePanel(true);
     }
     document.addEventListener("click", onDocClick);
     document.addEventListener("keydown", onEsc);
@@ -39,6 +69,7 @@ export default function CategoryNav() {
       document.removeEventListener("click", onDocClick);
       document.removeEventListener("keydown", onEsc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const current = open ? categories.find((c) => c.slug === open) : null;
@@ -68,7 +99,11 @@ export default function CategoryNav() {
             className={`catnav-btn ${open === "__wg" ? "is-open" : ""}`}
             aria-expanded={open === "__wg"}
             aria-haspopup="true"
-            onClick={() => setOpen(open === "__wg" ? null : "__wg")}
+            aria-controls={open === "__wg" ? PANEL_ID : undefined}
+            onClick={(e) => {
+              if (open === "__wg") closePanel(false);
+              else openPanel("__wg", e.currentTarget);
+            }}
           >
             <span aria-hidden="true">🔤</span>
             <span>Word Games</span>
@@ -83,7 +118,11 @@ export default function CategoryNav() {
                 className={`catnav-btn ${isOpen ? "is-open" : ""}`}
                 aria-expanded={isOpen}
                 aria-haspopup="true"
-                onClick={() => setOpen(isOpen ? null : c.slug)}
+                aria-controls={isOpen ? PANEL_ID : undefined}
+                onClick={(e) => {
+                  if (isOpen) closePanel(false);
+                  else openPanel(c.slug, e.currentTarget);
+                }}
               >
                 <span aria-hidden="true">{c.emoji}</span>
                 <span>{c.short || c.name}</span>
@@ -94,7 +133,7 @@ export default function CategoryNav() {
         </div>
 
         {open === "__wg" && (
-          <div className="catnav-panel">
+          <div className="catnav-panel" id={PANEL_ID}>
             <Link href="/unscramble" className="catnav-panel-head">All Word Games →</Link>
             <div className="catnav-panel-grid">
               {WORD_GAMES.map((l) => (
@@ -105,7 +144,7 @@ export default function CategoryNav() {
         )}
 
         {current && (
-          <div className="catnav-panel">
+          <div className="catnav-panel" id={PANEL_ID}>
             <Link href={`/${current.slug}`} className="catnav-panel-head">
               All {current.name} →
             </Link>

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import WordSearchBox from "../../components/WordSearchBox";
-import { POPULAR } from "../../lib/wordPopular";
 
 export const metadata = {
   title: { absolute: "Anagram Solver — free anagram generator & finder" },
@@ -19,18 +18,12 @@ export default function AnagramHub() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
-      <nav className="breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Anagram Solver</span></nav>
+      <nav className="breadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Anagram Solver</span></nav>
       <header className="page-head">
         <h1><span aria-hidden="true">🔀</span> Anagram Solver</h1>
         <p>Enter your letters and find every anagram — the words that use all of them. Free, for Scrabble, crosswords and word puzzles.</p>
       </header>
       <div className="block" style={{ marginTop: 0 }}><WordSearchBox basePath="/anagram" placeholder="Enter letters to find anagrams" buttonLabel="Solve" min={2} /></div>
-      <section className="block">
-        <h2 className="section-title">Popular anagrams</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {POPULAR.slice(0, 40).map((l) => (<Link key={l} href={`/anagram/${l}`} className="badge" style={{ textDecoration: "none" }}>{l.toUpperCase()}</Link>))}
-        </div>
-      </section>
       <section className="block">
         <h2 className="section-title">Frequently asked questions</h2>
         {faq.map((f, i) => (<div key={i} style={{ marginBottom: 12 }}><p style={{ fontWeight: 600, margin: "0 0 3px" }}>{f.q}</p><p className="muted" style={{ margin: 0 }}>{f.a}</p></div>))}

@@ -1,14 +1,26 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { PDFDocument } from "pdf-lib";
 import { ENCRYPTED_MSG, isEncryptedError } from "../../lib/pdfLoad";
+
+// pdf-lib is ~425 KB — load it on demand so the UI paints first.
+let pdfLibPromise = null;
+function loadPdfLib() {
+  if (!pdfLibPromise) {
+    pdfLibPromise = import("pdf-lib").catch((e) => {
+      pdfLibPromise = null; // let a later attempt retry the download
+      throw e;
+    });
+  }
+  return pdfLibPromise;
+}
 
 export default function MergePdf() {
   const [files, setFiles] = useState([]); // { id, file, name }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
+  const [mergedCount, setMergedCount] = useState(0);
 
   // Free the previous merged PDF when a new merge replaces it, and on unmount.
   useEffect(() => {
@@ -24,6 +36,7 @@ export default function MergePdf() {
       (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
     );
     if (!pdfs.length) return;
+    loadPdfLib().catch(() => {}); // warm the chunk while the user picks the order
     setFiles((prev) => [...prev, ...pdfs.map((f) => ({ id: ++idRef.current, file: f, name: f.name }))]);
     setDownloadUrl("");
     setError("");
@@ -66,6 +79,7 @@ export default function MergePdf() {
     setError("");
     setDownloadUrl("");
     try {
+      const { PDFDocument } = await loadPdfLib();
       const out = await PDFDocument.create();
       for (const item of files) {
         const bytes = await item.file.arrayBuffer();
@@ -75,6 +89,7 @@ export default function MergePdf() {
       }
       const mergedBytes = await out.save();
       const blob = new Blob([mergedBytes], { type: "application/pdf" });
+      setMergedCount(files.length);
       setDownloadUrl(URL.createObjectURL(blob));
     } catch (e) {
       setError(isEncryptedError(e) ? ENCRYPTED_MSG : "Couldn't merge those files — one may be corrupted or password-protected.");
@@ -128,6 +143,15 @@ export default function MergePdf() {
           <a className="btn btn-success" href={downloadUrl} download="merged.pdf">↓ Download merged PDF</a>
         )}
       </div>
+
+      {/* Always in the DOM so screen readers announce the result when it appears. */}
+      <p
+        role="status"
+        aria-live="polite"
+        style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap" }}
+      >
+        {downloadUrl ? `Merged ${mergedCount} PDFs — download ready` : ""}
+      </p>
     </div>
   );
 }

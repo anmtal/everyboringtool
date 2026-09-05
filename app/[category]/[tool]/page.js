@@ -8,6 +8,10 @@ import ToolMount from "../../../components/ToolMount";
 import AdSlot from "../../../components/AdSlot";
 import { ymylNote } from "../../../lib/ymyl";
 
+// The tool list is a closed set defined in lib/tools — every valid URL is
+// enumerated below, so unknown slugs 404 instead of rendering an empty shell.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   const params = [];
   for (const c of categories) {
@@ -19,16 +23,37 @@ export function generateStaticParams() {
 }
 
 // tools.js descriptions are ~23 chars on average — far too short for a meta
-// description, so Google rewrites them. Prefer the first sentence(s) of the
-// tool's About copy, trimmed to a sane length at a word boundary.
+// description, so Google rewrites them. Prefer a hand-written metaDescription
+// when the tool has one; otherwise fall back to the tool's About copy, cut at a
+// real sentence boundary so the snippet never ends mid-thought.
 function metaDescription(t, content) {
+  const hand = content && content.metaDescription ? String(content.metaDescription).replace(/\s+/g, " ").trim() : "";
+  if (hand) return hand;
   const about = (content && content.about ? content.about : "").replace(/\s+/g, " ").trim();
   const base = about || `${t.description} Free, no sign-up, and it runs right in your browser.`;
-  if (base.length <= 150) return base;
-  const cut = base.slice(0, 150).slice(0, base.slice(0, 150).lastIndexOf(" "));
-  // If the trim already lands on a sentence end, leave it clean — appending an
-  // ellipsis after a period ("NO.…") reads as broken. Otherwise mark the cut.
-  return /[.!?]$/.test(cut) ? cut : cut.replace(/[\s,;:]+$/, "") + "…";
+  if (base.length <= 155) return base;
+  // Longest prefix (<= 155 chars) that ends on a sentence terminator followed by
+  // whitespace. The 156-char window lets a terminator at index 154 still count.
+  const m = base.slice(0, 156).match(/^[\s\S]*[.!?](?=\s)/);
+  if (m && m[0].trim().length >= 60) return m[0].trim();
+  // No usable sentence break: cut at the last word boundary <= 152 and close the
+  // sentence with a period rather than a mid-sentence ellipsis.
+  let cut = base.slice(0, 152);
+  const sp = cut.lastIndexOf(" ");
+  if (sp >= 60) cut = cut.slice(0, sp);
+  return cut.replace(/[\s,;:.!?–—-]+$/, "") + ".";
+}
+
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+// "2026-08-26" -> "August 26, 2026". Parsed by hand so a timezone offset can't
+// shift the rendered day off the date we actually claim in the JSON-LD.
+function formatUpdated(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ""));
+  if (!m) return null;
+  const month = Number(m[2]);
+  if (month < 1 || month > 12) return null;
+  return `${MONTHS[month - 1]} ${Number(m[3])}, ${m[1]}`;
 }
 
 export function generateMetadata({ params }) {
@@ -64,7 +89,7 @@ export default function ToolPage({ params }) {
   const content = toolContent[t.slug];
 
   const crumb = (
-    <nav className="breadcrumb">
+    <nav className="breadcrumb" aria-label="Breadcrumb">
       <Link href="/">Home</Link>
       <span className="sep">/</span>
       <Link href={`/${c.slug}`}>{c.name}</Link>
@@ -93,6 +118,11 @@ export default function ToolPage({ params }) {
   // One @graph carrying every JSON-LD type for the page: FAQPage (when present),
   // BreadcrumbList (mirrors the visible breadcrumb) and a minimal WebApplication
   // node describing the free browser tool. No aggregateRating without real data.
+  // One honest "last reviewed" date, shown on the page and claimed in the
+  // JSON-LD, so the two can never drift apart.
+  const updated = content.updated || LAST_UPDATED;
+  const updatedLabel = formatUpdated(updated);
+
   const abs = (p) => `${SITE.url}${p}`;
   const graph = [];
   if (content.faq && content.faq.length) {
@@ -124,7 +154,7 @@ export default function ToolPage({ params }) {
     // Freshness + attribution signals for AI engines: an honest last-reviewed
     // date and a publisher pointing at the site-wide Organization entity defined
     // in the root layout's JSON-LD (@id "/#org"), plus membership of the WebSite.
-    dateModified: content.updated || LAST_UPDATED,
+    dateModified: updated,
     inLanguage: "en",
     isPartOf: { "@id": `${SITE.url}/#website` },
     publisher: { "@id": `${SITE.url}/#org` },
@@ -153,7 +183,12 @@ export default function ToolPage({ params }) {
       {crumb}
       <header className="page-head">
         <h1>{t.name}</h1>
-        <p>{t.description}</p>
+        <p>{content.lede || t.description}</p>
+        {updatedLabel && (
+          <div className="tool-note tool-updated" style={{ marginTop: 10 }}>
+            Updated <time dateTime={updated}>{updatedLabel}</time>
+          </div>
+        )}
       </header>
 
       <ToolMount slug={t.slug} />

@@ -322,7 +322,6 @@ export default function MemoryMatch() {
               <button
                 key={card.id}
                 type="button"
-                role="presentation"
                 aria-label={cardLabel(index)}
                 aria-pressed={faceUp}
                 disabled={status === "won" || matched.has(index)}

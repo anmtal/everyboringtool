@@ -36,10 +36,12 @@ function loadEngine() {
   return enginePromise;
 }
 
+// Issue colours live in globals.css (--gc-*) so the dark-mode overrides there
+// keep every label above the AA contrast threshold in both themes.
 const TYPE_COLOR = {
-  spelling: "#dc2626",
-  grammar: "#2563eb",
-  style: "#9333ea",
+  spelling: "var(--gc-spelling)",
+  grammar: "var(--gc-grammar)",
+  style: "var(--gc-style)",
 };
 
 export default function GrammarChecker() {
@@ -49,12 +51,14 @@ export default function GrammarChecker() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [ignoreNames, setIgnoreNames] = useState(true);
+  const [lateSuggestions, setLateSuggestions] = useState({}); // issue id -> string[]
   const ignoredWords = useRef(new Set());
   const dismissed = useRef(new Set());
 
   const run = useCallback(
     async (nextText) => {
       const value = nextText != null ? nextText : text;
+      setLateSuggestions({}); // issue ids are regenerated on every run
       if (!value.trim()) {
         setResult({ issues: [], stats: { words: 0, sentences: 0, spelling: 0, grammar: 0, style: 0 } });
         return;
@@ -99,6 +103,15 @@ export default function GrammarChecker() {
     [run]
   );
 
+  // Beyond the first 25 misspellings the engine defers the (costly) suggestion
+  // search, so it runs here only for the word the user actually asks about.
+  const showSuggestions = useCallback((issue) => {
+    if (!ENGINE) return;
+    let list = ENGINE.suggest(issue.bad);
+    if (issue.capFirst) list = list.map((s) => s.charAt(0).toUpperCase() + s.slice(1));
+    setLateSuggestions((prev) => ({ ...prev, [issue.id]: list }));
+  }, []);
+
   const dismiss = useCallback(
     (issue) => {
       dismissed.current.add(issue.type + "|" + issue.message + "|" + issue.bad);
@@ -123,6 +136,7 @@ export default function GrammarChecker() {
     setText("");
     setResult(null);
     setError("");
+    setLateSuggestions({});
     ignoredWords.current = new Set();
     dismissed.current = new Set();
   }, []);
@@ -256,7 +270,10 @@ export default function GrammarChecker() {
               )}
 
               <ul style={{ listStyle: "none", padding: 0, margin: "0.75rem 0 0" }}>
-                {result.issues.map((i) => (
+                {result.issues.map((i) => {
+                  // null = the engine deferred the search; [] = it found nothing.
+                  const sugg = i.suggestions === null ? lateSuggestions[i.id] || null : i.suggestions;
+                  return (
                   <li
                     key={i.id}
                     style={{
@@ -268,15 +285,15 @@ export default function GrammarChecker() {
                     }}
                   >
                     <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: TYPE_COLOR[i.type] }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: TYPE_COLOR[i.type] }}>
                         {i.type}
                       </span>
                       <span style={{ fontWeight: 600 }}>“{i.bad.trim() || "␣"}”</span>
                       <span className="tool-note" style={{ margin: 0 }}>{i.message}</span>
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                      {i.suggestions && i.suggestions.length > 0 ? (
-                        i.suggestions.map((s, k) => (
+                      {sugg && sugg.length > 0 ? (
+                        sugg.map((s, k) => (
                           <button key={k} type="button" className="btn btn-sm" onClick={() => applyFix(i, s)}>
                             {i.type === "spelling"
                               ? s
@@ -285,6 +302,14 @@ export default function GrammarChecker() {
                               : `Change to “${s.trim()}”`}
                           </button>
                         ))
+                      ) : sugg === null ? (
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          onClick={() => showSuggestions(i)}
+                        >
+                          Show suggestions
+                        </button>
                       ) : i.type === "spelling" ? (
                         <span className="tool-note" style={{ margin: 0 }}>No suggestion — check manually.</span>
                       ) : null}
@@ -295,7 +320,8 @@ export default function GrammarChecker() {
                       )}
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </>
           )}

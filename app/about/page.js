@@ -53,7 +53,7 @@ const FAQ_LD = {
 export default function About() {
   return (
     <>
-      <nav className="breadcrumb">
+      <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link href="/">Home</Link><span className="sep">/</span><span>About</span>
       </nav>
 

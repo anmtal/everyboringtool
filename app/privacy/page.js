@@ -8,7 +8,7 @@ export const metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-const UPDATED = "23 August 2026";
+const UPDATED = "4 September 2026";
 const CONTACT = SITE.email;
 
 export default function Privacy() {
@@ -92,15 +92,30 @@ export default function Privacy() {
       <section className="block">
         <h2 className="section-title">Cookies, analytics and advertising</h2>
         <p>
-          <strong>As of {UPDATED}, this site sets no cookies of its own, runs no analytics, and shows
-          no advertising.</strong>
+          <strong>As of {UPDATED}, this site uses Google Analytics and carries Google
+          advertising.</strong> Here is exactly what that means.
         </p>
         <p>
-          We intend to introduce advertising in future to keep the tools free. When that happens,
-          third-party vendors — including Google — may use cookies or similar technologies to serve
-          ads based on your prior visits to this or other websites, and this policy will be updated
-          before any such code is enabled. You will be able to opt out of personalised advertising by
-          Google at{" "}
+          <strong>Analytics.</strong> We use Google Analytics 4, which sets cookies in your browser
+          (the <code>_ga</code> family) to tell one visit apart from another. It reports aggregate,
+          anonymised usage statistics — how many people used a tool, which pages they arrived on,
+          roughly which country they were in — so we know which tools are worth keeping and
+          improving. We do not use it to identify you, and we do not upload anything you put into a
+          tool. You can opt out of Google Analytics on every site you visit with Google&apos;s{" "}
+          <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
+            browser opt-out add-on
+          </a>
+          .
+        </p>
+        <p>
+          <strong>Advertising.</strong> Google AdSense may serve ads on this site to keep the tools
+          free. Google and its partners use cookies — including the DoubleClick cookie — to serve
+          and measure ads, and to personalise them based on your prior visits to this and other
+          websites. How Google uses cookies in advertising is described at{" "}
+          <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
+            policies.google.com/technologies/ads
+          </a>
+          . You can turn off personalised advertising by Google at{" "}
           <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
             Google Ads Settings
           </a>
@@ -108,8 +123,17 @@ export default function Privacy() {
           <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
             aboutads.info
           </a>
-          . If you are in the EEA, the UK or Switzerland, we will ask for your consent before any
-          non-essential cookies are set.
+          .
+        </p>
+        <p>
+          <strong>The tools themselves are unaffected.</strong> Analytics and advertising sit around
+          the page, not inside the tools: the files, images and text you process are still handled
+          locally in your browser and are never uploaded — not to us, not to Google, not to anyone.
+        </p>
+        <p>
+          If you are in the EEA, the UK or Switzerland, Google shows a consent message where consent
+          is required before non-essential advertising and analytics cookies are set, and your choice
+          is respected.
         </p>
       </section>
 
@@ -135,8 +159,8 @@ export default function Privacy() {
       <section className="block">
         <h2 className="section-title">Changes</h2>
         <p>
-          If this policy changes materially — in particular before advertising or analytics are
-          switched on — we will update the &ldquo;last updated&rdquo; date above and revise this page.
+          If this policy changes materially — in particular if the way advertising or analytics work
+          here changes — we will update the &ldquo;last updated&rdquo; date above and revise this page.
         </p>
       </section>
 

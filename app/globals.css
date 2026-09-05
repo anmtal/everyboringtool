@@ -14,6 +14,12 @@
      custom property makes that declaration invalid, rendering the button transparent. */
   --live: #1a7f4b;
 
+  /* Grammar-checker issue types. Light values are AA (>=4.5:1) on --surface/--bg;
+     the dark overrides below are the AA-safe counterparts on the dark surfaces. */
+  --gc-spelling: #b91c1c;
+  --gc-grammar: #1d4ed8;
+  --gc-style: #7e22ce;
+
   --r-xs: 7px;
   --r-sm: 10px;
   --r: 14px;
@@ -38,6 +44,9 @@
     --faint: #8b887f; /* 5.31:1 on dark --bg (was #78756d = 4.02:1, failed AA) */
     --border: #2b2925;
     --border-strong: #383530;
+    --gc-spelling: #f87171;
+    --gc-grammar: #60a5fa;
+    --gc-style: #c084fc;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
@@ -67,7 +76,7 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 
 .container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 22px; }
 .muted { color: var(--muted); }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 /* Skip link: 20 focusable elements (brand + 19 nav buttons) precede <main> on
    every page, so keyboard users need a way past them. Hidden until focused. */
 .skip-link {

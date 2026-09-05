@@ -16,6 +16,30 @@ function formatBytes(bytes) {
   return value.toFixed(value >= 10 ? 1 : 2) + " " + units[i];
 }
 
+// Some files arrive with an empty (or wrong) browser-reported MIME type —
+// common for SVG/AVIF, files copied off a network share, or some OS builds.
+// Fall back to the extension, matching the acceptance test in _image-tool.jsx.
+const IMAGE_EXT_RE = /\.(png|jpe?g|webp|gif|bmp|ico|avif|svg|tiff?)$/i;
+
+const EXT_MIME = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  bmp: "image/bmp",
+  ico: "image/x-icon",
+  avif: "image/avif",
+  svg: "image/svg+xml",
+  tif: "image/tiff",
+  tiff: "image/tiff",
+};
+
+function mimeFromName(name) {
+  const match = /\.([a-z0-9]+)$/i.exec(name || "");
+  return match ? EXT_MIME[match[1].toLowerCase()] || "" : "";
+}
+
 export default function ImageToBase64() {
   const [fileName, setFileName] = useState("");
   const [mimeType, setMimeType] = useState("");
@@ -38,15 +62,21 @@ export default function ImageToBase64() {
 
   const handleFile = useCallback((file) => {
     if (!file) return;
-    if (!file.type || !file.type.startsWith("image/")) {
+    const typeIsImage = !!file.type && file.type.startsWith("image/");
+    if (!typeIsImage && !IMAGE_EXT_RE.test(file.name || "")) {
       setError("Please choose an image file (PNG, JPG, GIF, SVG, WebP, etc.).");
       return;
     }
+    // When the browser gave us no usable type, infer it from the extension so
+    // the data: prefix is still correct.
+    const effectiveType = typeIsImage
+      ? file.type
+      : mimeFromName(file.name) || file.type || "";
 
     setError("");
     setBusy(true);
     setFileName(file.name || "image");
-    setMimeType(file.type);
+    setMimeType(effectiveType);
     setOriginalSize(file.size || 0);
     setDataUri("");
     setDimensions(null);
@@ -59,7 +89,20 @@ export default function ImageToBase64() {
         setBusy(false);
         return;
       }
-      const uri = String(src);
+      let uri = String(src);
+      if (!typeIsImage && effectiveType && uri.startsWith("data:")) {
+        // FileReader stamps the (missing/generic) file type into the prefix;
+        // swap in the type we inferred from the extension.
+        const comma = uri.indexOf(",");
+        if (comma >= 0) {
+          const isBase64 = /;base64$/i.test(uri.slice(5, comma));
+          uri =
+            "data:" +
+            effectiveType +
+            (isBase64 ? ";base64," : ",") +
+            uri.slice(comma + 1);
+        }
+      }
       setDataUri(uri);
       setBusy(false);
 

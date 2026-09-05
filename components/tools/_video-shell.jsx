@@ -8,6 +8,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { runVideoJob, fmtBytes } from "../../lib/videoTool";
 
+// The only video containers browsers can play inline. Anything else (AVI, MKV,
+// MPEG-TS…) would render a dead <video>, so those get a note + download instead.
+const PLAYABLE_VIDEO = ["video/mp4", "video/webm", "video/quicktime"];
+
 export default function VideoToolShell({
   accept = "video/*",
   acceptTest,
@@ -57,14 +61,19 @@ export default function VideoToolShell({
       const r = await runVideoJob({ file, ...job, onStatus: setStatus, onProgress: setProgress });
       setResult(r);
       setStatus("");
-    } catch {
-      setError("Couldn't process this file — it may be an unsupported format or too large for the browser to handle.");
+    } catch (err) {
+      setError(
+        (err && err.userMessage) ||
+          "Couldn't process this file — it may be an unsupported format or too large for the browser to handle."
+      );
       setStatus("");
     } finally {
       setBusy(false);
       setProgress(0);
     }
   }, [file, opts, buildJob]);
+
+  const outMime = ((result && (result.mime || (result.blob && result.blob.type))) || "").toLowerCase();
 
   return (
     <div className="tool">
@@ -110,8 +119,10 @@ export default function VideoToolShell({
             <img src={result.url} alt="Result" style={{ maxWidth: "100%", marginTop: 8, borderRadius: 8 }} />
           ) : resultKind === "audio" ? (
             <audio controls src={result.url} style={{ width: "100%", marginTop: 8 }} />
-          ) : (
+          ) : PLAYABLE_VIDEO.includes(outMime) ? (
             <video controls src={result.url} style={{ width: "100%", marginTop: 8, borderRadius: 8 }} />
+          ) : (
+            <p className="tool-note">Preview isn&rsquo;t supported for this format in the browser — download it to play.</p>
           )}
           <div className="tool-actions" style={{ marginTop: 10 }}>
             <a className="btn btn-success" href={result.url} download={result.name}>↓ Download {(result.name.split(".").pop() || "file").toUpperCase()}</a>

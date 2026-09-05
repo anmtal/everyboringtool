@@ -80,17 +80,23 @@ const ORG_LD = {
 
 export default function RootLayout({ children }) {
   const year = new Date().getFullYear();
+  // Set NEXT_PUBLIC_ADSENSE_ENABLED=1 in Vercel once AdSense is approved and ad units are placed.
+  const adsenseEnabled = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "1";
   return (
     <html lang="en" className={inter.variable}>
       <body>
         {/* Raw <script> so the AdSense crawler sees it in the server HTML (a
             next/script afterInteractive tag is JS-injected and invisible to the
-            non-JS verification crawler). async = non-blocking. */}
-        <script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-          crossOrigin="anonymous"
-        />
+            non-JS verification crawler). async = non-blocking. The
+            google-adsense-account meta tag above stays unconditional, so site
+            verification still works while this loader is off. */}
+        {adsenseEnabled && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+          />
+        )}
         {/* Google Analytics 4 (gtag.js) */}
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
         <script

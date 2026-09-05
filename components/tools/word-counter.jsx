@@ -2,6 +2,24 @@
 
 import { useMemo, useState } from "react";
 
+// String.length counts UTF-16 code units, so "👍" scores 2 and a flag or a
+// skin-toned emoji scores 4+. Count user-perceived characters (graphemes)
+// instead, falling back to code points where Intl.Segmenter is missing.
+const GRAPHEME_SEGMENTER =
+  typeof Intl !== "undefined" && typeof Intl.Segmenter === "function"
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : null;
+
+function countCharacters(str) {
+  if (!str) return 0;
+  if (GRAPHEME_SEGMENTER) {
+    let count = 0;
+    for (const _segment of GRAPHEME_SEGMENTER.segment(str)) count++;
+    return count;
+  }
+  return Array.from(str).length;
+}
+
 export default function WordCounter() {
   const [text, setText] = useState("");
 
@@ -9,8 +27,8 @@ export default function WordCounter() {
     const trimmed = text.trim();
 
     const words = trimmed ? (trimmed.match(/\S+/g) || []).length : 0;
-    const characters = text.length;
-    const charactersNoSpaces = text.replace(/\s/g, "").length;
+    const characters = countCharacters(text);
+    const charactersNoSpaces = countCharacters(text.replace(/\s/g, ""));
     const sentences = trimmed
       ? (trimmed.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || []).length
       : 0;

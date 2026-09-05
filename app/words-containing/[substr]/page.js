@@ -13,13 +13,26 @@ export function generateStaticParams() {
   return SEED.map((substr) => ({ substr }));
 }
 
-function clean(p) { return String(p || "").toLowerCase().replace(/[^a-z]/g, "").slice(0, 12); }
+// The URL space here is unbounded, so only serve a page for a segment that is a
+// genuine query: letters only, 15 characters at most, and matching at least one
+// word. Everything else 404s instead of returning a 200 "0 words" page.
+// Sub-pages stay reachable by submitting the form.
+const MAX_LEN = 15;
+
+function parseParam(raw) {
+  let dec;
+  try { dec = decodeURIComponent(String(raw || "")); } catch (e) { return null; }
+  if (!dec || dec.length > MAX_LEN) return null;
+  if (!/^[A-Za-z]+$/.test(dec)) return null;
+  return dec.toLowerCase();
+}
 
 export function generateMetadata({ params }) {
-  const p = clean(decodeURIComponent(params.substr || ""));
-  if (!p) return { title: "Words Containing…" };
-  const up = p.toUpperCase();
+  const p = parseParam(params.substr);
+  if (!p) return { title: "Words Containing…", robots: { index: false, follow: false } };
   const count = containing(p).length;
+  if (!count) return { title: "Words Containing…", robots: { index: false, follow: false } };
+  const up = p.toUpperCase();
   return {
     title: `Words with ${up} in them — ${count} words`,
     description: `A complete list of ${count} words containing the letters ${up}, sorted by length with Scrabble scores. Free — great for Scrabble, Words With Friends and crosswords.`,
@@ -29,10 +42,11 @@ export function generateMetadata({ params }) {
 }
 
 export default function ContainingPage({ params }) {
-  const p = clean(decodeURIComponent(params.substr || ""));
+  const p = parseParam(params.substr);
   if (!p) notFound();
-  const up = p.toUpperCase();
   const words = containing(p);
+  if (!words.length) notFound();
+  const up = p.toUpperCase();
 
   const faq = [
     { q: `How many words contain ${up}?`, a: words.length ? `There are ${words.length} words that contain the letters ${up}.` : `No words contain ${up}.` },

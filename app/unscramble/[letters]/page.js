@@ -13,11 +13,28 @@ export function generateStaticParams() {
   return POPULAR.map((letters) => ({ letters }));
 }
 
+// The URL space here is unbounded, so only serve a page for a segment that is a
+// genuine query: letters (plus "?" wildcards) only, 15 characters at most, and
+// yielding at least one word. Everything else 404s instead of returning a 200
+// "0 words" page. Sub-pages stay reachable by submitting the form.
+const MAX_LEN = 15;
+
+function parseParam(raw) {
+  let dec;
+  try { dec = decodeURIComponent(String(raw || "")); } catch (e) { return null; }
+  if (!dec || dec.length > MAX_LEN) return null;
+  if (!/^[A-Za-z?]+$/.test(dec)) return null;
+  const letters = cleanLetters(dec);
+  if (letters.replace(/\?/g, "").length < 2) return null;
+  return letters;
+}
+
 export function generateMetadata({ params }) {
-  const letters = cleanLetters(decodeURIComponent(params.letters || ""));
-  if (letters.replace(/\?/g, "").length < 2) return { title: "Word Unscrambler" };
-  const up = letters.toUpperCase();
+  const letters = parseParam(params.letters);
+  if (!letters) return { title: "Word Unscrambler", robots: { index: false, follow: false } };
   const count = unscramble(letters).length;
+  if (!count) return { title: "Word Unscrambler", robots: { index: false, follow: false } };
+  const up = letters.toUpperCase();
   return {
     title: { absolute: `Unscramble ${up} — ${count} words made from these letters` },
     description: `All ${count} words you can make from the letters ${up}, grouped by length with Scrabble scores. Free word unscrambler and anagram solver — no sign-up.`,
@@ -27,10 +44,11 @@ export function generateMetadata({ params }) {
 }
 
 export default function UnscrambleLettersPage({ params }) {
-  const letters = cleanLetters(decodeURIComponent(params.letters || ""));
-  if (letters.replace(/\?/g, "").length < 2) notFound();
+  const letters = parseParam(params.letters);
+  if (!letters) notFound();
 
   const words = unscramble(letters);
+  if (!words.length) notFound();
   const up = letters.toUpperCase();
   const best = words[0];
   const stats = wordStats(words);
@@ -49,7 +67,7 @@ export default function UnscrambleLettersPage({ params }) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
 
-      <nav className="breadcrumb">
+      <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link href="/">Home</Link><span className="sep">/</span>
         <Link href="/unscramble">Word Unscrambler</Link><span className="sep">/</span>
         <span>{up}</span>

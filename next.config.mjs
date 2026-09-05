@@ -24,7 +24,7 @@ const CSP = [
   `connect-src 'self' data: blob: https://cdn.jsdelivr.net https://huggingface.co https://*.hf.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.huggingface.co https://tessdata.projectnaptha.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com ${GOOGLE_ADS} https://*.g.doubleclick.net`,
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
-  "frame-src 'self' blob: data: https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net https://*.googlesyndication.com https://www.google.com",
+  "frame-src 'self' blob: https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net https://*.googlesyndication.com https://www.google.com",
   "manifest-src 'self'",
 ].join("; ");
 
@@ -47,10 +47,6 @@ const nextConfig = {
   // hand-typed 8,767-word list to the browser (61 KB) and competed with
   // /unscramble — which uses the full 168,551-word dictionary — for the same
   // head term. Consolidated rather than left to cannibalise itself.
-  // No security headers were being sent at all. These are the safe, high-value
-  // ones for a static client-side site. A strict CSP is deliberately NOT set
-  // here: the tools rely on blob: workers, data: URIs and wasm-eval, so a CSP
-  // needs to be written and tested per-tool rather than guessed at.
   async headers() {
     return [
       {
@@ -59,8 +55,10 @@ const nextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "geolocation=(), microphone=(), payment=(), interest-cohort=()" },
+          // camera=(self) — the QR scanner needs it; everything else is off.
+          { key: "Permissions-Policy", value: "camera=(self), geolocation=(), microphone=(), payment=(), interest-cohort=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
           // Enforcing. Verified Report-Only first: homepage inline scripts/styles/
           // fonts, blob workers (regex), object URLs/data URIs, the iframe PDF
           // preview, ffmpeg, and the OCR/transcribe CDNs (jsDelivr + Hugging Face)
