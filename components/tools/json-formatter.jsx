@@ -8,9 +8,12 @@ export default function JsonFormatter() {
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [repaired, setRepaired] = useState(false);
+  const [repairing, setRepairing] = useState(false);
 
   function process(minify) {
     setCopied(false);
+    setRepaired(false);
     if (!input.trim()) {
       setOutput("");
       setError("");
@@ -37,11 +40,36 @@ export default function JsonFormatter() {
     process(true);
   }
 
+  // Opt-in: only offered after strict parsing fails. Fixes missing/trailing
+  // commas, single quotes, unquoted keys, comments, etc., then pretty-prints.
+  async function handleRepair() {
+    if (!input.trim()) return;
+    setRepairing(true);
+    setCopied(false);
+    try {
+      const { jsonrepair } = await import("jsonrepair");
+      const fixed = jsonrepair(input);
+      const parsed = JSON.parse(fixed);
+      setOutput(JSON.stringify(parsed, null, 2));
+      setError("");
+      setRepaired(true);
+    } catch (e) {
+      setError(
+        "Couldn't auto-repair this — it may be too malformed. Fix the spot the error points to and try Format again."
+      );
+      setOutput("");
+      setRepaired(false);
+    } finally {
+      setRepairing(false);
+    }
+  }
+
   function handleClear() {
     setInput("");
     setOutput("");
     setError("");
     setCopied(false);
+    setRepaired(false);
   }
 
   async function handleCopy() {
@@ -66,7 +94,10 @@ export default function JsonFormatter() {
             className="tool-textarea"
             id="json-input"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              setRepaired(false);
+            }}
             placeholder='{"hello": "world", "items": [1, 2, 3]}'
             rows={10}
             spellCheck={false}
@@ -90,7 +121,20 @@ export default function JsonFormatter() {
         </button>
       </div>
 
-      {error ? <p className="tool-error">{error}</p> : null}
+      {error ? (
+        <div className="tool-error" role="alert">
+          <p style={{ margin: 0 }}>{error}</p>
+          <button
+            className="btn btn-sm"
+            type="button"
+            onClick={handleRepair}
+            disabled={repairing}
+            style={{ marginTop: 8 }}
+          >
+            {repairing ? "Repairing…" : "🔧 Repair & format"}
+          </button>
+        </div>
+      ) : null}
 
       {output ? (
         <div className="tool-field">
@@ -103,6 +147,12 @@ export default function JsonFormatter() {
               {copied ? "Copied!" : "Copy"}
             </button>
           </div>
+          {repaired ? (
+            <p className="tool-note" style={{ color: "var(--live, #16a34a)" }}>
+              ✓ Auto-repaired and formatted. Double-check the result matches what
+              you intended.
+            </p>
+          ) : null}
           <label className="tool-label" htmlFor="json-output">
             Result
           </label>
@@ -115,7 +165,8 @@ export default function JsonFormatter() {
       {!output && !error ? (
         <p className="tool-note">
           Paste JSON above, then click Format to pretty-print it with 2-space
-          indentation or Minify to strip whitespace.
+          indentation, or Minify to strip whitespace. If it’s broken, Format
+          points to the error and offers a one-click repair.
         </p>
       ) : null}
     </div>
