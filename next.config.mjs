@@ -24,7 +24,10 @@ const CSP = [
   `connect-src 'self' data: blob: https://cdn.jsdelivr.net https://huggingface.co https://*.hf.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.huggingface.co https://tessdata.projectnaptha.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com ${GOOGLE_ADS} https://*.g.doubleclick.net`,
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
-  "frame-src 'self' blob: https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net https://*.googlesyndication.com https://www.google.com",
+  // *.google.com covers www.google.com AND fundingchoicesmessages.google.com —
+  // the Google consent-message (CMP) iframe must be frameable or EEA visitors get
+  // no consent prompt and personalised ads can't serve to them.
+  "frame-src 'self' blob: https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net https://*.googlesyndication.com https://*.google.com https://fundingchoicesmessages.google.com",
   "manifest-src 'self'",
 ].join("; ");
 

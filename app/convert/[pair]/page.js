@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { SITE, LAST_UPDATED } from "../../../lib/tools";
 import { getPair, PAIRS, pairName, relatedPairs, buildAbout, buildFaq } from "../../../lib/convertMatrix";
 import ConvertMount from "../../../components/ConvertMount";
-import AdSlot from "../../../components/AdSlot";
 
 export function generateStaticParams() {
   return PAIRS.map((p) => ({ pair: p.slug }));
@@ -122,8 +121,9 @@ export default function ConvertPage({ params }) {
         </section>
       )}
 
-      <AdSlot slot={process.env.NEXT_PUBLIC_ADSLOT_TOOL} minHeight={280} />
-
+      {/* No AdSlot here: these /convert/[pair] permutation pages are noindex
+          (see robots above), so we keep Google ads off them and serve ads only
+          on the hand-built, indexed tool pages — no ads on low-value inventory. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );

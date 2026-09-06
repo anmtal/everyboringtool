@@ -119,9 +119,13 @@ export default function Privacy() {
           <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
             Google Ads Settings
           </a>
-          , or opt out of third-party vendor cookies at{" "}
-          <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
+          , opt out of third-party vendor cookies at{" "}
+          <a href="https://optout.aboutads.info/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
             aboutads.info
+          </a>
+          , or — in the EEA, the UK or Switzerland — at{" "}
+          <a href="https://www.youronlinechoices.eu/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
+            youronlinechoices.eu
           </a>
           .
         </p>

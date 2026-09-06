@@ -6,6 +6,7 @@ import { useState, useMemo } from "react";
 // difference and each system emits its own letter for that index — this keeps
 // above-D letters consistent instead of chaining letter-to-letter.
 const BANDS = [
+  { US: "26", UK: "26", EU: "55", FR: "70", AU: "4" },
   { US: "28", UK: "28", EU: "60", FR: "75", AU: "6" },
   { US: "30", UK: "30", EU: "65", FR: "80", AU: "8" },
   { US: "32", UK: "32", EU: "70", FR: "85", AU: "10" },
@@ -46,6 +47,9 @@ function buildCards(bandRow, cupIndex) {
 
 export default function BraSizeConverter() {
   const [mode, setMode] = useState("known");
+  // Which measurement method: "accurate" (6-point, ABraThatFits) or "quick" (2-point).
+  const [mMethod, setMethod] = useState("accurate");
+  const [unit, setUnit] = useState("in"); // shared by both measurement methods
 
   // ---- "I know my size" mode ----
   const [sys, setSys] = useState("US");
@@ -54,7 +58,7 @@ export default function BraSizeConverter() {
 
   const bandOptions = BANDS.map((b) => b[sys]);
   const cupOptions = CUPS[sys];
-  const safeBand = bandOptions.includes(band) ? band : bandOptions[3];
+  const safeBand = bandOptions.includes(band) ? band : bandOptions[4];
   const safeCup = cupOptions.includes(cup) ? cup : "C";
 
   const knownResult = useMemo(() => {
@@ -64,8 +68,7 @@ export default function BraSizeConverter() {
     return buildCards(bandRow, cupIndex);
   }, [sys, safeBand, safeCup]);
 
-  // ---- "Calculate from measurements" mode ----
-  const [unit, setUnit] = useState("in");
+  // ---- Quick (2-measurement) method ----
   const [under, setUnder] = useState("");
   const [bust, setBust] = useState("");
 
@@ -80,12 +83,6 @@ export default function BraSizeConverter() {
     const bustIn = toIn(b);
     const underCm = toCm(u);
 
-    // Modern "snug band" method: the band IS your ribcage — NO +4. The old +4
-    // method inflates the band (leaving it too loose) and, when the bust-ribcage
-    // difference is small, collapses the cup to AA. Derive each system's band
-    // straight from the ribcage in its own unit so every one is a true fit, then
-    // cup = bust minus ribcage (one letter per inch). This can differ from the
-    // "I know my size" converter, which follows the older printed-label charts.
     const usBand = clamp(Math.round(underIn / 2) * 2, 26, 48);
     const euBand = clamp(Math.round(underCm / 5) * 5, 55, 115);
     const bandByKey = {
@@ -114,6 +111,87 @@ export default function BraSizeConverter() {
       warnCup: rawDiff > maxIdx,
     };
   }, [unit, under, bust]);
+
+  // ---- Most accurate (6-measurement, ABraThatFits) method ----
+  // Band comes from the snug under-bust; the cup range comes from every bust
+  // measurement you give (standing / leaning / lying), because full breast tissue
+  // reads differently in each position. This is the r/ABraThatFits approach.
+  const [ubLoose, setUbLoose] = useState("");
+  const [ubSnug, setUbSnug] = useState("");
+  const [ubTight, setUbTight] = useState("");
+  const [bStand, setBStand] = useState("");
+  const [bLean, setBLean] = useState("");
+  const [bLie, setBLie] = useState("");
+
+  const accurate = useMemo(() => {
+    const toIn = (v) => {
+      const n = parseFloat(v);
+      if (!(n > 0)) return null;
+      return unit === "cm" ? n / CM_PER_IN : n;
+    };
+    const snugIn = toIn(ubSnug);
+    const tightIn = toIn(ubTight);
+    const stand = toIn(bStand), lean = toIn(bLean), lie = toIn(bLie);
+    const busts = [stand, lean, lie].filter((v) => v != null);
+    if (snugIn == null || busts.length === 0) return null;
+
+    const maxIdx = CUPS.US.length - 1;
+    const bandIn = clamp(Math.round(snugIn / 2) * 2, 26, 44);
+    const bandRow = BANDS.find((b) => Number(b.US) === bandIn) || BANDS[4];
+    const bandIdx = BANDS.indexOf(bandRow);
+
+    // Dynamic bust target (ABraThatFits): breast tissue reads differently by
+    // position, so if the leaning bust runs >=2.5" over standing (softer, more
+    // elastic tissue) trust the leaning measurement; otherwise take the full
+    // range of what you measured. Cup = bust - band, one letter per inch.
+    const softTissue = stand != null && lean != null && lean - stand >= 2.5;
+    const bustLo = softTissue ? lean : Math.min(...busts);
+    const bustHi = softTissue ? lean : Math.max(...busts);
+    const loDiff = bustLo - bandIn;
+    const hiDiff = bustHi - bandIn;
+    const minIdx = clamp(Math.round(loDiff), 0, maxIdx);
+    const maxCupIdx = clamp(Math.round(hiDiff), 0, maxIdx);
+    const primaryIdx = clamp(Math.round((loDiff + hiDiff) / 2), 0, maxIdx);
+
+    const fmt = (arr) => (minIdx === maxCupIdx ? arr[minIdx] : `${arr[minIdx]}/${arr[maxCupIdx]}`);
+    const cards = SYSTEMS.map((s) => ({
+      key: s.key,
+      label: s.label,
+      band: bandRow[s.key],
+      cup: fmt(CUPS[s.key]) || "—",
+    }));
+    const uk = cards.find((c) => c.key === "UK");
+
+    const sisterDown = bandIdx > 0
+      ? `${BANDS[bandIdx - 1].US}${CUPS.US[clamp(primaryIdx + 1, 0, maxIdx)]}`
+      : null; // smaller band, one cup up (same volume)
+    const sisterUp = bandIdx < BANDS.length - 1
+      ? `${BANDS[bandIdx + 1].US}${CUPS.US[clamp(primaryIdx - 1, 0, maxIdx)]}`
+      : null; // larger band, one cup down
+
+    return {
+      cards,
+      ukSize: `${uk.band}${uk.cup}`,
+      isRange: minIdx !== maxCupIdx,
+      softTissue,
+      anyUnder: loDiff < 0,
+      anyOverCup: hiDiff > maxIdx,
+      sisterDown,
+      sisterUp,
+      bustCount: busts.length,
+      tightHint: tightIn != null && Math.round(tightIn / 2) * 2 < bandIn
+        ? String(clamp(Math.round(tightIn / 2) * 2, 26, 44))
+        : null,
+    };
+  }, [unit, ubSnug, ubTight, bStand, bLean, bLie]);
+
+  const numProps = {
+    className: "tool-input",
+    type: "number",
+    inputMode: "decimal",
+    min: "0",
+    step: "0.1",
+  };
 
   return (
     <div className="tool">
@@ -179,80 +257,199 @@ export default function BraSizeConverter() {
         </>
       ) : (
         <>
-          <div className="tool-fields">
-            <div className="tool-field">
-              <span className="tool-label" id="bra-unit-label">Measure in</span>
-              <div className="seg-toggle" role="group" aria-labelledby="bra-unit-label">
-                <button
-                  type="button" aria-pressed={unit === "in"}
-                  className={`seg-btn ${unit === "in" ? "is-active" : ""}`}
-                  onClick={() => setUnit("in")}
-                >
-                  Inches
-                </button>
-                <button
-                  type="button" aria-pressed={unit === "cm"}
-                  className={`seg-btn ${unit === "cm" ? "is-active" : ""}`}
-                  onClick={() => setUnit("cm")}
-                >
-                  Cm
-                </button>
-              </div>
-            </div>
-            <div className="tool-field">
-              <label className="tool-label" htmlFor="bra-under">Under-bust (ribcage)</label>
-              <input
-                id="bra-under" className="tool-input" type="number" inputMode="decimal"
-                min="0" step="0.1" placeholder={unit === "cm" ? "e.g. 76" : "e.g. 30"}
-                value={under} onChange={(e) => setUnder(e.target.value)}
-              />
-            </div>
-            <div className="tool-field">
-              <label className="tool-label" htmlFor="bra-bust">Bust (fullest)</label>
-              <input
-                id="bra-bust" className="tool-input" type="number" inputMode="decimal"
-                min="0" step="0.1" placeholder={unit === "cm" ? "e.g. 86" : "e.g. 34"}
-                value={bust} onChange={(e) => setBust(e.target.value)}
-              />
+          <div className="seg-toggle" role="tablist" aria-label="Measurement method" style={{ marginBottom: 14 }}>
+            <button
+              type="button" role="tab" aria-selected={mMethod === "accurate"}
+              className={`seg-btn ${mMethod === "accurate" ? "is-active" : ""}`}
+              onClick={() => setMethod("accurate")}
+            >
+              Most accurate
+            </button>
+            <button
+              type="button" role="tab" aria-selected={mMethod === "quick"}
+              className={`seg-btn ${mMethod === "quick" ? "is-active" : ""}`}
+              onClick={() => setMethod("quick")}
+            >
+              Quick estimate
+            </button>
+          </div>
+
+          <div className="tool-field" style={{ marginBottom: 12 }}>
+            <span className="tool-label" id="bra-unit-label">Measure in</span>
+            <div className="seg-toggle" role="group" aria-labelledby="bra-unit-label">
+              <button
+                type="button" aria-pressed={unit === "in"}
+                className={`seg-btn ${unit === "in" ? "is-active" : ""}`}
+                onClick={() => setUnit("in")}
+              >
+                Inches
+              </button>
+              <button
+                type="button" aria-pressed={unit === "cm"}
+                className={`seg-btn ${unit === "cm" ? "is-active" : ""}`}
+                onClick={() => setUnit("cm")}
+              >
+                Cm
+              </button>
             </div>
           </div>
 
-          {measure ? (
-            <div className="tool-result" role="status" aria-live="polite">
-              <p className="tool-result-label">Your measurements suggest a US {measure.usSize}</p>
-              <div className="csc-cards">
-                {measure.cards.map((r) => (
-                  <div key={r.key} className={`csc-card ${r.key === "US" ? "is-input" : ""}`}>
-                    <div className="csc-card-country">{r.label}</div>
-                    <div className="csc-card-size">{r.band}{r.cup}</div>
-                  </div>
-                ))}
+          {mMethod === "quick" ? (
+            <>
+              <div className="tool-fields">
+                <div className="tool-field">
+                  <label className="tool-label" htmlFor="bra-under">Under-bust (ribcage)</label>
+                  <input
+                    {...numProps} id="bra-under" placeholder={unit === "cm" ? "e.g. 76" : "e.g. 30"}
+                    value={under} onChange={(e) => setUnder(e.target.value)}
+                  />
+                </div>
+                <div className="tool-field">
+                  <label className="tool-label" htmlFor="bra-bust">Bust (fullest)</label>
+                  <input
+                    {...numProps} id="bra-bust" placeholder={unit === "cm" ? "e.g. 86" : "e.g. 34"}
+                    value={bust} onChange={(e) => setBust(e.target.value)}
+                  />
+                </div>
               </div>
-              {measure.warnSmallBust && (
-                <p className="tool-note">
-                  Your bust came out smaller than your under-bust — worth a re-measure, since the bust is taken around the
-                  fullest part. We've shown the smallest cup for now.
-                </p>
-              )}
-              {measure.warnCup && (
-                <p className="tool-note">
-                  That's a bigger cup than our chart lists — take the largest one shown as a guide and check the brand's own chart.
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="tool-note">Enter both measurements to see your size in every system.</p>
-          )}
 
-          <p className="tool-note">
-            How this works: measure your under-bust snug around your ribcage and your bust around the fullest part, both level.
-            Your <strong>band</strong> is that ribcage measurement rounded to the nearest even inch (or nearest 5 cm) — the
-            modern “snug band” method that gives the best support. We don’t add 4 inches the way older calculators do; that
-            leaves the band too loose. Your <strong>cup</strong> is the bust-minus-ribcage difference: each inch is one cup
-            (1″ = A, 2″ = B, 3″ = C…). If you’re converting a size already printed on a bra label, use “I know my size” instead —
-            printed labels follow the older cross-country charts, so the two can differ. Fit varies by brand and Asian labels
-            often run a cup smaller, so treat this as a starting point. Nothing you type leaves your browser.
-          </p>
+              {measure ? (
+                <div className="tool-result" role="status" aria-live="polite">
+                  <p className="tool-result-label">Your measurements suggest a US {measure.usSize}</p>
+                  <div className="csc-cards">
+                    {measure.cards.map((r) => (
+                      <div key={r.key} className={`csc-card ${r.key === "US" ? "is-input" : ""}`}>
+                        <div className="csc-card-country">{r.label}</div>
+                        <div className="csc-card-size">{r.band}{r.cup}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {measure.warnSmallBust && (
+                    <p className="tool-note">
+                      Your bust came out smaller than your under-bust — worth a re-measure, since the bust is taken around the
+                      fullest part. We've shown the smallest cup for now.
+                    </p>
+                  )}
+                  {measure.warnCup && (
+                    <p className="tool-note">
+                      That's a bigger cup than our chart lists — take the largest one shown as a guide and check the brand's own chart.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="tool-note">Enter both measurements to see your size in every system.</p>
+              )}
+
+              <p className="tool-note">
+                Quick method: measure your under-bust snug around your ribcage and your bust around the fullest part, both level.
+                Your <strong>band</strong> is the ribcage rounded to the nearest even inch (or nearest 5&nbsp;cm) — the modern
+                “snug band” method, no +4. Your <strong>cup</strong> is the bust-minus-ribcage difference (1″ = A, 2″ = B, 3″ = C…).
+                For a truer fit, switch to <strong>Most accurate</strong>. Nothing you type leaves your browser.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="tool-note" style={{ marginTop: 0 }}>
+                The most accurate DIY method (used by r/ABraThatFits). Take a firm tape and measure to the nearest ¼&nbsp;inch or ½&nbsp;cm.
+              </p>
+              <div className="tool-fields">
+                <div className="tool-field">
+                  <span className="tool-label">Under-bust — around your ribcage, three ways</span>
+                  <div className="tool-row">
+                    <div className="tool-field">
+                      <label className="tool-label" htmlFor="ub-loose">Loose</label>
+                      <input {...numProps} id="ub-loose" placeholder={unit === "cm" ? "74" : "29"} value={ubLoose} onChange={(e) => setUbLoose(e.target.value)} />
+                    </div>
+                    <div className="tool-field">
+                      <label className="tool-label" htmlFor="ub-snug">Snug</label>
+                      <input {...numProps} id="ub-snug" placeholder={unit === "cm" ? "71" : "28"} value={ubSnug} onChange={(e) => setUbSnug(e.target.value)} />
+                    </div>
+                    <div className="tool-field">
+                      <label className="tool-label" htmlFor="ub-tight">Tight</label>
+                      <input {...numProps} id="ub-tight" placeholder={unit === "cm" ? "66" : "26"} value={ubTight} onChange={(e) => setUbTight(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="tool-field">
+                  <span className="tool-label">Bust — around the fullest part, three positions</span>
+                  <div className="tool-row">
+                    <div className="tool-field">
+                      <label className="tool-label" htmlFor="b-stand">Standing</label>
+                      <input {...numProps} id="b-stand" placeholder={unit === "cm" ? "86" : "34"} value={bStand} onChange={(e) => setBStand(e.target.value)} />
+                    </div>
+                    <div className="tool-field">
+                      <label className="tool-label" htmlFor="b-lean">Leaning</label>
+                      <input {...numProps} id="b-lean" placeholder={unit === "cm" ? "89" : "35"} value={bLean} onChange={(e) => setBLean(e.target.value)} />
+                    </div>
+                    <div className="tool-field">
+                      <label className="tool-label" htmlFor="b-lie">Lying</label>
+                      <input {...numProps} id="b-lie" placeholder={unit === "cm" ? "86" : "34"} value={bLie} onChange={(e) => setBLie(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {accurate ? (
+                <div className="tool-result" role="status" aria-live="polite">
+                  <p className="tool-result-label">Your best fit is around a UK {accurate.ukSize}</p>
+                  <div className="csc-cards">
+                    {accurate.cards.map((r) => (
+                      <div key={r.key} className={`csc-card ${r.key === "UK" ? "is-input" : ""}`}>
+                        <div className="csc-card-country">{r.label}</div>
+                        <div className="csc-card-size">{r.band}{r.cup}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {accurate.isRange && (
+                    <p className="tool-note">
+                      Your bust reads across two cups, so we've shown the range. Keep the band snug and, if you're between sizes,
+                      size to the <strong>larger</strong> cup so it fully contains the tissue.
+                    </p>
+                  )}
+                  {accurate.softTissue && (
+                    <p className="tool-note">
+                      Your leaning bust runs well over your standing bust — softer, more elastic tissue — so we sized to the
+                      <strong> leaning</strong> measurement, which captures the full tissue a bra actually has to hold.
+                    </p>
+                  )}
+                  {(accurate.sisterDown || accurate.sisterUp) && (
+                    <p className="tool-note">
+                      Sister sizes (same cup volume, different band) if the band feels off:{" "}
+                      {accurate.sisterDown ? <>tighter band <strong>{accurate.sisterDown}</strong></> : null}
+                      {accurate.sisterDown && accurate.sisterUp ? " · " : ""}
+                      {accurate.sisterUp ? <>looser band <strong>{accurate.sisterUp}</strong></> : null} (US).
+                    </p>
+                  )}
+                  {accurate.tightHint && (
+                    <p className="tool-note">
+                      Your tight measurement points to a firmer <strong>{accurate.tightHint}</strong> band — worth trying too if the {accurate.cards[0].band} rides up at the back.
+                    </p>
+                  )}
+                  {accurate.anyUnder && (
+                    <p className="tool-note">One bust measurement came out at or below your band — re-measure level, all the way round the fullest part.</p>
+                  )}
+                  {accurate.anyOverCup && (
+                    <p className="tool-note">You're above the cups our chart lists — take the largest shown as a guide and check the brand's own size chart.</p>
+                  )}
+                </div>
+              ) : (
+                <p className="tool-note">
+                  Enter at least your <strong>snug</strong> under-bust and one <strong>bust</strong> measurement. Add the leaning and
+                  lying bust for the most accurate cup range.
+                </p>
+              )}
+
+              <p className="tool-note">
+                How it works: your <strong>band</strong> comes from the snug under-bust (rounded to the nearest even inch / 5&nbsp;cm) —
+                the loose and tight readings just tell you how firm the band should be. Your <strong>cup</strong> is the bust minus
+                the band; because breast tissue sits differently standing, leaning (bent forward 90°) and lying on your back, each
+                position can give a different cup — so we show the range. UK cups go A, B, C, D, DD, E, F, FF, G… (no “DDD”). Fit
+                varies by brand and Asian labels often run a cup smaller, so treat this as a strong starting point. Everything is
+                worked out in your browser — nothing you type is sent anywhere.
+              </p>
+            </>
+          )}
         </>
       )}
     </div>

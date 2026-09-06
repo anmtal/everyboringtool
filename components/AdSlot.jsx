@@ -16,18 +16,22 @@ import { useEffect, useRef } from "react";
 const CLIENT = "ca-pub-8757202685549420";
 
 export default function AdSlot({ slot, minHeight = 100, className = "" }) {
+  // Render + push only when BOTH the ad unit id AND the master enable flag are
+  // set — so setting NEXT_PUBLIC_ADSLOT_TOOL without NEXT_PUBLIC_ADSENSE_ENABLED
+  // can never ship an <ins> with no loader (a permanently blank reserved box).
+  const enabled = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "1";
   const pushed = useRef(false);
   useEffect(() => {
-    if (!slot || pushed.current) return;
+    if (!slot || !enabled || pushed.current) return;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
       pushed.current = true;
     } catch {
       /* adsbygoogle not ready / blocked — ignore */
     }
-  }, [slot]);
+  }, [slot, enabled]);
 
-  if (!slot) return null;
+  if (!slot || !enabled) return null;
 
   return (
     <div
