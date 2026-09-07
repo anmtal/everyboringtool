@@ -252,6 +252,17 @@ export default function ToolPage({ params }) {
         </section>
       )}
 
+      {content.variations && content.variations.length > 0 && (
+        <section className="tool-related">
+          <h2 className="tool-h2">Popular versions</h2>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {content.variations.map((v) => (
+              <Link key={v.url} href={v.url} className="badge" style={{ textDecoration: "none" }}>{v.name}</Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       <AdSlot slot={process.env.NEXT_PUBLIC_ADSLOT_TOOL} minHeight={280} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

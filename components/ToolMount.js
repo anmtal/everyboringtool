@@ -6,7 +6,9 @@ import { trackEvent } from "../lib/analytics";
 import ToolSkeleton from "../lib/toolSkeleton";
 
 // Loads a built tool by slug from components/tools/<slug>.jsx (client-only).
-export default function ToolMount({ slug }) {
+// `props` (optional) are forwarded to the tool component — used by long-tail
+// landing pages that embed a tool preset to a specific mode.
+export default function ToolMount({ slug, props }) {
   // The `loading` fallback of an ssr:false dynamic import IS rendered into the
   // server HTML, so it is what Google and AdSense reviewers see. ToolSkeleton
   // renders a static, category-appropriate set of controls there instead of a
@@ -60,7 +62,7 @@ export default function ToolMount({ slug }) {
 
   return (
     <div className="tool-shell" ref={shellRef}>
-      <Tool />
+      <Tool {...(props || {})} />
     </div>
   );
 }

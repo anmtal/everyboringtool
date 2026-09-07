@@ -17,7 +17,8 @@ const CODE = [
   'SELECT name, price\nFROM products\nWHERE price > 10\nORDER BY price DESC;',
 ];
 
-const DURATIONS = [15, 30, 60, 120];
+const DURATIONS = [15, 30, 60, 120, 300];
+const durLabel = (d) => (d >= 60 ? (d % 60 === 0 ? d / 60 + "m" : d + "s") : d + "s");
 const MODES = [["words", "Words"], ["quote", "Quote"], ["code", "Code"], ["custom", "Custom"]];
 const HKEY = "ebt_typing_history_v1";
 const KEYROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
@@ -45,9 +46,9 @@ function buildWords(count, opts) {
 const normCustom = (s) =>
   String(s || "").replace(/\r\n/g, "\n").replace(/\t/g, "  ").replace(/[ ]+\n/g, "\n").trim();
 
-export default function TypingSpeedTest() {
-  const [mode, setMode] = useState("words");
-  const [duration, setDuration] = useState(30);
+export default function TypingSpeedTest({ initialMode = "words", initialDuration = 30 } = {}) {
+  const [mode, setMode] = useState(initialMode);
+  const [duration, setDuration] = useState(initialDuration);
   const [opts, setOpts] = useState({ punctuation: false, numbers: false });
   const [customDraft, setCustomDraft] = useState("");
   const [customText, setCustomText] = useState("");
@@ -248,7 +249,7 @@ export default function TypingSpeedTest() {
           <div className="seg-toggle" role="tablist" aria-label="Duration">
             {DURATIONS.map((d) => (
               <button key={d} type="button" role="tab" aria-selected={duration === d}
-                className={`seg-btn ${duration === d ? "is-active" : ""}`} onClick={() => setDuration(d)}>{d}s</button>
+                className={`seg-btn ${duration === d ? "is-active" : ""}`} onClick={() => setDuration(d)}>{durLabel(d)}</button>
             ))}
           </div>
           <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, cursor: "pointer" }}>
