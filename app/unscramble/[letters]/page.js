@@ -38,7 +38,7 @@ export function generateMetadata({ params }) {
   return {
     title: { absolute: `Unscramble ${up} — ${count} words made from these letters` },
     description: `All ${count} words you can make from the letters ${up}, grouped by length with Scrabble scores. Free word unscrambler and anagram solver — no sign-up.`,
-    robots: wordRobots(count),
+    robots: wordRobots(count, { family: "unscramble", param: letters }),
     alternates: { canonical: `/unscramble/${canonicalLettersForm(letters)}` },
   };
 }

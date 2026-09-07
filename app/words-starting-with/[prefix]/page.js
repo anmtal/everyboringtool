@@ -36,7 +36,7 @@ export function generateMetadata({ params }) {
   return {
     title: `Words that start with ${up} — ${count} words`,
     description: `A complete list of ${count} words that start with ${up}, sorted by length with Scrabble scores. Free — great for Scrabble, Words With Friends and crosswords.`,
-    robots: wordRobots(count),
+    robots: wordRobots(count, { family: "words-starting-with", param: p }),
     alternates: { canonical: `/words-starting-with/${p}` },
   };
 }

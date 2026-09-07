@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "check:allowlist": "node scripts/check-word-allowlist.cjs",
+    "build": "node scripts/check-word-allowlist.cjs && next build",
     "start": "next start",
     "indexnow": "node scripts/indexnow.mjs"
   },

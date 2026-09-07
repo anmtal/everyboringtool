@@ -39,7 +39,7 @@ export function generateMetadata({ params }) {
   return {
     title: `Crossword answers for ${shown} — ${count} words`,
     description: `Every word that fits the pattern ${shown} (use _ for unknown letters). ${count} matches with Scrabble scores. Free crossword solver.`,
-    robots: wordRobots(count),
+    robots: wordRobots(count, { family: "crossword-solver", param: p }),
     alternates: { canonical: `/crossword-solver/${p}` },
   };
 }

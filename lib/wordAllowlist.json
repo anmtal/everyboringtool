@@ -1,0 +1,30 @@
+{
+  "_comment": "Curated allowlist for the programmatic word engine's index gate. Phase-1 seed (2026-09-07): high-substance letter word-lists only; every entry was verified >= its family floor against the 168,523-word dictionary. unscramble/anagram/crossword/convert intentionally start EMPTY (they carry the highest thin-content risk) and stay noindex even after the master switch flips, until curated racks/patterns are added and re-validated. Single source of truth: consumed by lib/wordAllowlist.js and validated by scripts/check-word-allowlist.cjs. Adding an entry that yields < its floor will FAIL the build guard.",
+  "floors": {
+    "words-starting-with": 40,
+    "words-ending-with": 40,
+    "words-containing": 40,
+    "unscramble": 25,
+    "anagram": 25,
+    "crossword-solver": 15,
+    "convert": 1
+  },
+  "allow": {
+    "words-starting-with": [
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+      "un", "re", "in", "de", "dis", "pre", "pro", "con", "com", "over", "out", "under", "super", "sub", "anti", "non", "mis", "inter", "trans", "up", "back", "fore", "post", "semi", "mid",
+      "th", "ch", "sh", "wh", "st", "sp", "sc", "sk", "sn", "sl", "sw", "tr", "br", "cr", "dr", "fr", "gr", "pr", "bl", "cl", "fl", "gl", "pl", "str", "spr", "scr", "thr", "shr", "squ", "qu"
+    ],
+    "words-ending-with": [
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u", "w", "x", "y", "z",
+      "ing", "ed", "er", "ly", "es", "ion", "tion", "sion", "ness", "ment", "able", "ible", "ful", "less", "est", "ous", "ity", "ish", "ive", "age", "ance", "ence", "ward", "like", "ology", "graphy", "ate", "ent", "ant", "ary", "ory"
+    ],
+    "words-containing": [
+      "qu", "zz", "oo", "ee", "th", "ch", "ph", "ck", "sch", "tch", "igh", "eau", "ough", "x", "z", "q", "j", "v", "ll", "ss", "ff", "tt", "pp", "rr", "nn", "mm", "xy", "gh", "ai", "ei", "ie", "ou"
+    ],
+    "unscramble": [],
+    "anagram": [],
+    "crossword-solver": [],
+    "convert": []
+  }
+}

@@ -38,7 +38,7 @@ export function generateMetadata({ params }) {
   return {
     title: `Anagrams of ${up} — ${count} words`,
     description: `All ${count} anagrams of ${up} — words that use every letter. Free anagram solver for Scrabble, crosswords and word games.`,
-    robots: wordRobots(count),
+    robots: wordRobots(count, { family: "anagram", param: letters }),
     alternates: { canonical: `/anagram/${canonicalLettersForm(letters)}` },
   };
 }

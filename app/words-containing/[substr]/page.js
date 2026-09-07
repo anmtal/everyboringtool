@@ -36,7 +36,7 @@ export function generateMetadata({ params }) {
   return {
     title: `Words with ${up} in them — ${count} words`,
     description: `A complete list of ${count} words containing the letters ${up}, sorted by length with Scrabble scores. Free — great for Scrabble, Words With Friends and crosswords.`,
-    robots: wordRobots(count),
+    robots: wordRobots(count, { family: "words-containing", param: p }),
     alternates: { canonical: `/words-containing/${p}` },
   };
 }
