@@ -18,10 +18,10 @@ function fmtBytes(n) {
   return (n / 1048576).toFixed(1) + " MB";
 }
 
-export default function AudioConverter() {
+export default function AudioConverter({ initialFormat = "mp3", initialBitrate = 192 } = {}) {
   const [file, setFile] = useState(null);
-  const [format, setFormat] = useState("mp3");
-  const [bitrate, setBitrate] = useState(192);
+  const [format, setFormat] = useState(FORMATS[initialFormat] ? initialFormat : "mp3");
+  const [bitrate, setBitrate] = useState(initialBitrate);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");

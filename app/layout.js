@@ -64,6 +64,7 @@ const ORG_LD = {
       sameAs: [
         "https://www.youtube.com/channel/UCBUS0GlS5YbY45xtWuNcE7w",
         "https://www.instagram.com/everyboringtool/",
+        "https://www.facebook.com/everyboringtool",
         "https://www.producthunt.com/products/every-boring-tool",
       ],
     },

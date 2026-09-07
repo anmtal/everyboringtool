@@ -47,12 +47,14 @@ const SOLVE_LABELS = {
   impressions: "Impressions",
 };
 
-export default function CpmCalculator() {
-  const [solveFor, setSolveFor] = useState("cpm");
+export default function CpmCalculator({ initialSolveFor = "cpm" } = {}) {
+  const [solveFor, setSolveFor] = useState(initialSolveFor);
   const [currency, setCurrency] = useState("USD");
   const [cost, setCost] = useState("500");
   const [impressions, setImpressions] = useState("250000");
   const [cpm, setCpm] = useState("");
+  const [clicks, setClicks] = useState("");
+  const [conversions, setConversions] = useState("");
 
   const result = useMemo(() => {
     const c = toNumber(cost);
@@ -78,6 +80,21 @@ export default function CpmCalculator() {
     if (m === 0) return { status: "zero-cpm" };
     return { status: "ok", key: "impressions", value: (c / m) * 1000, cost: c, cpm: m };
   }, [solveFor, cost, impressions, cpm]);
+
+  // Optional extra ad metrics when clicks / conversions are provided, using the
+  // canonical cost + impressions resolved by the solve-for calculation above.
+  const derived = useMemo(() => {
+    if (result.status !== "ok") return null;
+    const c = result.cost != null ? result.cost : (result.key === "cost" ? result.value : toNumber(cost));
+    const imp = result.impressions != null ? result.impressions : (result.key === "impressions" ? result.value : toNumber(impressions));
+    const clk = toNumber(clicks);
+    const conv = toNumber(conversions);
+    const out = {};
+    if (c != null && clk != null && clk > 0) out.cpc = c / clk;
+    if (imp != null && clk != null && imp > 0) out.ctr = (clk / imp) * 100;
+    if (c != null && conv != null && conv > 0) out.cpa = c / conv;
+    return Object.keys(out).length ? out : null;
+  }, [result, cost, impressions, clicks, conversions]);
 
   function renderResultValue() {
     if (result.status !== "ok") return null;
@@ -197,6 +214,19 @@ export default function CpmCalculator() {
         </div>
       </div>
 
+      <div className="tool-fields">
+        <div className="tool-row">
+          <div className="tool-field">
+            <label className="tool-label" htmlFor="cpm-clicks">Clicks (optional — adds CPC &amp; CTR)</label>
+            <input className="tool-input" id="cpm-clicks" type="number" inputMode="numeric" min="0" step="1" value={clicks} onChange={(e) => setClicks(e.target.value)} placeholder="e.g. 1250" />
+          </div>
+          <div className="tool-field">
+            <label className="tool-label" htmlFor="cpm-conv">Conversions (optional — adds CPA)</label>
+            <input className="tool-input" id="cpm-conv" type="number" inputMode="numeric" min="0" step="1" value={conversions} onChange={(e) => setConversions(e.target.value)} placeholder="e.g. 40" />
+          </div>
+        </div>
+      </div>
+
       {result.status === "ok" ? (
         <>
           <div className="tool-result" role="status" aria-live="polite">
@@ -231,8 +261,15 @@ export default function CpmCalculator() {
             </div>
           </div>
 
+          {derived && (
+            <div className="tool-stat-grid" role="status" aria-live="polite" style={{ marginTop: 10 }}>
+              {derived.cpc != null && <div className="tool-stat"><div className="tool-stat-num">{money(derived.cpc, currency)}</div><div className="tool-stat-label">CPC (per click)</div></div>}
+              {derived.ctr != null && <div className="tool-stat"><div className="tool-stat-num">{derived.ctr.toLocaleString("en-US", { maximumFractionDigits: 2 })}%</div><div className="tool-stat-label">CTR</div></div>}
+              {derived.cpa != null && <div className="tool-stat"><div className="tool-stat-num">{money(derived.cpa, currency)}</div><div className="tool-stat-label">CPA (per conversion)</div></div>}
+            </div>
+          )}
           <p className="tool-note">
-            CPM is the cost per 1,000 impressions. CPM = cost ÷ impressions ×
+            CPM is the cost per 1,000 impressions (eCPM is the same math on ad revenue). CPM = cost ÷ impressions ×
             1,000; cost = CPM × impressions ÷ 1,000; impressions = cost ÷ CPM ×
             1,000. Pick what to solve for and fill in the other two values.
           </p>

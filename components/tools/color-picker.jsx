@@ -120,6 +120,25 @@ export default function ColorPicker() {
   const compHex = useMemo(() => rgbToHex(comp), [comp]);
   const compHsl = useMemo(() => rgbToHsl(comp), [comp]);
 
+  // Palette: a strip of tints/shades at the same hue, plus harmony colors.
+  const shades = useMemo(
+    () => [92, 82, 72, 62, 50, 40, 30, 20, 12].map((l) => rgbToHex(hslToRgb(hsl.h, hsl.s, l))),
+    [hsl.h, hsl.s]
+  );
+  const harmonies = useMemo(() => ([
+    { name: "Complementary", hex: rgbToHex(hslToRgb((hsl.h + 180) % 360, hsl.s, hsl.l)) },
+    { name: "Analogous −30°", hex: rgbToHex(hslToRgb((hsl.h + 330) % 360, hsl.s, hsl.l)) },
+    { name: "Analogous +30°", hex: rgbToHex(hslToRgb((hsl.h + 30) % 360, hsl.s, hsl.l)) },
+    { name: "Triadic +120°", hex: rgbToHex(hslToRgb((hsl.h + 120) % 360, hsl.s, hsl.l)) },
+    { name: "Triadic +240°", hex: rgbToHex(hslToRgb((hsl.h + 240) % 360, hsl.s, hsl.l)) },
+  ]), [hsl.h, hsl.s, hsl.l]);
+
+  // Gradient generator: current color -> a second color (defaults to complement).
+  const [gradTo, setGradTo] = useState("");
+  const [gradDir, setGradDir] = useState("to right");
+  const effGradTo = gradTo || compHex;
+  const gradientCss = `linear-gradient(${gradDir}, ${hexNormalized}, ${effGradTo})`;
+
   const rgbString = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
   const hslString = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
   const compRgbString = `rgb(${comp.r}, ${comp.g}, ${comp.b})`;
@@ -327,6 +346,50 @@ export default function ColorPicker() {
         <div className="tool-stat">
           <div className="tool-stat-num">{hsl.l}%</div>
           <div className="tool-stat-label">Lightness</div>
+        </div>
+      </div>
+
+      <div className="tool-result" role="status" aria-live="polite">
+        <div className="tool-result-label">Shades &amp; tints</div>
+        <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", marginTop: 8 }}>
+          {shades.map((hex) => (
+            <button key={hex} type="button" onClick={() => copy(hex, "sh-" + hex)} title={`Copy ${hex}`}
+              style={{ flex: 1, height: 40, background: hex, border: "none", cursor: "pointer" }} aria-label={`Copy ${hex}`} />
+          ))}
+        </div>
+        <div className="tool-result-label" style={{ marginTop: 14 }}>Color harmonies</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+          {harmonies.map((h) => (
+            <button key={h.name} type="button" onClick={() => copy(h.hex, "hm-" + h.hex)} title={`Copy ${h.hex}`}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px 4px 4px", borderRadius: 20, border: "1px solid var(--border, rgba(128,128,128,0.3))", background: "var(--surface-2, rgba(127,127,127,0.06))", cursor: "pointer", fontSize: 12.5 }}>
+              <span style={{ width: 22, height: 22, borderRadius: 6, background: h.hex, display: "inline-block" }} />
+              {copied === "hm-" + h.hex ? "Copied!" : `${h.name} · ${h.hex}`}
+            </button>
+          ))}
+        </div>
+        <p className="tool-note" style={{ marginTop: 8 }}>Click any swatch to copy its hex.</p>
+      </div>
+
+      <div className="tool-result" role="status" aria-live="polite">
+        <div className="tool-result-label">CSS gradient</div>
+        <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13 }}>To
+            <input type="color" value={effGradTo} onChange={(e) => setGradTo(e.target.value.toUpperCase())} style={{ width: 40, height: 32, padding: 2 }} />
+          </label>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13 }}>Direction
+            <select className="tool-select" value={gradDir} onChange={(e) => setGradDir(e.target.value)} style={{ width: "auto" }}>
+              <option value="to right">→ right</option>
+              <option value="to bottom">↓ bottom</option>
+              <option value="to bottom right">↘ diagonal</option>
+              <option value="45deg">45°</option>
+              <option value="135deg">135°</option>
+            </select>
+          </label>
+        </div>
+        <div style={{ height: 60, borderRadius: 10, marginTop: 10, background: gradientCss, border: "1px solid rgba(128,128,128,0.3)" }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginTop: 10 }}>
+          <code style={{ fontSize: 12.5, wordBreak: "break-all" }}>background: {gradientCss};</code>
+          <button type="button" className="btn" onClick={() => copy(`background: ${gradientCss};`, "grad")}>{copied === "grad" ? "Copied!" : "Copy CSS"}</button>
         </div>
       </div>
 
