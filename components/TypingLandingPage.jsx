@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SITE } from "../lib/tools";
 import ToolMount from "./ToolMount";
 import AdSlot from "./AdSlot";
-import { LANDING_UPDATED } from "../lib/typingLanding";
+import { LANDING_UPDATED, HIDDEN_LANDING_URLS } from "../lib/typingLanding";
 
 const FLAGSHIP = "/games/typing-speed-test";
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -52,7 +52,7 @@ export default function TypingLandingPage({ cfg }) {
   });
   const jsonLd = { "@context": "https://schema.org", "@graph": graph };
 
-  const siblings = (cfg.siblings || []).filter(Boolean);
+  const siblings = (cfg.siblings || []).filter((s) => s && !HIDDEN_LANDING_URLS.has(s.url));
 
   return (
     <>

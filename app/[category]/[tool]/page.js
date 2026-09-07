@@ -4,6 +4,7 @@ import { categories, getCategory, getTool, getToolBySlug, SITE, LAST_UPDATED } f
 import { toolContent } from "../../../lib/toolContent";
 import { toolHowto } from "../../../lib/toolHowto";
 import { relatedSlugs } from "../../../lib/related";
+import { HIDDEN_LANDING_URLS } from "../../../lib/typingLanding";
 import ToolMount from "../../../components/ToolMount";
 import AdSlot from "../../../components/AdSlot";
 import { ymylNote } from "../../../lib/ymyl";
@@ -252,11 +253,11 @@ export default function ToolPage({ params }) {
         </section>
       )}
 
-      {content.variations && content.variations.length > 0 && (
+      {content.variations && content.variations.filter((v) => !HIDDEN_LANDING_URLS.has(v.url)).length > 0 && (
         <section className="tool-related">
           <h2 className="tool-h2">Popular versions</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {content.variations.map((v) => (
+            {content.variations.filter((v) => !HIDDEN_LANDING_URLS.has(v.url)).map((v) => (
               <Link key={v.url} href={v.url} className="badge" style={{ textDecoration: "none" }}>{v.name}</Link>
             ))}
           </div>
