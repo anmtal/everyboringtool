@@ -57,7 +57,7 @@ export default function VideoToolShell({
     setResult(null);
     setProgress(0);
     try {
-      const job = buildJob(file, opts);
+      const job = await buildJob(file, opts);
       const r = await runVideoJob({ file, ...job, onStatus: setStatus, onProgress: setProgress });
       setResult(r);
       setStatus("");
