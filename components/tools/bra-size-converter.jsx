@@ -259,6 +259,19 @@ export default function BraSizeConverter() {
         </>
       ) : (
         <>
+          {mMethod === "accurate" && (
+            <p style={{ margin: "0 0 10px", fontSize: 13, color: "#f87171" }}>
+              In a hurry? Switch to{" "}
+              <button
+                type="button"
+                onClick={() => setMethod("quick")}
+                style={{ background: "none", border: "none", padding: 0, color: "#f87171", font: "inherit", fontWeight: 700, textDecoration: "underline", cursor: "pointer" }}
+              >
+                Quick estimate
+              </button>{" "}
+              — just two measurements (under-bust and bust).
+            </p>
+          )}
           <div className="seg-toggle" role="tablist" aria-label="Measurement method" style={{ marginBottom: 14 }}>
             <button
               type="button" role="tab" aria-selected={mMethod === "accurate"}
