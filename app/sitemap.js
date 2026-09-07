@@ -1,6 +1,7 @@
 import { categories, SITE, LAST_UPDATED } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
 import { TYPING_LANDING, LANDING_UPDATED, visibleLandingKeys } from "../lib/typingLanding";
+import { TOOL_LANDINGS, visibleToolLandingKeys } from "../lib/toolLandings";
 
 export default function sitemap() {
   const base = SITE.url;
@@ -31,6 +32,11 @@ export default function sitemap() {
   const landingDate = new Date(LANDING_UPDATED);
   for (const key of visibleLandingKeys()) {
     urls.push({ url: `${base}${TYPING_LANDING[key].url}`, lastModified: landingDate, priority: 0.6 });
+  }
+  // Long-tail landing pages for other tools (utm-builder, etc.)
+  for (const key of visibleToolLandingKeys()) {
+    const c = TOOL_LANDINGS[key];
+    urls.push({ url: `${base}${c.url}`, lastModified: new Date(c.updated), priority: 0.6 });
   }
   for (const c of categories) {
     urls.push({ url: `${base}/${c.slug}`, lastModified: siteDate });
