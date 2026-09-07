@@ -46,7 +46,9 @@ function buildCards(bandRow, cupIndex) {
 }
 
 export default function BraSizeConverter() {
-  const [mode, setMode] = useState("known");
+  // Default to the measurement calculator: most searchers ("bra size calculator")
+  // don't know their size yet. The "I know my size" converter is one tab away.
+  const [mode, setMode] = useState("measure");
   // Which measurement method: "accurate" (6-point, ABraThatFits) or "quick" (2-point).
   const [mMethod, setMethod] = useState("accurate");
   const [unit, setUnit] = useState("in"); // shared by both measurement methods
@@ -197,18 +199,18 @@ export default function BraSizeConverter() {
     <div className="tool">
       <div className="seg-toggle" role="tablist" aria-label="How to enter your size" style={{ marginBottom: 16 }}>
         <button
-          type="button" role="tab" aria-selected={mode === "known"}
-          className={`seg-btn ${mode === "known" ? "is-active" : ""}`}
-          onClick={() => setMode("known")}
-        >
-          I know my size
-        </button>
-        <button
           type="button" role="tab" aria-selected={mode === "measure"}
           className={`seg-btn ${mode === "measure" ? "is-active" : ""}`}
           onClick={() => setMode("measure")}
         >
           Calculate from measurements
+        </button>
+        <button
+          type="button" role="tab" aria-selected={mode === "known"}
+          className={`seg-btn ${mode === "known" ? "is-active" : ""}`}
+          onClick={() => setMode("known")}
+        >
+          I know my size
         </button>
       </div>
 
