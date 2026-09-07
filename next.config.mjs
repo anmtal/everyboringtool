@@ -21,7 +21,7 @@ const CSP = [
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: blob: https:",
-  `connect-src 'self' data: blob: https://cdn.jsdelivr.net https://huggingface.co https://*.hf.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.huggingface.co https://tessdata.projectnaptha.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com ${GOOGLE_ADS} https://*.g.doubleclick.net`,
+  `connect-src 'self' data: blob: https://api.frankfurter.app https://cdn.jsdelivr.net https://huggingface.co https://*.hf.co https://cdn-lfs.huggingface.co https://cdn-lfs-us-1.huggingface.co https://tessdata.projectnaptha.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com ${GOOGLE_ADS} https://*.g.doubleclick.net`,
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   // *.google.com covers www.google.com AND fundingchoicesmessages.google.com —
@@ -90,7 +90,6 @@ const nextConfig = {
       // Retired the "coming soon" placeholders (need a paid API / server / model):
       // parked in memory to build later. 301 their nav-linked URLs to the category.
       { source: "/pdf/pdf-to-word", destination: "/pdf", permanent: true },
-      { source: "/converters/currency-converter", destination: "/converters", permanent: true },
       { source: "/image/background-remover", destination: "/image", permanent: true },
       { source: "/seo-web/sitemap-checker", destination: "/seo-web", permanent: true },
       { source: "/seo-web/open-graph-preview", destination: "/seo-web", permanent: true },
