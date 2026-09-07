@@ -39,6 +39,7 @@ export default function CurrencyConverter() {
   const [rates, setRates] = useState(null); // rates for the currently-loaded base
   const [date, setDate] = useState("");
   const [status, setStatus] = useState("loading"); // loading | ok | error
+  const [reload, setReload] = useState(0); // bump to force a refetch (retry button)
   const cache = useRef({}); // base -> { rates, date }
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function CurrencyConverter() {
         if (!cancelled) setStatus("error");
       });
     return () => { cancelled = true; };
-  }, [from]);
+  }, [from, reload]);
 
   const amt = useMemo(() => {
     const n = parseFloat(String(amount).replace(/,/g, ""));
@@ -118,7 +119,7 @@ export default function CurrencyConverter() {
           <p className="tool-note" style={{ color: "var(--danger, #b4462d)" }}>
             Couldn't load today's exchange rates — the rate service may be busy or offline.
             Check your connection and{" "}
-            <button type="button" className="btn btn-sm" onClick={() => { delete cache.current[from]; setFrom((f) => f); setStatus("loading"); }}>
+            <button type="button" className="btn btn-sm" onClick={() => { delete cache.current[from]; setStatus("loading"); setReload((n) => n + 1); }}>
               try again
             </button>.
           </p>

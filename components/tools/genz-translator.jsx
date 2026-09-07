@@ -78,6 +78,18 @@ const SLANG = [
   { gz: "istg", en: "I swear to god" },
   { gz: "fomo", en: "fear of missing out" },
   { gz: "goat", en: "greatest of all time" },
+  { gz: "skibidi", en: "chaotic or silly (from Skibidi Toilet); good or bad depending on context" },
+  { gz: "sigma", en: "a confident, independent, do-your-own-thing person" },
+  { gz: "gigachad", en: "an impressively strong or admirable person" },
+  { gz: "mewing", en: "pressing your tongue to the roof of your mouth to sharpen your jawline" },
+  { gz: "looksmaxxing", en: "trying to maximise your looks" },
+  { gz: "ohio", en: "weird or bizarre, as in 'only in Ohio'" },
+  { gz: "rizzler", en: "someone with a lot of charm" },
+  { gz: "crash out", en: "to lose your temper or react dramatically" },
+  { gz: "yap", en: "to talk a lot about nothing" },
+  { gz: "yapping", en: "talking too much" },
+  { gz: "pookie", en: "an affectionate nickname for someone dear" },
+  { gz: "glazing", en: "over-praising someone" },
 ];
 
 // Reverse (English -> Gen Z): a curated subset where a clean slang word exists.
@@ -116,6 +128,9 @@ const REVERSE = [
   { en: "understood", gz: "say less" },
   { en: "kind of", gz: "lowkey" },
   { en: "point of view", gz: "pov" },
+  { en: "cool", gz: "fire" },
+  { en: "money", gz: "bands" },
+  { en: "impressive", gz: "goated" },
 ];
 
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, (m) => "\\" + m); }

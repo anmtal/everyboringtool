@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DeadPan Intro Recorder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{ --accent:#d6296a; --accent-bright:#f5589a; --accent-soft:#fbe4ee; /* accent kept for off-frame controls only */
+    --paper:#efeff0; --ink:#161616; --muted:#6b6b6e; --badge:#191919; --hole:#f5f5f6; --ok:#1f9d6b; }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:radial-gradient(120% 90% at 50% 0%,#151020,#0d0a12 70%);
+    color:#efe9f2;font-family:"IBM Plex Mono",ui-monospace,monospace;min-height:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:18px 14px 26px;overflow:hidden}
+
+  .scaler{display:grid;place-items:center}
+  .phone{position:relative;width:412px;height:732px;border-radius:30px;overflow:hidden;background:#000;
+    box-shadow:0 30px 90px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.06);transform-origin:center top}
+  .phone iframe{position:absolute;inset:0;width:412px;height:732px;border:0;display:block;background:#0d0a12}
+  .prog{position:absolute;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#8a8a8a,#dcdcdc);z-index:20}
+  .shield{position:absolute;inset:0;z-index:8}
+
+  /* ---------- overlay scenes ---------- */
+  .ov{position:absolute;inset:0;z-index:10;pointer-events:none}
+  .oscene{position:absolute;inset:0;opacity:0;transition:opacity .3s ease;display:grid;place-items:center}
+  .oscene.on{opacity:1}
+
+  /* face */
+  .faceScene{background:radial-gradient(90% 70% at 50% 40%,#ffffff,var(--paper))}
+  .face{width:52%;max-width:220px;filter:drop-shadow(0 22px 38px rgba(34,29,43,.28))}
+  .face .badge{fill:var(--badge)} .face .eye,.face .mouth-flat,.face .mouth-smile{fill:var(--hole)}
+  .face .mouth-smile{opacity:0}
+  .faceScene.smirk .mouth-flat{opacity:0} .faceScene.smirk .mouth-smile{opacity:1}
+  .eye{transform-box:fill-box;transform-origin:center}
+  .oscene.on.faceScene .eye{animation:blink 3.6s ease-in-out infinite}
+  .oscene.on.faceScene .face{animation:bob 5s ease-in-out infinite}
+  @keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .facetag{position:absolute;bottom:13%;left:0;right:0;text-align:center;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+  /* tabs gag */
+  .tabsScene{background:#efefef;color:var(--ink);display:block}
+  .winbar{background:#e4e4e6;display:flex;align-items:center;gap:7px;padding:12px 14px}
+  .winbar i{width:11px;height:11px;border-radius:50%;background:#c4c4c6;display:block}
+  .tabrow{display:flex;background:#dadadc;padding:9px 8px 0;gap:3px;overflow:hidden;flex-wrap:nowrap}
+  .tab{flex:1 1 0;min-width:0;background:#f2f2f3;border-radius:8px 8px 0 0;height:32px;display:flex;align-items:center;gap:5px;padding:0 8px;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;opacity:0;transform:translateY(-8px);transition:opacity .16s,transform .16s}
+  .tab.show{opacity:1;transform:none} .tab .fav{width:9px;height:9px;border-radius:2px;background:#d6d6d9;flex:0 0 9px} .tab.hot .fav{background:#191919}
+  .tabbig{text-align:center;margin-top:34%;font-family:"Anton",sans-serif;font-size:150px;line-height:1;color:rgba(0,0,0,.10)}
+  .tabbig b{color:#191919}
+
+  /* folder gag */
+  .folderScene{background:#efefef;color:var(--ink);display:block}
+  .fhead{background:#e4e4e6;padding:13px 16px;display:flex;align-items:center;gap:9px;font-size:14px;color:#333;font-weight:600}
+  .flist{padding:14px 12px;display:grid;gap:4px;align-content:start}
+  .frow{display:flex;align-items:center;gap:11px;padding:12px 12px;border-radius:9px;font-size:15px;color:#333;opacity:0;transform:translateX(-10px);transition:opacity .2s,transform .2s}
+  .frow.show{opacity:1;transform:none}
+  .frow.cursed{background:#e6e6e8;color:var(--ink);font-weight:700;box-shadow:0 0 0 1.5px #191919 inset;animation:pulse 1.1s ease-in-out infinite}
+  .frow .mono{font-family:"IBM Plex Mono",monospace}
+  .frow.cursed .glow{margin-left:auto;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#191919;background:#fff;border-radius:20px;padding:3px 9px}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 1.5px #191919 inset}50%{box-shadow:0 0 0 1.5px #191919 inset,0 0 20px -2px rgba(0,0,0,.32)}}
+
+  /* end card */
+  .endScene{background:#ffffff;text-align:center;color:var(--ink)}
+  .endScene .efc{width:82px;margin-bottom:20px;filter:drop-shadow(0 14px 26px rgba(34,29,43,.20))}
+  .endScene .efc .badge{fill:var(--badge)} .endScene .efc .eye,.endScene .efc .mouth-flat{fill:#ffffff}
+  .endScene .url{font-family:"Anton",sans-serif;font-size:33px;line-height:1;margin:0;letter-spacing:-.01em;color:var(--ink)}
+  .endScene .tag{margin:13px 0 0;font-size:14px;color:var(--ink)} .endScene .meta{margin:16px 0 0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;flex-direction:column;align-items:center;gap:11px;max-width:min(94vw,600px);text-align:center}
+  .row{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;align-items:center}
+  .btn{font-family:inherit;font-size:12px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:9px;padding:10px 15px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#efe9f2}
+  .btn:hover{border-color:var(--accent-bright);color:#fff}
+  .btn.primary{background:var(--accent);border-color:var(--accent)} .btn.primary:hover{background:var(--accent-bright);border-color:var(--accent-bright)}
+  .file{font-size:11px;color:#a89db4}
+  input[type=file]{color:#a89db4;font-family:inherit;font-size:11px;max-width:230px}
+  input[type=number]{width:64px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#efe9f2;border-radius:7px;padding:7px 8px;font-family:inherit;font-size:12px}
+  .status{font-size:11px;color:#8a8096}
+  .hint{font-size:12px;color:#a89db4;line-height:1.55} .hint b{color:#efe9f2;font-weight:600}
+</style>
+</head>
+<body>
+  <div class="scaler" id="scaler">
+    <div class="phone" id="phone">
+      <div class="prog" id="prog"></div>
+      <iframe id="site" src="/" title="everyboringtool.com"></iframe>
+      <div class="shield"></div>
+
+      <div class="ov" id="ov">
+        <!-- face -->
+        <section class="oscene faceScene" data-o="face">
+          <svg class="face" viewBox="0 0 100 100" aria-hidden="true">
+            <rect class="badge" x="7" y="7" width="86" height="86" rx="22"/>
+            <circle class="eye" cx="35.5" cy="43" r="6.5"/><circle class="eye" cx="64.5" cy="43" r="6.5"/>
+            <rect class="mouth-flat" x="33" y="60" width="34" height="7" rx="3.5"/>
+            <path class="mouth-smile" d="M31 60 Q50 65 69 60 Q50 71 31 60 Z"/>
+          </svg>
+          <div class="facetag">your friendly neighborhood roaster</div>
+        </section>
+        <!-- tabs -->
+        <section class="oscene tabsScene" data-o="tabs">
+          <div class="winbar"><i></i><i></i><i></i></div>
+          <div class="tabrow" id="tabrow"></div>
+          <div class="tabbig"><b id="tabnum">0</b></div>
+        </section>
+        <!-- folder -->
+        <section class="oscene folderScene" data-o="folder">
+          <div class="fhead"><span>📁</span> Documents</div>
+          <div class="flist" id="flist">
+            <div class="frow"><span>📄</span><span class="mono">draft.docx</span></div>
+            <div class="frow"><span>📄</span><span class="mono">draft_v2.docx</span></div>
+            <div class="frow"><span>📄</span><span class="mono">final.docx</span></div>
+            <div class="frow"><span>📄</span><span class="mono">final_v2.docx</span></div>
+            <div class="frow"><span>📄</span><span class="mono">final_FINAL.docx</span></div>
+            <div class="frow cursed"><span>📄</span><span class="mono">final_FINAL_v3.docx</span><span class="glow">this one</span></div>
+          </div>
+        </section>
+        <!-- end -->
+        <section class="oscene endScene" data-o="end">
+          <div>
+            <svg class="efc" viewBox="0 0 100 100" aria-hidden="true">
+              <rect class="badge" x="7" y="7" width="86" height="86" rx="22"/>
+              <circle class="eye" cx="35.5" cy="43" r="6.5"/><circle class="eye" cx="64.5" cy="43" r="6.5"/>
+              <rect class="mouth-flat" x="33" y="60" width="34" height="7" rx="3.5"/>
+            </svg>
+            <p class="url">everyboringtool.com</p>
+            <p class="tag">Every boring tool. One simple place.</p>
+            <p class="meta">free · no sign-up · in your browser</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <button class="btn primary" id="play">▶ Play intro</button>
+      <label class="file">🎙 VO audio: <input type="file" id="audio" accept="audio/*"></label>
+      <label class="file">or length <input type="number" id="dur" value="22" min="6" max="90" step="0.5">s</label>
+    </div>
+    <div class="row"><span class="status" id="status">loading site…</span></div>
+    <p class="hint"><b>DeadPan intro · real site · 9:16.</b> Load your ElevenLabs VO and the whole sequence runs for exactly its length (categories scroll → homepage → gags → real tool → end card). No audio? It uses the length box. Press Play, then F11 + screen-record the phone frame.</p>
+  </div>
+
+<script>
+(function(){
+  var site=document.getElementById('site'), prog=document.getElementById('prog');
+  var status=document.getElementById('status'), phone=document.getElementById('phone'), scaler=document.getElementById('scaler');
+  var ov=document.getElementById('ov'), durEl=document.getElementById('dur'), fileEl=document.getElementById('audio');
+  var scenes={}; [].forEach.call(ov.querySelectorAll('.oscene'),function(s){ scenes[s.getAttribute('data-o')]=s; });
+  var faceScene=scenes.face;
+  var IMG_TOOL='/image/image-compressor';
+  (function(){ var m=location.search.match(/[?&]dur=([\d.]+)/); if(m) durEl.value=m[1]; })();
+
+  // fit phone to viewport (keep 412 logical width => real mobile layout)
+  function fit(){ var s=Math.min((window.innerHeight-190)/732,(window.innerWidth-28)/412); s=Math.max(.4,Math.min(s,1.7));
+    phone.style.transform='scale('+s+')'; scaler.style.height=(732*s)+'px'; scaler.style.width=(412*s)+'px'; }
+  window.addEventListener('resize',fit); fit();
+
+  function win(){ try{return site.contentWindow;}catch(e){return null;} }
+  function doc(){ try{return site.contentWindow.document;}catch(e){return null;} }
+  function cat(){ var d=doc(); return d? d.querySelector('.catnav-row'):null; }
+  function vmax(){ var d=doc(); if(!d)return 0; var el=d.scrollingElement||d.documentElement; return Math.max(0,el.scrollHeight-732); }
+  function catmax(){ var c=cat(); return c? Math.max(0,c.scrollWidth-c.clientWidth):0; }
+
+  // build 17 tabs + refs
+  var tabrow=document.getElementById('tabrow'), tabnum=document.getElementById('tabnum');
+  for(var i=0;i<17;i++){ var t=document.createElement('div'); t.className='tab'+(i===16?' hot':''); t.innerHTML='<span class="fav"></span>tab'; tabrow.appendChild(t); }
+  var tabEls=[].slice.call(tabrow.children), frows=[].slice.call(document.querySelectorAll('#flist .frow'));
+
+  function showScene(name){ // null => reveal iframe
+    for(var k in scenes){ scenes[k].classList.toggle('on', k===name); }
+  }
+  function resetGags(){ tabEls.forEach(function(e){e.classList.remove('show');}); tabnum.textContent='0';
+    frows.forEach(function(e){e.classList.remove('show');}); faceScene.classList.remove('smirk'); }
+
+  // ---- beats: weight + enter() once + render(p) each frame ----
+  var beats=[
+    { name:'face',   w:0.12, enter:function(){ showScene('face'); } },
+    { name:'site',   w:0.34, enter:function(){ showScene(null); var w=win(); if(w)w.scrollTo(0,0); var c=cat(); if(c)c.scrollLeft=0; },
+      render:function(p){ var w=win(); if(!w)return; var c=cat(); var vt=Math.min(vmax(),3400);
+        if(p<0.42){ if(c)c.scrollLeft=catmax()*(p/0.42); w.scrollTo(0,0); }
+        else { if(c)c.scrollLeft=catmax(); w.scrollTo(0, vt*((p-0.42)/0.58)); } } },
+    { name:'tabs',   w:0.11, enter:function(){ showScene('tabs'); tabEls.forEach(function(e,idx){ setTimeout(function(){ e.classList.add('show'); tabnum.textContent=String(idx+1); }, 60+idx*70); }); } },
+    { name:'folder', w:0.11, enter:function(){ showScene('folder'); frows.forEach(function(e,idx){ setTimeout(function(){ e.classList.add('show'); }, 80+idx*150); }); } },
+    { name:'smirk',  w:0.11, enter:function(){ showScene('face'); setTimeout(function(){ faceScene.classList.add('smirk'); }, 700);
+        var w=win(); if(w){ try{ if(w.location.pathname!==IMG_TOOL) site.src=IMG_TOOL; }catch(e){ site.src=IMG_TOOL; } } } }, // preload real tool behind overlay
+    { name:'tool',   w:0.13, enter:function(){ showScene(null); var w=win(); if(w)w.scrollTo(0,0); },
+      render:function(p){ var w=win(); if(!w)return; try{ w.scrollTo(0, Math.min(360, 360*p)); }catch(e){} } },
+    { name:'end',    w:0.08, enter:function(){ showScene('end'); } }
+  ];
+  // boundaries as fractions of total — tuned to the DeadPan VO's detected sentence pauses
+  // beats:            face   site    tabs    folder  smirk   tool    end
+  var F=[0, 0.1355, 0.2560, 0.3916, 0.5271, 0.6747, 0.7801, 1.0];
+  beats.forEach(function(b,idx){ b.f0=F[idx]; b.f1=F[idx+1]; });
+
+  var audioEl=null, running=false, raf=null, clock0=0, lastBeat=-1, useAudioClock=false;
+  function totalMs(){ if(audioEl && isFinite(audioEl.duration) && audioEl.duration>0) return audioEl.duration*1000; return (parseFloat(durEl.value)||22)*1000; }
+  function nowMs(){ if(useAudioClock && audioEl && !audioEl.paused) return audioEl.currentTime*1000; return performance.now()-clock0; }
+  function loadAudioSrc(src,label){
+    if(audioEl){ try{audioEl.pause();}catch(_){} }
+    audioEl=new Audio(src); audioEl.preload='auto';
+    audioEl.addEventListener('loadedmetadata',function(){ durEl.value=audioEl.duration.toFixed(1); status.textContent=label+' · '+audioEl.duration.toFixed(1)+'s — press Play'; });
+    audioEl.addEventListener('error',function(){ audioEl=null; });
+  }
+
+  function frame(){
+    if(!running) return;
+    var total=totalMs(), t=nowMs();
+    if(t>=total){ finish(); return; }
+    var tf=t/total; prog.style.width=(tf*100)+'%';
+    for(var i=0;i<beats.length;i++){ var b=beats[i]; if(tf>=b.f0 && tf<b.f1){
+      if(i!==lastBeat){ lastBeat=i; if(b.enter) b.enter(); }
+      if(b.render){ b.render((tf-b.f0)/(b.f1-b.f0)); } break; } }
+    raf=requestAnimationFrame(frame);
+  }
+  function finish(){ running=false; if(raf)cancelAnimationFrame(raf); prog.style.width='100%'; showScene('end'); status.textContent='done'; if(audioEl){ try{audioEl.pause();}catch(e){} } }
+
+  function start(){
+    if(raf)cancelAnimationFrame(raf); resetGags(); showScene('face'); lastBeat=-1; running=true; useAudioClock=false;
+    clock0=performance.now();
+    var w=win(); if(w){ try{ if(w.location.pathname!=='/'){ site.src='/'; } else { w.scrollTo(0,0); } }catch(e){ site.src='/'; } }
+    if(audioEl){ try{ audioEl.currentTime=0; var pr=audioEl.play();
+        if(pr&&pr.then){ pr.then(function(){useAudioClock=true;}).catch(function(){useAudioClock=false;}); } else { useAudioClock=true; }
+      }catch(e){ useAudioClock=false; }
+      status.textContent='playing · '+ (audioEl.duration? audioEl.duration.toFixed(1)+'s':'audio'); }
+    else { status.textContent='playing · '+durEl.value+'s (no audio)'; }
+    raf=requestAnimationFrame(frame);
+  }
+  document.getElementById('play').onclick=start;
+
+  fileEl.addEventListener('change',function(e){ var f=e.target.files&&e.target.files[0]; if(f) loadAudioSrc(URL.createObjectURL(f),'audio loaded'); });
+  // auto-load the DeadPan VO baked into the app (override with Choose File)
+  loadAudioSrc('/deadpan-vo.mp3','DeadPan VO');
+
+  var autoStarted=false;
+  site.addEventListener('load',function(){
+    var d=doc();
+    if(d){ var path=(site.contentWindow.location.pathname||'/');
+      if(status.textContent==='loading site…') status.textContent='ready — load your VO, then Play';
+      try{ if(!d.getElementById('__recstyle')){ var st=d.createElement('style'); st.id='__recstyle';
+        st.textContent='::-webkit-scrollbar{width:0!important;height:0!important;background:transparent!important} html{scrollbar-width:none!important;-ms-overflow-style:none!important}';
+        (d.head||d.documentElement).appendChild(st); } }catch(e){}
+      if(path==='/' && !autoStarted && !running && /[?&]auto/.test(location.search)){ autoStarted=true; setTimeout(start,700); }
+    } else { status.textContent='blocked: cross-origin — open via http://localhost:3000/intro-recorder.html'; }
+  });
+})();
+</script>
+</body>
+</html>
