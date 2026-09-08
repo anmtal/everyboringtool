@@ -97,10 +97,11 @@ function encodeEntities(input, { mode, scope }) {
       continue;
     }
 
-    if (mode === "named" && cp in CHAR_TO_NAMED) {
-      out += "&" + CHAR_TO_NAMED[cp] + ";";
-    } else if (mode === "named" && isSpecial) {
+    if (mode === "named" && isSpecial) {
+      // Prefer the safe basic mapping (apostrophe -> &#39;, not &apos;).
       out += BASIC_NAMED[cp];
+    } else if (mode === "named" && cp in CHAR_TO_NAMED) {
+      out += "&" + CHAR_TO_NAMED[cp] + ";";
     } else if (mode === "hex") {
       out += "&#x" + c.toString(16).toUpperCase() + ";";
     } else {

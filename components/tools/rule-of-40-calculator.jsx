@@ -255,23 +255,9 @@ export default function RuleOf40Calculator() {
             </div>
           </div>
 
-          <div
-            className="tool-result"
-            role="status"
-            aria-live="polite"
-            style={{
-              borderColor:
-                result.verdict.tone === "bad"
-                  ? "rgba(220, 38, 38, 0.5)"
-                  : result.verdict.tone === "warn"
-                  ? "rgba(217, 119, 6, 0.5)"
-                  : "rgba(22, 163, 74, 0.5)",
-            }}
-          >
+          <div className="tool-result" role="status" aria-live="polite">
             <p className="tool-result-label">{result.verdict.label}</p>
-            <p className="tool-note" style={{ marginTop: "0.35rem" }}>
-              {result.verdict.note}
-            </p>
+            <p className="tool-note">{result.verdict.note}</p>
           </div>
 
           <p className="tool-note">

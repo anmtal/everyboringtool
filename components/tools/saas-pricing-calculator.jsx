@@ -278,9 +278,7 @@ export default function SaasPricingCalculator() {
 
           {result.projection ? (
             <>
-              <p className="tool-result-label" style={undefined}>
-                Projected in 12 months
-              </p>
+              <p className="tool-result-label">Projected in 12 months</p>
               <div className="tool-stat-grid" role="status" aria-live="polite">
                 <div className="tool-stat">
                   <div className="tool-stat-num">
