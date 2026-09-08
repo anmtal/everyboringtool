@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { marked } from "marked";
 import { blogPosts } from "../../../lib/blogPosts";
-import { SITE } from "../../../lib/tools";
+import { SITE, getToolBySlug } from "../../../lib/tools";
 import AdSlot from "../../../components/AdSlot";
 
 export const dynamicParams = false;
@@ -44,6 +44,11 @@ export default function Post({ params }) {
 
   const html = marked.parse(p.body || "");
   const abs = (u) => (String(u).startsWith("http") ? u : `${SITE.url}${u}`);
+  // Only surface tool links that are currently live (tools can be temporarily
+  // hidden via HIDE_NEW_TOOLS); this keeps guides free of dead links.
+  const isLive = (u) => !!getToolBySlug(String(u).split("/").filter(Boolean).pop());
+  const toolLive = p.tool ? isLive(p.tool) : false;
+  const relatedLive = Array.isArray(p.related) ? p.related.filter((r) => isLive(r.url)) : [];
 
   const articleLd = {
     "@context": "https://schema.org",
@@ -86,7 +91,7 @@ export default function Post({ params }) {
         <p className="muted">Updated {formatDate(p.updated || p.date)}</p>
       </header>
 
-      {p.tool ? (
+      {p.tool && toolLive ? (
         <div
           className="block"
           style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}
@@ -102,7 +107,7 @@ export default function Post({ params }) {
 
       <AdSlot slot={process.env.NEXT_PUBLIC_ADSLOT_TOOL} minHeight={280} />
 
-      {p.tool ? (
+      {p.tool && toolLive ? (
         <section className="block">
           <h2 className="section-title">Do it now — free and private</h2>
           <p>The tool runs entirely in your browser: nothing you add is uploaded, and there is no sign-up.</p>
@@ -112,11 +117,11 @@ export default function Post({ params }) {
         </section>
       ) : null}
 
-      {Array.isArray(p.related) && p.related.length ? (
+      {relatedLive.length ? (
         <section className="block">
           <h2 className="section-title">Related tools</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {p.related.map((r) => (
+            {relatedLive.map((r) => (
               <Link key={r.url} href={r.url} className="badge" style={{ textDecoration: "none" }}>
                 {r.name}
               </Link>
