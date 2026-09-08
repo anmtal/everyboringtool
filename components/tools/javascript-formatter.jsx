@@ -125,6 +125,19 @@ function peekWord(s, i) {
 
 const CONTINUATION = new Set(["else", "catch", "finally", "while"]);
 
+// Keywords after which a "{" opens an object literal (a value), not a block.
+const OBJ_WORDS = new Set([
+  "return", "typeof", "instanceof", "in", "of", "new", "delete", "void",
+  "throw", "case", "yield", "await", "default",
+]);
+
+// Decide whether a "{" begins an object literal (value position) or a block.
+function braceIsObject(out) {
+  const { ch, word } = prevContext(out);
+  if (word) return OBJ_WORDS.has(word);
+  return "=([,:?|&".includes(ch);
+}
+
 // Control keywords that read better with a space before their "(".
 const KW_PAREN = new Set([
   "if", "for", "while", "switch", "catch", "return", "do",
@@ -147,6 +160,13 @@ function beautify(src, indentUnit) {
   let pendingSpace = false;
   let atLineStart = true;
   const stack = []; // "{", "[", "("
+  const objStack = []; // per-"{" : { obj: boolean, sawColon: boolean }
+
+  const topFrame = () => objStack[objStack.length - 1];
+  const topIsObjectBrace = () => {
+    const f = topFrame();
+    return stack[stack.length - 1] === "{" && f && f.obj === true;
+  };
 
   const pad = () => indentUnit.repeat(Math.max(0, indent));
 
@@ -226,6 +246,7 @@ function beautify(src, indentUnit) {
 
     // Structural punctuation
     if (c === "{") {
+      const isObj = braceIsObject(out);
       const before = out.replace(/[ \t\n]+$/, "");
       const lastCh = before.length ? before[before.length - 1] : "";
       if (!atLineStart && lastCh && !"([{".includes(lastCh)) {
@@ -239,6 +260,7 @@ function beautify(src, indentUnit) {
       atLineStart = false;
       pendingSpace = false;
       stack.push("{");
+      objStack.push({ obj: isObj, sawColon: false });
       indent += 1;
       // Empty block? collapse on the same line.
       if (peekNext(s, i + 1) === "}") {
@@ -247,6 +269,7 @@ function beautify(src, indentUnit) {
         while (j < len && s[j] !== "}") j += 1;
         indent -= 1;
         stack.pop();
+        objStack.pop();
         out += "}";
         pendingSpace = true;
         i = j + 1;
@@ -259,7 +282,7 @@ function beautify(src, indentUnit) {
 
     if (c === "}") {
       indent = Math.max(0, indent - 1);
-      if (stack[stack.length - 1] === "{") stack.pop();
+      if (stack[stack.length - 1] === "{") { stack.pop(); objStack.pop(); }
       const trimmed = out.replace(/[ \t\n]+$/, "");
       if (trimmed.endsWith("{")) {
         out = trimmed + "}";
@@ -274,8 +297,10 @@ function beautify(src, indentUnit) {
       const nc = peekNext(s, i);
       const nw = peekWord(s, i);
       if (nc === "" ) { /* end of input */ }
-      else if (")]},;.:".includes(nc) || CONTINUATION.has(nw)) {
-        pendingSpace = true;
+      else if (CONTINUATION.has(nw)) {
+        pendingSpace = true; // } else, } catch, } while
+      } else if (")]},;.:".includes(nc)) {
+        // Trailing punctuation hugs the brace: }; }, }) }.foo
       } else {
         newline();
       }
@@ -322,15 +347,27 @@ function beautify(src, indentUnit) {
 
     if (c === ",") {
       push(",");
-      if (stack[stack.length - 1] === "{") newline();
-      else pendingSpace = true;
+      if (topIsObjectBrace()) {
+        topFrame().sawColon = false; // next key starts a fresh property
+        newline();
+      } else {
+        pendingSpace = true;
+      }
       i += 1;
       continue;
     }
 
     if (c === ":") {
       push(":");
-      if (stack[stack.length - 1] === "{") pendingSpace = true;
+      if (topIsObjectBrace()) {
+        const f = topFrame();
+        if (!f.sawColon) {
+          // First colon after a key is the property separator.
+          f.sawColon = true;
+          pendingSpace = true;
+        }
+        // Later colons at this level belong to a ternary; leave them as-is.
+      }
       i += 1;
       continue;
     }

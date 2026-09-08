@@ -142,7 +142,7 @@ export default function ImageToAscii() {
         if (lum < 0) lum = 0;
         else if (lum > 255) lum = 255;
         // Dark pixel -> dark (left) character. Invert flips the mapping.
-        const t = invert ? lum / 255 : 1 - lum / 255;
+        const t = invert ? 1 - lum / 255 : lum / 255;
         const idx = Math.round(t * maxIdx);
         line += chars[idx];
       }
