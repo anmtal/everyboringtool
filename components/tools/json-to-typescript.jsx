@@ -227,8 +227,12 @@ function generate(jsonText, rootName, kind, exportKw, nullMode) {
     emitInterface([parsed], rootHint, ctx);
   } else {
     // Root is an array or primitive -> emit a type alias.
+    // Reserve the alias name first so a root array of objects doesn't collide
+    // with the element interface (e.g. `type Root = Root[]` + `interface Root`).
+    const aliasName = uniqueName(toPascalCase(rootHint), ctx);
+    ctx.reserved.add(aliasName);
     const typeText = buildType(parsed, rootHint, ctx);
-    rootAlias = { name: toPascalCase(rootHint), typeText };
+    rootAlias = { name: aliasName, typeText };
   }
 
   const kw = exportKw ? "export " : "";
