@@ -2,6 +2,7 @@ import { categories, SITE, LAST_UPDATED } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
 import { TYPING_LANDING, LANDING_UPDATED, visibleLandingKeys } from "../lib/typingLanding";
 import { TOOL_LANDINGS, visibleToolLandingKeys } from "../lib/toolLandings";
+import { sortedPosts, BLOG_UPDATED } from "../lib/blogPosts";
 
 export default function sitemap() {
   const base = SITE.url;
@@ -18,6 +19,21 @@ export default function sitemap() {
   const urls = [{ url: base, lastModified: siteDate, priority: 1 }];
   for (const u of ["/about", "/privacy", "/terms", "/contact"]) {
     urls.push({ url: `${base}${u}`, lastModified: siteDate, priority: 0.3 });
+  }
+  // Blog / guides: index + each published post (hand-written how-to content).
+  const blogDate = new Date(BLOG_UPDATED);
+  const blogPostList = sortedPosts();
+  if (blogPostList.length) {
+    urls.push({ url: `${base}/blog`, lastModified: blogDate, priority: 0.6 });
+    for (const post of blogPostList) {
+      const pd = post.updated || post.date;
+      const d = pd ? new Date(pd) : blogDate;
+      urls.push({
+        url: `${base}/blog/${post.slug}`,
+        lastModified: isNaN(d.getTime()) ? blogDate : d,
+        priority: 0.5,
+      });
+    }
   }
   // Word-game + convert HUBS only. The per-combination pages (unscramble/<letters>,
   // convert/<pair>, words-*, crossword-solver/<pattern>) are noindexed as of

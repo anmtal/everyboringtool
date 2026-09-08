@@ -160,6 +160,7 @@ export default function RootLayout({ children }) {
                 <h3 className="footer-h">Site</h3>
                 <Link href="/">All tools</Link>
                 <Link href="/convert">File Converters</Link>
+                <Link href="/blog">Guides</Link>
                 <Link href="/about">About</Link>
                 <Link href="/contact">Contact</Link>
                 <Link href="/privacy">Privacy Policy</Link>
