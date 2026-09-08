@@ -215,7 +215,9 @@ export default function MarkdownTableGenerator() {
         .map((_, c) => {
           const a = ALIGN[aligns[c]] || ALIGN.none;
           const inner = pretty ? widths[c] : 3;
-          const dashes = "-".repeat(Math.max(1, inner - (a.left === ":" ? 1 : 0) - (a.right === ":" ? 1 : 0)));
+          // a.left and a.right each occupy one character, so the fill is
+          // inner - 2 to keep the separator the same width as the content.
+          const dashes = "-".repeat(Math.max(1, inner - 2));
           return a.left + dashes + a.right;
         })
         .join(" | ") +

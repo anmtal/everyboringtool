@@ -269,11 +269,8 @@ export default function PasswordStrengthChecker() {
                   height: "8px",
                   padding: 0,
                   borderRadius: "4px",
-                  background:
-                    b <= result.score
-                      ? "currentColor"
-                      : "rgba(128,128,128,0.25)",
-                  opacity: b <= result.score ? 1 : 0.5,
+                  background: "currentColor",
+                  opacity: b <= result.score ? 1 : 0.18,
                 }}
               />
             ))}

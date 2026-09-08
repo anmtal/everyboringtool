@@ -3,128 +3,123 @@
 import { useMemo, useState } from "react";
 import { copyText } from "../../lib/copyText";
 
-const SAMPLE = `The quick brown fox
-jumps over the lazy dog.
-It was a bright cold day
-in April.
+const EXAMPLE = `The quick brown fox
+jumps over the
+lazy dog.
 
-The clocks were
-striking thirteen.`;
+Pack my box with
+five dozen liquor
+jugs.`;
 
-const MODES = [
-  {
-    value: "spaces",
-    label: "Replace line breaks with spaces",
-  },
-  {
-    value: "remove",
-    label: "Remove line breaks entirely (join)",
-  },
-  {
-    value: "paragraphs",
-    label: "Unwrap lines, keep paragraph breaks",
-  },
-  {
-    value: "blank",
-    label: "Remove only blank (empty) lines",
-  },
+// What to put in place of each removed line break.
+const REPLACERS = [
+  { value: "space", label: "A single space" },
+  { value: "none", label: "Nothing (join directly)" },
+  { value: "comma", label: "Comma + space" },
+  { value: "custom", label: "Custom text…" },
 ];
 
-// Normalize all newline styles (Windows \r\n, old Mac \r) to \n first.
-function normalize(text) {
-  return text.replace(/\r\n?/g, "\n");
+function collapseSpaces(text) {
+  // Collapse runs of spaces/tabs into one, but leave newlines alone.
+  return text.replace(/[ \t\f\v]+/g, " ");
 }
 
-function collapseSpaces(text, on) {
-  if (!on) return text;
-  // Collapse runs of spaces/tabs into a single space, but leave newlines alone.
-  return text.replace(/[ \t]{2,}/g, " ");
-}
+function process(input, opts) {
+  const { replacer, custom, keepParagraphs, removeEmpty, trimLines, collapse } = opts;
 
-function process(text, mode, opts) {
-  if (!text) return "";
-  let out = normalize(text);
+  if (!input) return "";
 
-  if (opts.trimLines) {
-    out = out
-      .split("\n")
-      .map((line) => line.replace(/[ \t]+$/g, "").replace(/^[ \t]+/g, ""))
-      .join("\n");
+  // Normalize all newline styles to \n first.
+  let text = input.replace(/\r\n|\r/g, "\n");
+
+  // Determine the joiner used to replace single line breaks.
+  let joiner;
+  switch (replacer) {
+    case "none":
+      joiner = "";
+      break;
+    case "comma":
+      joiner = ", ";
+      break;
+    case "custom":
+      joiner = custom;
+      break;
+    case "space":
+    default:
+      joiner = " ";
+      break;
   }
 
-  if (mode === "spaces") {
-    // Every line break becomes a single space.
-    out = out.replace(/\n+/g, " ");
-    out = collapseSpaces(out, opts.collapseSpaces);
-  } else if (mode === "remove") {
-    // Line breaks vanish with nothing between the joined text.
-    out = out.replace(/\n+/g, "");
-    out = collapseSpaces(out, opts.collapseSpaces);
-  } else if (mode === "paragraphs") {
-    // A blank line (two+ newlines) separates paragraphs and is preserved as
-    // one blank line. Single newlines inside a paragraph become spaces.
-    out = out
-      .split(/\n[ \t]*\n+/)
-      .map((para) => collapseSpaces(para.replace(/\n+/g, " ").trim(), opts.collapseSpaces))
-      .filter((para) => para.length > 0)
+  if (keepParagraphs) {
+    // A "paragraph" is a block separated by one or more blank lines.
+    const paragraphs = text.split(/\n[ \t]*\n+/);
+    const rebuilt = paragraphs
+      .map((para) => {
+        let lines = para.split("\n");
+        if (trimLines) lines = lines.map((l) => l.trim());
+        if (removeEmpty) lines = lines.filter((l) => l.length > 0);
+        return lines.join(joiner);
+      })
+      .filter((para) => (removeEmpty ? para.trim().length > 0 : true))
       .join("\n\n");
-  } else if (mode === "blank") {
-    // Keep real line breaks; only drop lines that are empty/whitespace-only.
-    out = out
-      .split("\n")
-      .filter((line) => line.trim().length > 0)
-      .join("\n");
-    out = collapseSpaces(out, opts.collapseSpaces);
+    return collapse ? collapseSpaces(rebuilt).replace(/ *\n */g, "\n") : rebuilt;
   }
 
-  if (opts.trimResult) out = out.trim();
+  // No paragraph preservation: flatten everything into one line.
+  let lines = text.split("\n");
+  if (trimLines) lines = lines.map((l) => l.trim());
+  if (removeEmpty) lines = lines.filter((l) => l.length > 0);
+  let out = lines.join(joiner);
+  if (collapse) out = collapseSpaces(out);
   return out;
 }
 
 export default function RemoveLineBreaks() {
-  const [text, setText] = useState(SAMPLE);
-  const [mode, setMode] = useState("spaces");
-  const [collapseSpacesOpt, setCollapseSpacesOpt] = useState(true);
+  const [text, setText] = useState(EXAMPLE);
+  const [replacer, setReplacer] = useState("space");
+  const [custom, setCustom] = useState(" | ");
+  const [keepParagraphs, setKeepParagraphs] = useState(true);
+  const [removeEmpty, setRemoveEmpty] = useState(true);
   const [trimLines, setTrimLines] = useState(true);
-  const [trimResult, setTrimResult] = useState(true);
+  const [collapse, setCollapse] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const output = useMemo(
     () =>
-      process(text, mode, {
-        collapseSpaces: collapseSpacesOpt,
+      process(text, {
+        replacer,
+        custom,
+        keepParagraphs,
+        removeEmpty,
         trimLines,
-        trimResult,
+        collapse,
       }),
-    [text, mode, collapseSpacesOpt, trimLines, trimResult]
+    [text, replacer, custom, keepParagraphs, removeEmpty, trimLines, collapse]
   );
 
   const stats = useMemo(() => {
-    const norm = normalize(text);
-    const breaksBefore = (norm.match(/\n/g) || []).length;
-    const breaksAfter = (normalize(output).match(/\n/g) || []).length;
+    const inBreaks = (text.match(/\r\n|\r|\n/g) || []).length;
+    const outBreaks = (output.match(/\n/g) || []).length;
     return {
-      breaksBefore,
-      breaksAfter,
-      removed: Math.max(breaksBefore - breaksAfter, 0),
-      charsOut: output.length,
+      removed: Math.max(0, inBreaks - outBreaks),
+      inChars: text.length,
+      outChars: output.length,
     };
   }, [text, output]);
 
   const fmt = (n) => n.toLocaleString("en-US");
 
-  function handleTextChange(e) {
-    setText(e.target.value);
-    setCopied(false);
-  }
-
-  function handleModeChange(e) {
-    setMode(e.target.value);
+  function bump() {
     setCopied(false);
   }
 
   function handleClear() {
     setText("");
+    setCopied(false);
+  }
+
+  function handleExample() {
+    setText(EXAMPLE);
     setCopied(false);
   }
 
@@ -134,7 +129,7 @@ export default function RemoveLineBreaks() {
       await copyText(output);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch (err) {
+    } catch (e) {
       setCopied(false);
     }
   }
@@ -143,24 +138,6 @@ export default function RemoveLineBreaks() {
     <div className="tool">
       <div className="tool-fields">
         <div className="tool-field">
-          <label className="tool-label" htmlFor="rlb-mode">
-            What to do with line breaks
-          </label>
-          <select
-            id="rlb-mode"
-            className="tool-select"
-            value={mode}
-            onChange={handleModeChange}
-          >
-            {MODES.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="tool-field">
           <label className="tool-label" htmlFor="rlb-input">
             Your text
           </label>
@@ -168,7 +145,10 @@ export default function RemoveLineBreaks() {
             id="rlb-input"
             className="tool-textarea"
             value={text}
-            onChange={handleTextChange}
+            onChange={(e) => {
+              setText(e.target.value);
+              bump();
+            }}
             placeholder="Paste text with unwanted line breaks here…"
             rows={8}
             spellCheck={false}
@@ -177,51 +157,111 @@ export default function RemoveLineBreaks() {
 
         <div className="tool-row">
           <div className="tool-field">
-            <label className="tool-label" htmlFor="rlb-collapse">
-              <input
-                id="rlb-collapse"
-                type="checkbox"
-                checked={collapseSpacesOpt}
-                onChange={(e) => {
-                  setCollapseSpacesOpt(e.target.checked);
-                  setCopied(false);
-                }}
-              />{" "}
-              Collapse double spaces
+            <label className="tool-label" htmlFor="rlb-replacer">
+              Replace each line break with
             </label>
+            <select
+              id="rlb-replacer"
+              className="tool-select"
+              value={replacer}
+              onChange={(e) => {
+                setReplacer(e.target.value);
+                bump();
+              }}
+            >
+              {REPLACERS.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="tool-field">
-            <label className="tool-label" htmlFor="rlb-trimlines">
+
+          {replacer === "custom" ? (
+            <div className="tool-field">
+              <label className="tool-label" htmlFor="rlb-custom">
+                Custom separator
+              </label>
               <input
-                id="rlb-trimlines"
-                type="checkbox"
-                checked={trimLines}
+                id="rlb-custom"
+                className="tool-input"
+                type="text"
+                value={custom}
                 onChange={(e) => {
-                  setTrimLines(e.target.checked);
-                  setCopied(false);
+                  setCustom(e.target.value);
+                  bump();
                 }}
-              />{" "}
-              Trim spaces at line ends
-            </label>
-          </div>
-          <div className="tool-field">
-            <label className="tool-label" htmlFor="rlb-trimresult">
-              <input
-                id="rlb-trimresult"
-                type="checkbox"
-                checked={trimResult}
-                onChange={(e) => {
-                  setTrimResult(e.target.checked);
-                  setCopied(false);
-                }}
-              />{" "}
-              Trim final result
-            </label>
-          </div>
+                placeholder=" | "
+              />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label" htmlFor="rlb-keep-para">
+            <input
+              id="rlb-keep-para"
+              type="checkbox"
+              checked={keepParagraphs}
+              onChange={(e) => {
+                setKeepParagraphs(e.target.checked);
+                bump();
+              }}
+            />{" "}
+            Keep paragraph breaks (blank lines stay as paragraph splits)
+          </label>
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label" htmlFor="rlb-remove-empty">
+            <input
+              id="rlb-remove-empty"
+              type="checkbox"
+              checked={removeEmpty}
+              onChange={(e) => {
+                setRemoveEmpty(e.target.checked);
+                bump();
+              }}
+            />{" "}
+            Remove empty lines
+          </label>
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label" htmlFor="rlb-trim">
+            <input
+              id="rlb-trim"
+              type="checkbox"
+              checked={trimLines}
+              onChange={(e) => {
+                setTrimLines(e.target.checked);
+                bump();
+              }}
+            />{" "}
+            Trim leading/trailing spaces on each line
+          </label>
+        </div>
+
+        <div className="tool-field">
+          <label className="tool-label" htmlFor="rlb-collapse">
+            <input
+              id="rlb-collapse"
+              type="checkbox"
+              checked={collapse}
+              onChange={(e) => {
+                setCollapse(e.target.checked);
+                bump();
+              }}
+            />{" "}
+            Collapse repeated spaces into one
+          </label>
         </div>
       </div>
 
       <div className="tool-actions">
+        <button className="btn" type="button" onClick={handleExample}>
+          Load example
+        </button>
         <button className="btn" type="button" onClick={handleClear}>
           Clear
         </button>
@@ -247,31 +287,32 @@ export default function RemoveLineBreaks() {
         </div>
       ) : (
         <p className="tool-note">
-          Paste some text above to strip out its line breaks. Your text stays on
-          this page and is never uploaded.
+          Paste some text above to strip out its line breaks. Try the “Load
+          example” button to see how the options work.
         </p>
       )}
 
       <div className="tool-stat-grid" role="status" aria-live="polite">
         <div className="tool-stat">
-          <div className="tool-stat-num">{fmt(stats.breaksBefore)}</div>
-          <div className="tool-stat-label">Line breaks in</div>
-        </div>
-        <div className="tool-stat">
           <div className="tool-stat-num">{fmt(stats.removed)}</div>
-          <div className="tool-stat-label">Breaks removed</div>
+          <div className="tool-stat-label">Line breaks removed</div>
         </div>
         <div className="tool-stat">
-          <div className="tool-stat-num">{fmt(stats.charsOut)}</div>
-          <div className="tool-stat-label">Characters out</div>
+          <div className="tool-stat-num">{fmt(stats.inChars)}</div>
+          <div className="tool-stat-label">Input characters</div>
+        </div>
+        <div className="tool-stat">
+          <div className="tool-stat-num">{fmt(stats.outChars)}</div>
+          <div className="tool-stat-label">Output characters</div>
         </div>
       </div>
 
       <p className="tool-note">
-        Handles Windows, Mac, and Unix line endings automatically. Use
-        &ldquo;keep paragraph breaks&rdquo; to unwrap text copied from PDFs or
-        emails while preserving where each paragraph starts. Everything runs
-        live in your browser.
+        Great for un-wrapping text copied from PDFs, emails, or code editors that
+        insert a hard return at the end of every line. Keep “paragraph breaks” on
+        to turn wrapped lines back into clean paragraphs, or turn it off to
+        flatten everything onto a single line. All processing happens in your
+        browser — nothing you paste is uploaded.
       </p>
     </div>
   );
