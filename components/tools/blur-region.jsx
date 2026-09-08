@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "—";
@@ -11,251 +11,221 @@ function formatBytes(bytes) {
   return `${mb.toFixed(mb < 10 ? 2 : 1)} MB`;
 }
 
-function clamp(n, lo, hi) {
-  return Math.min(Math.max(n, lo), hi);
-}
-
-// Normalise a raw drag (any corner order) into {x, y, w, h} in natural pixels,
-// clamped to the image bounds. Returns null for a too-small drag.
-function normalizeRect(a, b, nw, nh) {
-  const x1 = clamp(Math.min(a.x, b.x), 0, nw);
-  const y1 = clamp(Math.min(a.y, b.y), 0, nh);
-  const x2 = clamp(Math.max(a.x, b.x), 0, nw);
-  const y2 = clamp(Math.max(a.y, b.y), 0, nh);
-  const w = Math.round(x2 - x1);
-  const h = Math.round(y2 - y1);
-  if (w < 3 || h < 3) return null;
-  return { x: Math.round(x1), y: Math.round(y1), w, h };
+// Normalise a drag (which can go in any direction) into a positive-size rect.
+function normalizeRect(a, b) {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  const w = Math.abs(a.x - b.x);
+  const h = Math.abs(a.y - b.y);
+  return { x, y, w, h };
 }
 
 export default function BlurRegion() {
   const [fileName, setFileName] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
   const [natural, setNatural] = useState(null); // { w, h }
   const [origSize, setOrigSize] = useState(0);
 
-  const [regions, setRegions] = useState([]); // committed rects in natural px
-  const [effect, setEffect] = useState("blur"); // "blur" | "pixelate"
-  const [strength, setStrength] = useState(20);
+  const [regions, setRegions] = useState([]); // [{ x, y, w, h }] in natural px
+  const [drag, setDrag] = useState(null); // { start:{x,y}, current:{x,y} } in natural px
 
+  const [mode, setMode] = useState("blur"); // "blur" | "pixelate"
+  const [strength, setStrength] = useState(20); // 1..60
+
+  const [outUrl, setOutUrl] = useState("");
   const [outSize, setOutSize] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   const imgRef = useRef(null); // loaded HTMLImageElement
-  const canvasRef = useRef(null); // visible canvas (natural sized, CSS scaled)
-  const dragRef = useRef(null); // { start:{x,y}, cur:{x,y} } during a drag
+  const boxRef = useRef(null); // the preview wrapper element
+  const previewUrlRef = useRef("");
+  const outUrlRef = useRef("");
 
-  // Convert a pointer event to natural-image pixel coordinates.
-  const eventToNatural = useCallback((e) => {
-    const canvas = canvasRef.current;
-    if (!canvas || !natural) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    const cx = e.clientX - rect.left;
-    const cy = e.clientY - rect.top;
-    const sx = natural.w / rect.width;
-    const sy = natural.h / rect.height;
-    return { x: clamp(cx * sx, 0, natural.w), y: clamp(cy * sy, 0, natural.h) };
-  }, [natural]);
-
-  // Apply one region's blur/pixelate effect onto the given context.
-  const applyEffect = useCallback((ctx, img, r) => {
-    if (effect === "pixelate") {
-      const block = Math.max(2, Math.round((strength / 100) * Math.min(r.w, r.h)) || 2);
-      const smallW = Math.max(1, Math.round(r.w / block));
-      const smallH = Math.max(1, Math.round(r.h / block));
-      const tmp = document.createElement("canvas");
-      tmp.width = smallW;
-      tmp.height = smallH;
-      const tctx = tmp.getContext("2d");
-      tctx.imageSmoothingEnabled = false;
-      tctx.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, smallW, smallH);
-      ctx.save();
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(tmp, 0, 0, smallW, smallH, r.x, r.y, r.w, r.h);
-      ctx.restore();
-      return;
-    }
-    // Gaussian blur. Sample a padded source so the blur has neighbouring
-    // pixels for a clean look, then clip the painted result to the region so
-    // nothing outside the box is affected.
-    const radius = Math.max(1, Math.round((strength / 100) * 60));
-    const pad = Math.min(radius * 2, 200);
-    const sx = clamp(r.x - pad, 0, natural.w);
-    const sy = clamp(r.y - pad, 0, natural.h);
-    const sw = clamp(r.x + r.w + pad, 0, natural.w) - sx;
-    const sh = clamp(r.y + r.h + pad, 0, natural.h) - sy;
-    const tmp = document.createElement("canvas");
-    tmp.width = sw;
-    tmp.height = sh;
-    const tctx = tmp.getContext("2d");
-    tctx.filter = `blur(${radius}px)`;
-    tctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(r.x, r.y, r.w, r.h);
-    ctx.clip();
-    ctx.drawImage(tmp, sx, sy);
-    ctx.restore();
-  }, [effect, strength, natural]);
-
-  // Render the image + all committed regions to a fresh natural-sized canvas.
-  const renderResult = useCallback(() => {
-    const img = imgRef.current;
-    if (!img || !natural) return null;
-    const canvas = document.createElement("canvas");
-    canvas.width = natural.w;
-    canvas.height = natural.h;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    for (const r of regions) applyEffect(ctx, img, r);
-    return canvas;
-  }, [natural, regions, applyEffect]);
-
-  // Draw to the visible canvas: result + region outlines + in-progress drag.
-  const redraw = useCallback(() => {
-    const canvas = canvasRef.current;
-    const result = renderResult();
-    if (!canvas || !result) return;
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(result, 0, 0);
-
-    const line = Math.max(2, Math.round(natural.w / 400));
-    ctx.lineWidth = line;
-    ctx.strokeStyle = "#2563eb";
-    for (const r of regions) ctx.strokeRect(r.x, r.y, r.w, r.h);
-
-    const d = dragRef.current;
-    if (d) {
-      const rc = normalizeRect(d.start, d.cur, natural.w, natural.h) || {
-        x: Math.min(d.start.x, d.cur.x),
-        y: Math.min(d.start.y, d.cur.y),
-        w: Math.abs(d.cur.x - d.start.x),
-        h: Math.abs(d.cur.y - d.start.y),
-      };
-      ctx.setLineDash([line * 3, line * 2]);
-      ctx.strokeStyle = "#dc2626";
-      ctx.strokeRect(rc.x, rc.y, rc.w, rc.h);
-      ctx.setLineDash([]);
-    }
-  }, [renderResult, regions, natural]);
-
-  // Keep the visible canvas in sync whenever inputs change.
   useEffect(() => {
-    if (natural) redraw();
-  }, [natural, regions, effect, strength, redraw]);
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      if (outUrlRef.current) URL.revokeObjectURL(outUrlRef.current);
+    };
+  }, []);
+
+  function resetOutput() {
+    if (outUrlRef.current) {
+      URL.revokeObjectURL(outUrlRef.current);
+      outUrlRef.current = "";
+    }
+    setOutUrl("");
+    setOutSize(0);
+  }
 
   function onFile(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     setError("");
-    setOutSize(0);
+    resetOutput();
+    setRegions([]);
+    setDrag(null);
+
     if (!file.type.startsWith("image/")) {
       setError("Please choose an image file (PNG, JPG, WebP, GIF, etc.).");
       return;
     }
+
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     const url = URL.createObjectURL(file);
+    previewUrlRef.current = url;
+
     const img = new Image();
     img.onload = () => {
       imgRef.current = img;
-      const canvas = canvasRef.current;
-      if (canvas) {
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-      }
       setNatural({ w: img.naturalWidth, h: img.naturalHeight });
       setOrigSize(file.size);
       setFileName(file.name || "image");
-      setRegions([]);
-      setOutSize(0);
-      URL.revokeObjectURL(url);
+      setPreviewUrl(url);
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
+      previewUrlRef.current = "";
       setError("Couldn't read that image — it may be corrupted or an unsupported format.");
     };
     img.src = url;
+
     e.target.value = "";
   }
 
-  function onPointerDown(e) {
+  // Convert a pointer event to natural-image coordinates.
+  function pointToNatural(clientX, clientY) {
+    if (!boxRef.current || !natural) return null;
+    const rect = boxRef.current.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+    const px = (clientX - rect.left) / rect.width;
+    const py = (clientY - rect.top) / rect.height;
+    const x = Math.min(Math.max(px, 0), 1) * natural.w;
+    const y = Math.min(Math.max(py, 0), 1) * natural.h;
+    return { x, y };
+  }
+
+  function getClient(e) {
+    if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.changedTouches && e.changedTouches[0])
+      return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function onDragStart(e) {
     if (!natural) return;
-    e.preventDefault();
-    const p = eventToNatural(e);
-    dragRef.current = { start: p, cur: p };
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      /* pointer capture is best-effort */
-    }
-    redraw();
+    if (e.cancelable) e.preventDefault();
+    const c = getClient(e);
+    const p = pointToNatural(c.x, c.y);
+    if (!p) return;
+    setDrag({ start: p, current: p });
   }
 
-  function onPointerMove(e) {
-    if (!dragRef.current) return;
-    dragRef.current.cur = eventToNatural(e);
-    redraw();
+  function onDragMove(e) {
+    if (!drag) return;
+    if (e.cancelable) e.preventDefault();
+    const c = getClient(e);
+    const p = pointToNatural(c.x, c.y);
+    if (!p) return;
+    setDrag((d) => (d ? { ...d, current: p } : d));
   }
 
-  function onPointerUp() {
-    const d = dragRef.current;
-    dragRef.current = null;
-    if (!d || !natural) {
-      redraw();
-      return;
-    }
-    const rect = normalizeRect(d.start, d.cur, natural.w, natural.h);
-    if (rect) {
-      setOutSize(0);
-      setRegions((prev) => [...prev, rect]);
-    } else {
-      redraw();
-    }
+  function onDragEnd() {
+    if (!drag) return;
+    const r = normalizeRect(drag.start, drag.current);
+    setDrag(null);
+    // Ignore tiny/accidental drags (less than 4px in either dimension).
+    if (r.w < 4 || r.h < 4) return;
+    const rounded = {
+      x: Math.round(r.x),
+      y: Math.round(r.y),
+      w: Math.round(r.w),
+      h: Math.round(r.h),
+    };
+    setRegions((rs) => [...rs, rounded]);
+    resetOutput();
   }
 
-  function undoRegion() {
-    setOutSize(0);
-    setRegions((prev) => prev.slice(0, -1));
+  function removeRegion(idx) {
+    setRegions((rs) => rs.filter((_, i) => i !== idx));
+    resetOutput();
   }
 
   function clearRegions() {
-    setOutSize(0);
     setRegions([]);
+    setDrag(null);
+    resetOutput();
   }
 
-  function download() {
-    if (!natural) {
+  // Apply the blur/pixelate to each region on a full-resolution canvas.
+  function applyAndDownload() {
+    if (!imgRef.current || !natural) {
       setError("Upload an image first.");
       return;
     }
     if (regions.length === 0) {
-      setError("Drag a box over the part of the image you want to hide first.");
+      setError("Drag a rectangle over the image to mark at least one area to hide.");
       return;
     }
     setError("");
     setBusy(true);
+
     try {
-      const canvas = renderResult();
-      if (!canvas) {
-        setBusy(false);
-        setError("Export failed — try re-uploading the image.");
-        return;
+      const canvas = document.createElement("canvas");
+      canvas.width = natural.w;
+      canvas.height = natural.h;
+      const ctx = canvas.getContext("2d");
+
+      // Base image at full resolution.
+      ctx.drawImage(imgRef.current, 0, 0, natural.w, natural.h);
+
+      for (const r0 of regions) {
+        // Clamp region to image bounds.
+        const x = Math.min(Math.max(r0.x, 0), natural.w - 1);
+        const y = Math.min(Math.max(r0.y, 0), natural.h - 1);
+        const w = Math.min(r0.w, natural.w - x);
+        const h = Math.min(r0.h, natural.h - y);
+        if (w <= 0 || h <= 0) continue;
+
+        if (mode === "blur") {
+          // Scale blur radius to region size so it always looks blurred,
+          // even for large selections; strength is a percentage-ish dial.
+          const radius = Math.max(2, Math.round((Math.min(w, h) * strength) / 100));
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(x, y, w, h);
+          ctx.clip();
+          if (ctx.filter !== undefined) {
+            ctx.filter = `blur(${radius}px)`;
+            // Redraw the whole image blurred; the clip keeps it inside the region.
+            ctx.drawImage(imgRef.current, 0, 0, natural.w, natural.h);
+            ctx.filter = "none";
+          } else {
+            // Fallback for browsers without canvas filter: pixelate instead.
+            pixelateRegion(ctx, imgRef.current, x, y, w, h, strength, natural);
+          }
+          ctx.restore();
+        } else {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(x, y, w, h);
+          ctx.clip();
+          pixelateRegion(ctx, imgRef.current, x, y, w, h, strength, natural);
+          ctx.restore();
+        }
       }
+
       canvas.toBlob(
         (blob) => {
           if (!blob) {
             setBusy(false);
-            setError("Export failed — the image may be too large.");
+            setError("Export failed — try a smaller image.");
             return;
           }
-          const base = fileName.replace(/\.[^.]+$/, "") || "image";
-          const name = `${base}-${effect}ed.png`;
+          if (outUrlRef.current) URL.revokeObjectURL(outUrlRef.current);
           const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = name;
-          a.click();
-          URL.revokeObjectURL(url);
+          outUrlRef.current = url;
+          setOutUrl(url);
           setOutSize(blob.size);
           setBusy(false);
         },
@@ -263,8 +233,62 @@ export default function BlurRegion() {
       );
     } catch {
       setBusy(false);
-      setError("Something went wrong while exporting. Try a different image.");
+      setError("Something went wrong while processing. Try a different image.");
     }
+  }
+
+  // Draw a pixelated (mosaic) version of a region by downscaling then upscaling.
+  function pixelateRegion(ctx, img, x, y, w, h, str, nat) {
+    // Larger strength => bigger blocks => smaller downscale target.
+    const blocks = Math.max(3, Math.round(60 - (str / 60) * 55)); // ~3..60 cells
+    const tw = Math.max(1, Math.min(Math.round(blocks * (w / Math.max(w, h))), w));
+    const th = Math.max(1, Math.min(Math.round(blocks * (h / Math.max(w, h))), h));
+    const tmp = document.createElement("canvas");
+    tmp.width = tw;
+    tmp.height = th;
+    const tctx = tmp.getContext("2d");
+    tctx.imageSmoothingEnabled = true;
+    // Draw just the region, shrunk down.
+    tctx.drawImage(img, x, y, w, h, 0, 0, tw, th);
+    const prev = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = false; // blocky upscale
+    ctx.drawImage(tmp, 0, 0, tw, th, x, y, w, h);
+    ctx.imageSmoothingEnabled = prev;
+  }
+
+  const downloadName = (() => {
+    const base = fileName.replace(/\.[^.]+$/, "") || "image";
+    return `${base}-blurred.png`;
+  })();
+
+  // Build the list of overlay rectangles (committed regions + the live drag).
+  const overlays = [];
+  if (natural) {
+    regions.forEach((r, i) => {
+      overlays.push({ key: `r${i}`, rect: r, live: false, idx: i });
+    });
+    if (drag) {
+      overlays.push({
+        key: "drag",
+        rect: normalizeRect(drag.start, drag.current),
+        live: true,
+        idx: -1,
+      });
+    }
+  }
+
+  function overlayStyle(rect, live) {
+    return {
+      position: "absolute",
+      left: `${(rect.x / natural.w) * 100}%`,
+      top: `${(rect.y / natural.h) * 100}%`,
+      width: `${(rect.w / natural.w) * 100}%`,
+      height: `${(rect.h / natural.h) * 100}%`,
+      boxSizing: "border-box",
+      border: live ? "2px dashed #2563eb" : "2px solid #2563eb",
+      background: "rgba(37, 99, 235, 0.18)",
+      pointerEvents: "none",
+    };
   }
 
   return (
@@ -285,62 +309,73 @@ export default function BlurRegion() {
         </p>
       </div>
 
-      {!natural && (
+      {!previewUrl && (
         <p className="tool-note">
-          Upload a photo or screenshot, then drag a box over any face, name, address,
-          or other detail you want to blur or pixelate before saving.
+          Upload a photo, then drag a box over any face, license plate, address, or other
+          detail you want to hide. You can mark several areas.
         </p>
       )}
 
-      {natural && (
+      {previewUrl && (
         <>
           <div
+            ref={boxRef}
+            onMouseDown={onDragStart}
+            onMouseMove={onDragMove}
+            onMouseUp={onDragEnd}
+            onMouseLeave={onDragEnd}
+            onTouchStart={onDragStart}
+            onTouchMove={onDragMove}
+            onTouchEnd={onDragEnd}
             style={{
-              margin: "0.5rem 0 1rem",
+              position: "relative",
+              display: "inline-block",
               maxWidth: "100%",
+              margin: "0.5rem 0 0.75rem",
               lineHeight: 0,
+              cursor: "crosshair",
+              touchAction: "none",
+              userSelect: "none",
             }}
           >
-            <canvas
-              ref={canvasRef}
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onPointerCancel={onPointerUp}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewUrl}
+              alt="Uploaded image — drag to mark areas to blur"
+              draggable={false}
               style={{
                 maxWidth: "100%",
-                height: "auto",
+                maxHeight: 360,
                 borderRadius: 8,
-                touchAction: "none",
-                cursor: "crosshair",
                 display: "block",
               }}
-              aria-label="Image editor — drag to draw a box over the area to hide"
             />
+            {overlays.map((o) => (
+              <div key={o.key} style={overlayStyle(o.rect, o.live)} aria-hidden="true" />
+            ))}
           </div>
 
           <p className="tool-note">
-            Drag on the image to draw a box. Add as many boxes as you need — each one gets
-            hidden. Use Undo to remove the last box.
+            Drag on the image to draw a rectangle over each area you want to hide.
           </p>
 
           <div className="tool-fields">
             <div className="tool-row">
               <div className="tool-field">
-                <label className="tool-label" htmlFor="br-effect">
+                <label className="tool-label" htmlFor="br-mode">
                   Effect
                 </label>
                 <select
-                  id="br-effect"
+                  id="br-mode"
                   className="tool-select"
-                  value={effect}
+                  value={mode}
                   onChange={(e) => {
-                    setEffect(e.target.value);
-                    setOutSize(0);
+                    setMode(e.target.value);
+                    resetOutput();
                   }}
                 >
-                  <option value="blur">Blur (soft, Gaussian)</option>
-                  <option value="pixelate">Pixelate (mosaic blocks)</option>
+                  <option value="blur">Blur (smooth)</option>
+                  <option value="pixelate">Pixelate (mosaic)</option>
                 </select>
               </div>
               <div className="tool-field">
@@ -352,11 +387,11 @@ export default function BlurRegion() {
                   className="tool-input"
                   type="range"
                   min="1"
-                  max="100"
+                  max="60"
                   value={strength}
                   onChange={(e) => {
                     setStrength(Number(e.target.value));
-                    setOutSize(0);
+                    resetOutput();
                   }}
                 />
               </div>
@@ -372,7 +407,7 @@ export default function BlurRegion() {
             </div>
             <div className="tool-stat">
               <div className="tool-stat-num">{regions.length}</div>
-              <div className="tool-stat-label">Boxes drawn</div>
+              <div className="tool-stat-label">Areas marked</div>
             </div>
             <div className="tool-stat">
               <div className="tool-stat-num">{formatBytes(origSize)}</div>
@@ -380,14 +415,30 @@ export default function BlurRegion() {
             </div>
             <div className="tool-stat">
               <div className="tool-stat-num">{outSize ? formatBytes(outSize) : "—"}</div>
-              <div className="tool-stat-label">Saved PNG</div>
+              <div className="tool-stat-label">Output PNG</div>
             </div>
           </div>
 
-          <p className="tool-note">
-            Tip: pixelate and a strong blur are hard to reverse, which makes them the safest
-            choice for hiding faces, names, and account numbers.
-          </p>
+          {regions.length > 0 && (
+            <div className="tool-result">
+              <div className="tool-result-label">Marked areas</div>
+              <div className="tool-result-value">
+                {regions.map((r, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="btn"
+                    onClick={() => removeRegion(i)}
+                    style={{ margin: "0 0.4rem 0.4rem 0" }}
+                    title="Click to remove this area"
+                  >
+                    Area {i + 1}: {r.w}×{r.h} ✕
+                  </button>
+                ))}
+              </div>
+              <p className="tool-note">Click an area to remove it.</p>
+            </div>
+          )}
         </>
       )}
 
@@ -397,32 +448,29 @@ export default function BlurRegion() {
         </p>
       )}
 
-      {natural && (
+      {previewUrl && (
         <div className="tool-actions">
           <button
             type="button"
             className="btn btn-primary"
-            onClick={download}
+            onClick={applyAndDownload}
             disabled={busy || regions.length === 0}
           >
-            {busy ? "Saving…" : "Download PNG"}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            onClick={undoRegion}
-            disabled={busy || regions.length === 0}
-          >
-            Undo box
+            {busy ? "Processing…" : "Apply & Download PNG"}
           </button>
           <button
             type="button"
             className="btn"
             onClick={clearRegions}
-            disabled={busy || regions.length === 0}
+            disabled={busy || (regions.length === 0 && !drag)}
           >
-            Clear all
+            Clear areas
           </button>
+          {outUrl && (
+            <a className="btn btn-success" href={outUrl} download={downloadName}>
+              ↓ Download blurred PNG
+            </a>
+          )}
         </div>
       )}
     </div>
