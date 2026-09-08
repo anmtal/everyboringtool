@@ -2,8 +2,27 @@
 
 > Everything simple and boring. Every boring tool you need, in one simple place.
 
-A free online-tools website. This is the **scaffold** — the shell, navigation, and the first
-category (**PDF**) are in place. Tools themselves are not built yet (each shows "Coming soon").
+**🔗 Live site: [everyboringtool.com](https://everyboringtool.com)**
+
+[Every Boring Tool](https://everyboringtool.com) is a free online-tools website: a large
+collection of fast, no-sign-up utilities that run **entirely in your browser** — nothing you
+enter is uploaded to a server. PDF tools, image and audio/video converters, text utilities,
+calculators, unit and size converters, word games, and more.
+
+- **Free & no account** — every tool is free, with no sign-up and no watermarks.
+- **Private by design** — files and inputs are processed client-side (PDFs with `pdf-lib`,
+  video/audio with an in-browser build of `ffmpeg.wasm`, etc.), so your data never leaves
+  your device.
+- **No backend** — the whole site is static + client-side, which keeps it fast, private,
+  and cheap to run.
+
+## Tech
+
+- **Next.js 14** (App Router), plain JS/JSX.
+- Client-side processing: **ffmpeg.wasm** (single-threaded core — no `SharedArrayBuffer` /
+  COOP-COEP required), **pdf-lib**, `<canvas>`, `jszip`, and friends.
+- Data-driven: categories and tools live in **`lib/tools.js`**; the pages and the XML
+  sitemap generate from it automatically.
 
 ## Run locally
 
@@ -22,27 +41,28 @@ npm run build
 
 ## How it's structured
 
-Everything is data-driven from one file — **`lib/tools.js`**. To add a category or a tool,
-you just edit that file; the pages and sitemap update automatically.
-
 ```
 app/
-  layout.js              # header, footer, site metadata
-  page.js                # homepage (category grid)
-  [category]/page.js     # a category page (lists its tools)
-  [category]/[tool]/page.js  # a single tool page (stub for now)
-  sitemap.js  robots.js  # SEO
+  layout.js                    # header, footer, site metadata
+  page.js                      # homepage (category grid)
+  [category]/page.js           # a category page (lists its tools)
+  [category]/[tool]/page.js    # a single tool page
+  sitemap.js  robots.js        # SEO
+components/
+  tools/                       # one client-side component per tool
 lib/
-  tools.js               # ← the whole site's content lives here
+  tools.js                     # categories + tools (the site's content map)
+  toolContent.js               # per-tool SEO copy (title, meta, about, FAQ)
 ```
 
-## Adding a tool later
-
-1. Open `lib/tools.js`.
-2. Find the category (e.g. `pdf`) and add an item to its `tools` array.
-3. Build the tool's UI inside `app/[category]/[tool]/page.js` (replace the "coming soon" stub).
+To add a category or a tool, edit `lib/tools.js`, add the matching content in
+`lib/toolContent.js`, and build the tool's UI in `components/tools/`.
 
 ## Deploy
 
 Push to GitHub, then import the repo at [vercel.com/new](https://vercel.com/new).
 Vercel auto-detects Next.js — no configuration needed.
+
+---
+
+Made by **[Every Boring Tool](https://everyboringtool.com)** — everything simple and boring.
