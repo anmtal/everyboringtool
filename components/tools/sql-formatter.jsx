@@ -44,6 +44,14 @@ const JOIN_KEYWORDS = new Set([
 // Boolean connectors that break onto a new indented line inside WHERE / ON.
 const BOOL_KEYWORDS = new Set(["AND", "OR"]);
 
+// Reserved words that are function names: they hug their "(" like count(x),
+// even though they are also recognized keywords for casing.
+const FUNCTIONS = new Set([
+  "COUNT", "SUM", "AVG", "MIN", "MAX", "COALESCE", "CAST", "ROW_NUMBER",
+  "RANK", "DENSE_RANK", "NULLIF", "GREATEST", "LEAST", "ROUND", "ABS",
+  "LENGTH", "LOWER", "UPPER", "TRIM", "SUBSTRING", "CONCAT", "NOW",
+]);
+
 // Words recognised as reserved for case handling.
 const RESERVED = new Set([
   "SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "IN", "IS", "NULL", "AS",
@@ -294,10 +302,14 @@ function format(sql, options) {
         // Function call: an identifier (not a reserved word) directly before
         // "(" hugs the paren, e.g. count(x). Keywords like VALUES / IN keep a
         // space before the paren.
+        const prevUpper =
+          prevTok && prevTok.type === "word"
+            ? prevTok.value.toUpperCase()
+            : "";
         const isCall =
           prevTok &&
           prevTok.type === "word" &&
-          !RESERVED.has(prevTok.value.toUpperCase());
+          (!RESERVED.has(prevUpper) || FUNCTIONS.has(prevUpper));
         cur.text = isCall ? rtrim(cur.text) + "(" : cur.text + "(";
         parenStack.push("call");
       }

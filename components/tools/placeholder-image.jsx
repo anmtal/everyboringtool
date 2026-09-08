@@ -167,9 +167,13 @@ export default function PlaceholderImageGenerator() {
       const mime = format === "jpeg" ? "image/jpeg" : format === "webp" ? "image/webp" : "image/png";
       uri = canvas.toDataURL(mime, format === "png" ? undefined : 0.92);
     }
-    const ok = await copyText(uri);
-    setCopied(ok ? "uri" : "");
-    setTimeout(() => setCopied(""), 1500);
+    try {
+      await copyText(uri);
+      setCopied("uri");
+      setTimeout(() => setCopied(""), 1500);
+    } catch {
+      setCopied("");
+    }
   }, [format, svgString]);
 
   const copyImgTag = useCallback(async () => {
@@ -177,9 +181,13 @@ export default function PlaceholderImageGenerator() {
     const tag = `<img src="placeholder-${width}x${height}.${
       format === "jpeg" ? "jpg" : format
     }" width="${width}" height="${height}" alt="${alt}" />`;
-    const ok = await copyText(tag);
-    setCopied(ok ? "tag" : "");
-    setTimeout(() => setCopied(""), 1500);
+    try {
+      await copyText(tag);
+      setCopied("tag");
+      setTimeout(() => setCopied(""), 1500);
+    } catch {
+      setCopied("");
+    }
   }, [width, height, format, label]);
 
   const applyPreset = (i) => {
@@ -270,7 +278,7 @@ export default function PlaceholderImageGenerator() {
           <div className="tool-field">
             <label className="tool-label" htmlFor="ph-format">Download format</label>
             <select id="ph-format" className="tool-select" value={format} onChange={(e) => setFormat(e.target.value)}>
-              <option value="png">PNG (transparent-capable, lossless)</option>
+              <option value="png">PNG (lossless)</option>
               <option value="jpeg">JPG (smaller, no transparency)</option>
               <option value="webp">WebP (modern, small)</option>
               <option value="svg">SVG (vector, scales infinitely)</option>
