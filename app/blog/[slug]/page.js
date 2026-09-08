@@ -30,7 +30,9 @@ export function generateMetadata({ params }) {
 
 function formatDate(d) {
   try {
-    return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    // Parse plain YYYY-MM-DD at local noon so a UTC-behind timezone doesn't roll it back a day.
+    const dt = /^\d{4}-\d{2}-\d{2}$/.test(String(d)) ? new Date(`${d}T12:00:00`) : new Date(d);
+    return dt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   } catch (e) {
     return d;
   }
