@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { loadFFmpeg, fetchFile } from "../../lib/ffmpegClient";
+import { loadFFmpeg, fetchFile, sizeWarning, terminateFFmpeg } from "../../lib/ffmpegClient";
 import { copyText } from "../../lib/copyText";
 
 const MODELS = {
@@ -78,24 +78,34 @@ export default function VideoToText() {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null); // { text, chunks }
   const [copied, setCopied] = useState(false);
+  const [warn, setWarn] = useState("");
   const inputRef = useRef(null);
+  const abortRef = useRef(null);
+  const canceledRef = useRef(false);
 
   function onPick(e) {
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!f) return;
-    setError(""); setResult(null);
+    setError(""); setResult(null); setWarn("");
     if (!f.type.startsWith("audio/") && !f.type.startsWith("video/") &&
         !/\.(mp4|mov|mkv|webm|avi|m4v|mp3|wav|m4a|aac|ogg|flac|opus)$/i.test(f.name)) {
       setError("Please choose an audio or video file.");
       return;
     }
     setFile(f);
+    setWarn(sizeWarning(f) || "");
   }
 
   const run = useCallback(async () => {
     if (!file) return;
-    setBusy(true); setError(""); setResult(null); setProgress(0);
+    setBusy(true); setError(""); setResult(null); setProgress(0); setStatus("");
+    canceledRef.current = false;
+    let abortReject = null;
+    const abortP = new Promise((_, rej) => { abortReject = rej; });
+    abortP.catch(() => {}); // mark handled — reject can fire before the first Promise.race attaches (Cancel during engine load)
+    const onAbort = () => { terminateFFmpeg(); if (abortReject) abortReject(Object.assign(new Error("Canceled."), { userMessage: "Canceled." })); };
+    abortRef.current = onAbort;
     try {
       // 1) Extract 16 kHz mono audio with ffmpeg.
       setStatus("Loading audio engine (~32 MB, one-time)…");
@@ -103,9 +113,9 @@ export default function VideoToText() {
       const ext = (file.name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0];
       const inName = "in" + ext;
       setStatus("Extracting the audio…");
-      await ff.writeFile(inName, await fetchFile(file));
-      await ff.exec(["-i", inName, "-ar", "16000", "-ac", "1", "-f", "wav", "-acodec", "pcm_s16le", "out.wav"]);
-      const wav = await ff.readFile("out.wav");
+      await Promise.race([ff.writeFile(inName, await fetchFile(file)), abortP]);
+      await Promise.race([ff.exec(["-i", inName, "-ar", "16000", "-ac", "1", "-f", "wav", "-acodec", "pcm_s16le", "out.wav"]), abortP]);
+      const wav = await Promise.race([ff.readFile("out.wav"), abortP]);
       await ff.deleteFile(inName).catch(() => {});
       await ff.deleteFile("out.wav").catch(() => {});
       const audio = wavToFloat32(wav);
@@ -132,12 +142,22 @@ export default function VideoToText() {
       else setResult({ text, chunks });
       setStatus("");
     } catch (e) {
-      setError("Couldn't transcribe that file — it may be an unsupported format, contain no speech, or be too large for the browser to handle.");
-      setStatus("");
+      if (canceledRef.current) {
+        setError("");
+        setStatus("Canceled.");
+      } else {
+        setError((e && e.userMessage) || "Couldn't transcribe that file — it may be an unsupported format, contain no speech, or be too large for the browser to handle.");
+        setStatus("");
+      }
     } finally {
-      setBusy(false); setProgress(0);
+      setBusy(false); setProgress(0); abortRef.current = null;
     }
   }, [file, quality]);
+
+  const cancel = useCallback(() => {
+    canceledRef.current = true;
+    if (abortRef.current) abortRef.current();
+  }, []);
 
   const copy = useCallback(async () => {
     if (!result) return;
@@ -171,10 +191,13 @@ export default function VideoToText() {
         </div>
       </div>
 
+      {warn && !busy && (<p className="tool-note" role="note" style={{ borderLeft: "3px solid currentColor", paddingLeft: 10, opacity: 0.9 }}>⚠ {warn}</p>)}
+
       <div className="tool-actions">
         <button type="button" className="btn btn-primary" onClick={run} disabled={!file || busy}>
           {busy ? "Working…" : "Transcribe"}
         </button>
+        {busy && <button type="button" className="btn" onClick={cancel}>Cancel</button>}
       </div>
 
       {busy && (
@@ -186,6 +209,10 @@ export default function VideoToText() {
             </div>
           )}
         </div>
+      )}
+
+      {!busy && status && !error && !result && (
+        <p className="tool-note" role="status" aria-live="polite">{status}</p>
       )}
 
       {error && <p className="tool-error" role="alert">{error}</p>}

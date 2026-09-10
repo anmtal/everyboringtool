@@ -7,6 +7,7 @@
 // by slug) — only imported by the individual video tools.
 import { useState, useRef, useEffect, useCallback } from "react";
 import { runVideoJob, fmtBytes } from "../../lib/videoTool";
+import { sizeWarning } from "../../lib/ffmpegClient";
 
 // The only video containers browsers can play inline. Anything else (AVI, MKV,
 // MPEG-TS…) would render a dead <video>, so those get a note + download instead.
@@ -31,7 +32,12 @@ export default function VideoToolShell({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [warn, setWarn] = useState("");
+  const [stalled, setStalled] = useState(false);
+  const [canceled, setCanceled] = useState(false);
   const inputRef = useRef(null);
+  const abortRef = useRef(null);
+  const canceledRef = useRef(false);
 
   // Free the previous output blob before producing the next one.
   useEffect(() => () => { if (result && result.url) URL.revokeObjectURL(result.url); }, [result]);
@@ -42,36 +48,65 @@ export default function VideoToolShell({
     if (!f) return;
     setError("");
     setResult(null);
+    setCanceled(false);
+    setWarn("");
     if (acceptTest && !acceptTest(f)) {
       setError("Please choose a video file.");
       return;
     }
     setFile(f);
+    setWarn(sizeWarning(f) || "");
   }
   const setOpt = (k, v) => setOpts((o) => ({ ...o, [k]: v }));
 
   const run = useCallback(async () => {
     if (!file) return;
+    canceledRef.current = false;
+    setCanceled(false);
     setBusy(true);
     setError("");
     setResult(null);
     setProgress(0);
+    setStalled(false);
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       const job = await buildJob(file, opts);
-      const r = await runVideoJob({ file, ...job, onStatus: setStatus, onProgress: setProgress });
+      const r = await runVideoJob({
+        file,
+        ...job,
+        onStatus: setStatus,
+        onProgress: setProgress,
+        onStall: setStalled,
+        signal: controller.signal,
+      });
       setResult(r);
       setStatus("");
     } catch (err) {
-      setError(
-        (err && err.userMessage) ||
-          "Couldn't process this file — it may be an unsupported format or too large for the browser to handle."
-      );
+      if (canceledRef.current) {
+        setCanceled(true);
+      } else {
+        setError(
+          (err && err.userMessage) ||
+            "Couldn't process this file — it may be an unsupported format or too large for the browser to handle."
+        );
+      }
       setStatus("");
     } finally {
       setBusy(false);
       setProgress(0);
+      setStalled(false);
+      abortRef.current = null;
     }
   }, [file, opts, buildJob]);
+
+  // Cancel terminates the ffmpeg worker (the single-thread core can't stop one
+  // exec mid-run), freeing the UI and memory instead of a stuck "Working…".
+  const cancel = useCallback(() => {
+    canceledRef.current = true;
+    setStatus("Canceling…");
+    if (abortRef.current) abortRef.current.abort();
+  }, []);
 
   const outMime = ((result && (result.mime || (result.blob && result.blob.type))) || "").toLowerCase();
 
@@ -93,21 +128,41 @@ export default function VideoToolShell({
 
       {renderOptions && <div className="tool-fields">{renderOptions(opts, setOpt, busy)}</div>}
 
+      {warn && !busy && (
+        <p className="tool-note" role="note" style={{ borderLeft: "3px solid currentColor", paddingLeft: 10, opacity: 0.9 }}>
+          ⚠ {warn}
+        </p>
+      )}
+
       <div className="tool-actions">
         <button type="button" className="btn btn-primary" onClick={run} disabled={!file || busy}>
           {busy ? "Working…" : actionLabel}
         </button>
+        {busy && (
+          <button type="button" className="btn" onClick={cancel}>
+            Cancel
+          </button>
+        )}
       </div>
 
       {busy && (
         <div className="tool-note" aria-live="polite">
           {status}
+          {stalled && (
+            <div style={{ marginTop: 6 }}>
+              Still working — a large or high-resolution file can take a while in the browser, or it may be too big to finish. You can keep waiting or cancel.
+            </div>
+          )}
           {progress > 0 && (
             <div style={{ marginTop: 8, height: 8, borderRadius: 4, background: "rgba(128,128,128,0.25)", overflow: "hidden" }}>
               <div style={{ width: progress + "%", height: "100%", background: "currentColor", opacity: 0.7, transition: "width 150ms" }} />
             </div>
           )}
         </div>
+      )}
+
+      {canceled && !busy && (
+        <p className="tool-note" role="status">Canceled. Pick a file and run again when you&rsquo;re ready.</p>
       )}
 
       {error && <p className="tool-error" role="alert">{error}</p>}

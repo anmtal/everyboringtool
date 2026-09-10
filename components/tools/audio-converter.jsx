@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { loadFFmpeg, fetchFile } from "../../lib/ffmpegClient";
+import { loadFFmpeg, fetchFile, sizeWarning, terminateFFmpeg } from "../../lib/ffmpegClient";
 
 const FORMATS = {
   mp3: { ext: "mp3", mime: "audio/mpeg", label: "MP3", lossy: true, args: (i, o, br) => ["-i", i, "-vn", "-acodec", "libmp3lame", "-b:a", br + "k", o] },
@@ -26,7 +26,11 @@ export default function AudioConverter({ initialFormat = "mp3", initialBitrate =
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [warn, setWarn] = useState("");
+  const [canceled, setCanceled] = useState(false);
   const inputRef = useRef(null);
+  const abortRef = useRef(null);
+  const canceledRef = useRef(false);
 
   // Free the previous output when a new conversion replaces it, and on unmount.
   useEffect(() => {
@@ -37,44 +41,71 @@ export default function AudioConverter({ initialFormat = "mp3", initialBitrate =
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!f) return;
-    setError(""); setResult(null);
+    setError(""); setResult(null); setCanceled(false); setWarn("");
     if (!f.type.startsWith("audio/") && !f.type.startsWith("video/") &&
         !/\.(mp3|wav|m4a|aac|ogg|flac|opus|weba|wma|aiff|amr|mp4|mov|webm)$/i.test(f.name)) {
       setError("Please choose an audio file.");
       return;
     }
     setFile(f);
+    setWarn(sizeWarning(f) || "");
   }
 
   const run = useCallback(async () => {
     if (!file) return;
+    canceledRef.current = false;
+    setCanceled(false);
     setBusy(true); setError(""); setResult(null);
+    // The single-thread ffmpeg core can't abort one exec mid-run, so Cancel (or
+    // an out-of-memory hang) races each await against a promise we reject after
+    // terminating the worker — freeing the UI instead of a stuck "Working…".
+    let abortReject = null;
+    const abortP = new Promise((_, rej) => { abortReject = rej; });
+    abortP.catch(() => {}); // mark handled — reject can fire before the first Promise.race attaches (Cancel during engine load)
+    const onAbort = () => { terminateFFmpeg(); if (abortReject) abortReject(Object.assign(new Error("Canceled."), { userMessage: "Canceled." })); };
+    abortRef.current = onAbort;
     let ff;
     const spec = FORMATS[format];
     try {
       setStatus("Loading audio engine (~32 MB, one-time)…");
-      ff = await loadFFmpeg();
+      ff = await Promise.race([loadFFmpeg(), abortP]);
       const ext = (file.name.match(/\.[a-z0-9]+$/i) || [".mp3"])[0];
       const inName = "input" + ext;
       const outName = "output." + spec.ext;
       setStatus("Reading your file…");
-      await ff.writeFile(inName, await fetchFile(file));
+      await Promise.race([ff.writeFile(inName, await fetchFile(file)), abortP]);
       setStatus(`Converting to ${spec.label}…`);
-      await ff.exec(spec.args(inName, outName, bitrate));
-      const data = await ff.readFile(outName);
-      await ff.deleteFile(inName).catch(() => {});
-      await ff.deleteFile(outName).catch(() => {});
+      await Promise.race([ff.exec(spec.args(inName, outName, bitrate)), abortP]);
+      const data = await Promise.race([ff.readFile(outName), abortP]);
+      // The held ff reference is dead after a terminateFFmpeg(); guard cleanup.
+      try {
+        await ff.deleteFile(inName).catch(() => {});
+        await ff.deleteFile(outName).catch(() => {});
+      } catch { /* worker may already be gone */ }
       const blob = new Blob([data.buffer], { type: spec.mime });
       const base = file.name.replace(/\.[^.]+$/, "") || "audio";
       setResult({ url: URL.createObjectURL(blob), name: `${base}.${spec.ext}`, size: blob.size, inSize: file.size });
       setStatus("");
-    } catch {
-      setError("Couldn't convert that file — it may be an unsupported format or too large for the browser to handle.");
+    } catch (err) {
+      if (canceledRef.current) {
+        setCanceled(true);
+      } else {
+        setError((err && err.userMessage) || "Couldn't convert that file — it may be an unsupported format or too large for the browser to handle.");
+      }
       setStatus("");
     } finally {
+      abortRef.current = null;
       setBusy(false);
     }
   }, [file, format, bitrate]);
+
+  // Cancel terminates the ffmpeg worker (the single-thread core can't stop one
+  // exec mid-run), freeing the UI and memory instead of a stuck "Working…".
+  const cancel = useCallback(() => {
+    canceledRef.current = true;
+    setStatus("Canceling…");
+    if (abortRef.current) abortRef.current();
+  }, []);
 
   const spec = FORMATS[format];
 
@@ -113,13 +144,25 @@ export default function AudioConverter({ initialFormat = "mp3", initialBitrate =
         </div>
       </div>
 
+      {warn && !busy && (
+        <p className="tool-note" role="note" style={{ borderLeft: "3px solid currentColor", paddingLeft: 10, opacity: 0.9 }}>
+          ⚠ {warn}
+        </p>
+      )}
+
       <div className="tool-actions">
         <button type="button" className="btn btn-primary" onClick={run} disabled={!file || busy}>
           {busy ? "Converting…" : `Convert to ${spec.label.split(" ")[0]}`}
         </button>
+        {busy && (
+          <button type="button" className="btn" onClick={cancel}>Cancel</button>
+        )}
       </div>
 
       {busy && <p className="tool-note" aria-live="polite">{status}</p>}
+      {canceled && !busy && (
+        <p className="tool-note" role="status">Canceled. Pick a file and run again when you&rsquo;re ready.</p>
+      )}
       {error && <p className="tool-error" role="alert">{error}</p>}
 
       {result && (

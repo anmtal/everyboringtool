@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { loadFFmpeg, fetchFile } from "../../lib/ffmpegClient";
+import { loadFFmpeg, fetchFile, sizeWarning, terminateFFmpeg } from "../../lib/ffmpegClient";
 import { fmtBytes, inputExt } from "../../lib/videoTool";
 
 // Two inputs (video + subtitle) and two modes:
@@ -20,8 +20,12 @@ export default function AddSubtitles() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [warn, setWarn] = useState("");
+  const [canceled, setCanceled] = useState(false);
   const vRef = useRef(null);
   const sRef = useRef(null);
+  const abortRef = useRef(null);
+  const canceledRef = useRef(false);
 
   useEffect(() => () => { if (result && result.url) URL.revokeObjectURL(result.url); }, [result]);
 
@@ -29,40 +33,54 @@ export default function AddSubtitles() {
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!f) return;
-    setError(""); setResult(null);
+    setError(""); setResult(null); setCanceled(false);
     if (!VIDEO_OK(f)) { setError("Please choose a video file."); return; }
     setVideo(f);
+    const big = subs && subs.size > f.size ? subs : f;
+    setWarn(sizeWarning(big) || "");
   }
   function pickSubs(e) {
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!f) return;
-    setError(""); setResult(null);
+    setError(""); setResult(null); setCanceled(false);
     if (!SUB_OK(f)) { setError("Please choose a subtitle file (.srt, .vtt or .ass)."); return; }
     setSubs(f);
+    const big = video && video.size > f.size ? video : f;
+    setWarn(sizeWarning(big) || "");
   }
 
   const run = useCallback(async () => {
     if (!video || !subs) return;
+    canceledRef.current = false;
+    setCanceled(false);
     setBusy(true); setError(""); setResult(null); setProgress(0);
     let ff;
+    let abortReject = null;
+    const abortP = new Promise((_, rej) => { abortReject = rej; });
+    abortP.catch(() => {}); // mark handled — reject can fire before the first Promise.race attaches (Cancel during engine load)
+    const onAbort = () => {
+      terminateFFmpeg();
+      if (abortReject) abortReject(Object.assign(new Error("Canceled."), { userMessage: "Canceled." }));
+    };
+    abortRef.current = onAbort;
     const onProg = ({ progress }) => setProgress(Math.max(0, Math.min(100, Math.round(progress * 100))));
     try {
       setStatus("Loading video engine (~32 MB, one-time)…");
-      ff = await loadFFmpeg();
+      ff = await Promise.race([loadFFmpeg(), abortP]);
       ff.on("progress", onProg);
       const inName = "input." + inputExt(video);
       const subExt = ((subs.name.match(/\.([a-z0-9]+)$/i) || [null, "srt"])[1]).toLowerCase();
       const subName = "subs." + subExt;
       const outName = "output.mp4";
       setStatus("Reading your files…");
-      await ff.writeFile(inName, await fetchFile(video));
-      await ff.writeFile(subName, await fetchFile(subs));
+      await Promise.race([ff.writeFile(inName, await fetchFile(video)), abortP]);
+      await Promise.race([ff.writeFile(subName, await fetchFile(subs)), abortP]);
 
       let args;
       if (mode === "burn") {
         setStatus("Loading font…");
-        await ff.writeFile("font.ttf", await fetchFile(`${window.location.origin}/fonts/subtitle-font.ttf`));
+        await Promise.race([ff.writeFile("font.ttf", await fetchFile(`${window.location.origin}/fonts/subtitle-font.ttf`)), abortP]);
         setStatus("Burning subtitles into the video…");
         args = [
           "-i", inName,
@@ -82,25 +100,39 @@ export default function AddSubtitles() {
           outName,
         ];
       }
-      await ff.exec(args);
-      const data = await ff.readFile(outName);
+      await Promise.race([ff.exec(args), abortP]);
+      const data = await Promise.race([ff.readFile(outName), abortP]);
       const blob = new Blob([data.buffer], { type: "video/mp4" });
       const base = (video.name.replace(/\.[^.]+$/, "") || "video") + "-subtitled";
       setResult({ url: URL.createObjectURL(blob), name: `${base}.mp4`, size: blob.size });
       setStatus("");
-      for (const n of [inName, subName, outName, "font.ttf"]) await ff.deleteFile(n).catch(() => {});
-    } catch {
-      setError(
-        mode === "burn"
-          ? "Couldn't burn in the subtitles — check the subtitle file is a valid .srt, .vtt or .ass, or try the toggleable-track mode."
-          : "Couldn't add the subtitle track — this mode works best with an MP4 or MOV video. For other formats, use burn-in."
-      );
+      try { for (const n of [inName, subName, outName, "font.ttf"]) await ff.deleteFile(n).catch(() => {}); } catch {}
+    } catch (err) {
+      if (canceledRef.current) {
+        setCanceled(true);
+      } else {
+        setError(
+          (err && err.userMessage) ||
+            (mode === "burn"
+              ? "Couldn't burn in the subtitles — check the subtitle file is a valid .srt, .vtt or .ass, or try the toggleable-track mode."
+              : "Couldn't add the subtitle track — this mode works best with an MP4 or MOV video. For other formats, use burn-in.")
+        );
+      }
       setStatus("");
     } finally {
-      if (ff) ff.off("progress", onProg);
+      if (ff) { try { ff.off("progress", onProg); } catch {} }
+      abortRef.current = null;
       setBusy(false); setProgress(0);
     }
   }, [video, subs, mode]);
+
+  // Cancel terminates the ffmpeg worker (the single-thread core can't stop one
+  // exec mid-run), freeing the UI and memory instead of a stuck "Working…".
+  const cancel = useCallback(() => {
+    canceledRef.current = true;
+    setStatus("Canceling…");
+    if (abortRef.current) abortRef.current();
+  }, []);
 
   return (
     <div className="tool">
@@ -139,10 +171,15 @@ export default function AddSubtitles() {
         </div>
       </div>
 
+      {warn && !busy && (
+        <p className="tool-note" role="note" style={{ borderLeft: "3px solid currentColor", paddingLeft: 10, opacity: 0.9 }}>⚠ {warn}</p>
+      )}
+
       <div className="tool-actions">
         <button type="button" className="btn btn-primary" onClick={run} disabled={!video || !subs || busy}>
           {busy ? "Working…" : "Add subtitles"}
         </button>
+        {busy && <button type="button" className="btn" onClick={cancel}>Cancel</button>}
       </div>
 
       {busy && (
@@ -154,6 +191,10 @@ export default function AddSubtitles() {
             </div>
           )}
         </div>
+      )}
+
+      {canceled && !busy && (
+        <p className="tool-note" role="status">Canceled. Pick your files and run again when you&rsquo;re ready.</p>
       )}
 
       {error && <p className="tool-error" role="alert">{error}</p>}

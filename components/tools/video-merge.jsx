@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { loadFFmpeg, fetchFile } from "../../lib/ffmpegClient";
+import { loadFFmpeg, fetchFile, sizeWarning, terminateFFmpeg } from "../../lib/ffmpegClient";
 
 function fmtBytes(n) {
   if (n < 1024) return n + " B";
@@ -17,6 +17,9 @@ export default function VideoMerge() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [warn, setWarn] = useState("");
+  const abortRef = useRef(null);
+  const canceledRef = useRef(false);
 
   // Release the previous output blob. React runs this cleanup before the next
   // effect, so re-running a tool frees the old result instead of pinning every
@@ -27,6 +30,14 @@ export default function VideoMerge() {
     };
   }, [result]);
   const inputRef = useRef(null);
+
+  // Merge writes every input into the WASM heap plus the combined output, so the
+  // peak that risks an out-of-memory stall is the total selected size. Recompute
+  // on every add/remove/reorder; clears itself when nothing is selected.
+  useEffect(() => {
+    const total = files.reduce((s, f) => s + (f.size || 0), 0);
+    setWarn(files.length ? (sizeWarning({ size: total }) || "") : "");
+  }, [files]);
 
   function onPick(e) {
     const picked = Array.from(e.target.files || []);
@@ -47,6 +58,12 @@ export default function VideoMerge() {
   const run = useCallback(async () => {
     if (files.length < 2) { setError("Add at least two video clips to merge."); return; }
     setBusy(true); setError(""); setResult(null); setProgress(0);
+    canceledRef.current = false;
+    let abortReject = null;
+    const abortP = new Promise((_, rej) => { abortReject = rej; });
+    abortP.catch(() => {}); // mark handled — reject can fire before the first Promise.race attaches (Cancel during engine load)
+    const onAbort = () => { terminateFFmpeg(); if (abortReject) abortReject(Object.assign(new Error("Canceled."), { userMessage: "Canceled." })); };
+    abortRef.current = onAbort;
     let ff;
     const onProg = ({ progress }) => setProgress(Math.max(0, Math.min(100, Math.round(progress * 100))));
     try {
@@ -58,7 +75,7 @@ export default function VideoMerge() {
       for (let i = 0; i < files.length; i++) {
         const ext = (files[i].name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0];
         const n = `in${i}${ext}`;
-        await ff.writeFile(n, await fetchFile(files[i]));
+        await Promise.race([ff.writeFile(n, await fetchFile(files[i])), abortP]);
         names.push(n);
       }
       const firstExt = (files[0].name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0].toLowerCase();
@@ -77,32 +94,43 @@ export default function VideoMerge() {
         const labels = names.map((_, i) => `[v${i}][a${i}]`).join("");
         args.push("-filter_complex", `${pre};${labels}concat=n=${names.length}:v=1:a=1[v][a]`,
           "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "veryfast", "-c:a", "aac", outName);
-        await ff.exec(args);
+        await Promise.race([ff.exec(args), abortP]);
       } else {
         const list = names.map((n) => `file '${n}'`).join("\n");
-        await ff.writeFile("list.txt", new TextEncoder().encode(list));
-        await ff.exec(["-f", "concat", "-safe", "0", "-i", "list.txt", "-c", "copy", outName]);
+        await Promise.race([ff.writeFile("list.txt", new TextEncoder().encode(list)), abortP]);
+        await Promise.race([ff.exec(["-f", "concat", "-safe", "0", "-i", "list.txt", "-c", "copy", outName]), abortP]);
         await ff.deleteFile("list.txt").catch(() => {});
       }
-      const data = await ff.readFile(outName);
+      const data = await Promise.race([ff.readFile(outName), abortP]);
       for (const n of names) await ff.deleteFile(n).catch(() => {});
       await ff.deleteFile(outName).catch(() => {});
       const mimeByExt = { ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime", ".mkv": "video/x-matroska", ".m4v": "video/mp4" };
       const blob = new Blob([data.buffer], { type: mimeByExt[outExt] || "video/mp4" });
       setResult({ url: URL.createObjectURL(blob), name: `merged${outExt}`, size: blob.size });
       setStatus("");
-    } catch {
-      setError(
-        reencode
-          ? "Couldn't merge the clips. One clip may be missing an audio track, or the files are too large for the browser."
-          : "Couldn't merge — fast merge needs clips in the same format/resolution. Try the “re-encode for compatibility” option below."
-      );
+    } catch (err) {
+      if (canceledRef.current) {
+        setError("Canceled.");
+      } else {
+        setError(
+          err && err.userMessage
+            ? err.userMessage
+            : reencode
+              ? "Couldn't merge the clips. One clip may be missing an audio track, or the files are too large for the browser."
+              : "Couldn't merge — fast merge needs clips in the same format/resolution. Try the “re-encode for compatibility” option below."
+        );
+      }
       setStatus("");
     } finally {
-      if (ff) ff.off("progress", onProg);
+      // After a Cancel the worker was terminated, so the held ff reference is
+      // dead — guard the listener cleanup so it can't throw.
+      try { if (ff) ff.off("progress", onProg); } catch { /* worker gone */ }
+      abortRef.current = null;
       setBusy(false); setProgress(0);
     }
   }, [files, reencode]);
+
+  const cancel = () => { canceledRef.current = true; if (abortRef.current) abortRef.current(); };
 
   return (
     <div className="tool">
@@ -137,10 +165,13 @@ export default function VideoMerge() {
         </div>
       )}
 
+      {warn && !busy && (<p className="tool-note" role="note" style={{ borderLeft: "3px solid currentColor", paddingLeft: 10, opacity: 0.9 }}>⚠ {warn}</p>)}
+
       <div className="tool-actions">
         <button type="button" className="btn btn-primary" onClick={run} disabled={files.length < 2 || busy}>
           {busy ? "Working…" : `Merge ${files.length || ""} clips`}
         </button>
+        {busy && <button type="button" className="btn" onClick={cancel}>Cancel</button>}
       </div>
 
       {busy && (

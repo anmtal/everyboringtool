@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { loadFFmpeg, fetchFile } from "../../lib/ffmpegClient";
+import { loadFFmpeg, fetchFile, sizeWarning, terminateFFmpeg } from "../../lib/ffmpegClient";
 
 function fmtBytes(n) {
   if (n < 1024) return n + " B";
@@ -16,6 +16,7 @@ export default function AudioMerge() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [warn, setWarn] = useState("");
 
   // Release the previous output blob. React runs this cleanup before the next
   // effect, so re-running a tool frees the old result instead of pinning every
@@ -26,6 +27,8 @@ export default function AudioMerge() {
     };
   }, [result]);
   const inputRef = useRef(null);
+  const abortRef = useRef(null);
+  const canceledRef = useRef(false);
 
   function onPick(e) {
     const picked = Array.from(e.target.files || []);
@@ -34,18 +37,31 @@ export default function AudioMerge() {
     setError(""); setResult(null);
     const ok = picked.filter((f) => f.type.startsWith("audio/") || /\.(mp3|wav|m4a|aac|ogg|flac|opus|weba)$/i.test(f.name));
     if (!ok.length) { setError("Please choose audio files."); return; }
-    setFiles((prev) => [...prev, ...ok]);
+    const next = [...files, ...ok];
+    setFiles(next);
+    // Merge writes one combined output, so warn on the total bytes across inputs.
+    setWarn(sizeWarning({ size: next.reduce((s, f) => s + f.size, 0) }) || "");
   }
   const move = (i, d) => setFiles((prev) => {
     const a = [...prev]; const j = i + d;
     if (j < 0 || j >= a.length) return prev;
     [a[i], a[j]] = [a[j], a[i]]; return a;
   });
-  const remove = (i) => setFiles((prev) => prev.filter((_, k) => k !== i));
+  const remove = (i) => {
+    const next = files.filter((_, k) => k !== i);
+    setFiles(next);
+    setWarn(next.length ? (sizeWarning({ size: next.reduce((s, f) => s + f.size, 0) }) || "") : "");
+  };
 
   const run = useCallback(async () => {
     if (files.length < 2) { setError("Add at least two audio files to merge."); return; }
     setBusy(true); setError(""); setResult(null); setProgress(0);
+    canceledRef.current = false;
+    let abortReject = null;
+    const abortP = new Promise((_, rej) => { abortReject = rej; });
+    abortP.catch(() => {}); // mark handled — reject can fire before the first Promise.race attaches (Cancel during engine load)
+    const onAbort = () => { terminateFFmpeg(); if (abortReject) abortReject(Object.assign(new Error("Canceled."), { userMessage: "Canceled." })); };
+    abortRef.current = onAbort;
     let ff;
     const onProg = ({ progress }) => setProgress(Math.max(0, Math.min(100, Math.round(progress * 100))));
     try {
@@ -57,7 +73,7 @@ export default function AudioMerge() {
       for (let i = 0; i < files.length; i++) {
         const ext = (files[i].name.match(/\.[a-z0-9]+$/i) || [".mp3"])[0];
         const n = `in${i}${ext}`;
-        await ff.writeFile(n, await fetchFile(files[i]));
+        await Promise.race([ff.writeFile(n, await fetchFile(files[i])), abortP]);
         names.push(n);
       }
       setStatus("Merging…");
@@ -69,21 +85,33 @@ export default function AudioMerge() {
       const pre = names.map((_, i) => `[${i}:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a${i}]`).join(";");
       const labels = names.map((_, i) => `[a${i}]`).join("");
       args.push("-filter_complex", `${pre};${labels}concat=n=${names.length}:v=0:a=1[out]`, "-map", "[out]", "output.mp3");
-      await ff.exec(args);
-      const data = await ff.readFile("output.mp3");
-      for (const n of names) await ff.deleteFile(n).catch(() => {});
-      await ff.deleteFile("output.mp3").catch(() => {});
+      await Promise.race([ff.exec(args), abortP]);
+      const data = await Promise.race([ff.readFile("output.mp3"), abortP]);
+      try {
+        for (const n of names) await ff.deleteFile(n).catch(() => {});
+        await ff.deleteFile("output.mp3").catch(() => {});
+      } catch {}
       const blob = new Blob([data.buffer], { type: "audio/mpeg" });
       setResult({ url: URL.createObjectURL(blob), name: "merged.mp3", size: blob.size });
       setStatus("");
-    } catch {
-      setError("Couldn't merge the audio — one of the files may be an unsupported format or too large.");
-      setStatus("");
+    } catch (err) {
+      if (canceledRef.current) {
+        setStatus("Canceled.");
+      } else {
+        setError(err && err.userMessage ? err.userMessage : "Couldn't merge the audio — one of the files may be an unsupported format or too large for the browser to handle.");
+        setStatus("");
+      }
     } finally {
-      if (ff) ff.off("progress", onProg);
+      try { if (ff) ff.off("progress", onProg); } catch {}
+      abortRef.current = null;
       setBusy(false); setProgress(0);
     }
   }, [files]);
+
+  const cancel = useCallback(() => {
+    canceledRef.current = true;
+    if (abortRef.current) abortRef.current();
+  }, []);
 
   return (
     <div className="tool">
@@ -114,10 +142,13 @@ export default function AudioMerge() {
         </div>
       )}
 
+      {warn && !busy && (<p className="tool-note" role="note" style={{ borderLeft: "3px solid currentColor", paddingLeft: 10, opacity: 0.9 }}>⚠ {warn}</p>)}
+
       <div className="tool-actions">
         <button type="button" className="btn btn-primary" onClick={run} disabled={files.length < 2 || busy}>
           {busy ? "Working…" : `Merge ${files.length || ""} files`}
         </button>
+        {busy && <button type="button" className="btn" onClick={cancel}>Cancel</button>}
       </div>
 
       {busy && (
@@ -132,6 +163,8 @@ export default function AudioMerge() {
       )}
 
       {error && <p className="tool-error" role="alert">{error}</p>}
+
+      {!busy && status && <p className="tool-note" role="status">{status}</p>}
 
       {result && (
         <div className="tool-result" role="status" aria-live="polite">

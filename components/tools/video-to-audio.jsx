@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { loadFFmpeg, fetchFile } from "../../lib/ffmpegClient";
+import { loadFFmpeg, fetchFile, sizeWarning, terminateFFmpeg } from "../../lib/ffmpegClient";
 
 const FORMATS = {
   mp3: { ext: "mp3", mime: "audio/mpeg", label: "MP3", args: (i, o) => ["-i", i, "-vn", "-acodec", "libmp3lame", "-q:a", "2", o] },
@@ -23,6 +23,10 @@ export default function VideoToAudio() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [warn, setWarn] = useState("");
+  const [canceled, setCanceled] = useState(false);
+  const abortRef = useRef(null);
+  const canceledRef = useRef(false);
 
   // Release the previous output blob. React runs this cleanup before the next
   // effect, so re-running a tool frees the old result instead of pinning every
@@ -40,49 +44,78 @@ export default function VideoToAudio() {
     if (!f) return;
     setError("");
     setResult(null);
+    setCanceled(false);
+    setWarn("");
     if (!f.type.startsWith("video/") && !/\.(mp4|mov|mkv|webm|avi|m4v|3gp)$/i.test(f.name)) {
       setError("Please choose a video file.");
       return;
     }
     setFile(f);
+    setWarn(sizeWarning(f) || "");
   }
 
   const run = useCallback(async () => {
     if (!file) return;
+    canceledRef.current = false;
+    setCanceled(false);
     setBusy(true);
     setError("");
     setResult(null);
     setProgress(0);
+    // The single-thread ffmpeg core can't abort one exec mid-run, so Cancel (or
+    // an out-of-memory hang) races each await against a promise we reject after
+    // terminating the worker — freeing the UI instead of a stuck "Working…".
+    let abortReject = null;
+    const abortP = new Promise((_, rej) => { abortReject = rej; });
+    abortP.catch(() => {}); // mark handled — reject can fire before the first Promise.race attaches (Cancel during engine load)
+    const onAbort = () => { terminateFFmpeg(); if (abortReject) abortReject(Object.assign(new Error("Canceled."), { userMessage: "Canceled." })); };
+    abortRef.current = onAbort;
     let ff;
     const onProg = ({ progress }) => setProgress(Math.max(0, Math.min(100, Math.round(progress * 100))));
     try {
       setStatus("Loading audio engine (~32 MB, one-time)…");
-      ff = await loadFFmpeg();
+      ff = await Promise.race([loadFFmpeg(), abortP]);
       ff.on("progress", onProg);
       const ext = (file.name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0];
       const inName = "input" + ext;
       const spec = FORMATS[format];
       const outName = "output." + spec.ext;
       setStatus("Reading your video…");
-      await ff.writeFile(inName, await fetchFile(file));
+      await Promise.race([ff.writeFile(inName, await fetchFile(file)), abortP]);
       setStatus("Extracting the audio…");
-      await ff.exec(spec.args(inName, outName));
-      const data = await ff.readFile(outName);
-      await ff.deleteFile(inName).catch(() => {});
-      await ff.deleteFile(outName).catch(() => {});
+      await Promise.race([ff.exec(spec.args(inName, outName)), abortP]);
+      const data = await Promise.race([ff.readFile(outName), abortP]);
+      // The held ff reference is dead after a terminateFFmpeg(); guard cleanup.
+      try {
+        await ff.deleteFile(inName).catch(() => {});
+        await ff.deleteFile(outName).catch(() => {});
+      } catch { /* worker may already be gone */ }
       const blob = new Blob([data.buffer], { type: spec.mime });
       const base = file.name.replace(/\.[^.]+$/, "") || "audio";
       setResult({ url: URL.createObjectURL(blob), name: `${base}.${spec.ext}`, size: blob.size });
       setStatus("");
-    } catch {
-      setError("Couldn't extract the audio — the file may be an unsupported format or too large for the browser to handle.");
+    } catch (err) {
+      if (canceledRef.current) {
+        setCanceled(true);
+      } else {
+        setError((err && err.userMessage) || "Couldn't extract the audio — the file may be an unsupported format or too large for the browser to handle.");
+      }
       setStatus("");
     } finally {
-      if (ff) ff.off("progress", onProg);
+      abortRef.current = null;
+      try { if (ff) ff.off("progress", onProg); } catch { /* worker may already be gone */ }
       setBusy(false);
       setProgress(0);
     }
   }, [file, format]);
+
+  // Cancel terminates the ffmpeg worker (the single-thread core can't stop one
+  // exec mid-run), freeing the UI and memory instead of a stuck "Working…".
+  const cancel = useCallback(() => {
+    canceledRef.current = true;
+    setStatus("Canceling…");
+    if (abortRef.current) abortRef.current();
+  }, []);
 
   return (
     <div className="tool">
@@ -111,10 +144,19 @@ export default function VideoToAudio() {
         </div>
       </div>
 
+      {warn && !busy && (
+        <p className="tool-note" role="note" style={{ borderLeft: "3px solid currentColor", paddingLeft: 10, opacity: 0.9 }}>
+          ⚠ {warn}
+        </p>
+      )}
+
       <div className="tool-actions">
         <button type="button" className="btn btn-primary" onClick={run} disabled={!file || busy}>
           {busy ? "Working…" : "Extract audio"}
         </button>
+        {busy && (
+          <button type="button" className="btn" onClick={cancel}>Cancel</button>
+        )}
       </div>
 
       {busy && (
@@ -126,6 +168,10 @@ export default function VideoToAudio() {
             </div>
           )}
         </div>
+      )}
+
+      {canceled && !busy && (
+        <p className="tool-note" role="status">Canceled. Pick a file and run again when you&rsquo;re ready.</p>
       )}
 
       {error && <p className="tool-error" role="alert">{error}</p>}
