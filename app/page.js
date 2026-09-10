@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { categories, SITE } from "../lib/tools";
+import { categories, SITE, LAST_UPDATED } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
 import { TOOL_COUNT_LABEL } from "../lib/toolCount";
 import ToolSearch from "../components/ToolSearch";
@@ -14,6 +14,51 @@ const HOME_FAQ = [
   { q: "Does it work on my phone?", a: "Yes. The tools run in any modern browser on phones, tablets, and desktops, with nothing to install." },
   { q: "Why is it called Every Boring Tool?", a: "Because these are the unglamorous, get-it-done tools you look up once and forget about — and they should just work, without fuss. We lean into the boring." },
 ];
+
+// GEO homepage enhancements — the corrected wins from the citability review
+// (answer-first block, "what leaves your browser" original data, comparison,
+// additive schema). GATED OFF until AdSense approval: flip GEO_HOMEPAGE_ENABLED
+// to true AND set HIDE_NEW_TOOLS = false in lib/tools.js at the same time to
+// switch the whole batch on post-approval. Items the site already has (FAQ,
+// Org/WebSite schema, tool-page WebApplication) are deliberately NOT duplicated.
+const GEO_HOMEPAGE_ENABLED = false;
+
+const GEO_TAKEAWAYS = [
+  "Free, with no account, no watermark, and no daily limits.",
+  "Most tools run entirely in your browser — the file you add never leaves your device.",
+  "Works in any modern browser on desktop, tablet, or phone, with nothing to install.",
+  "Open source: the full site code is public on GitHub.",
+];
+
+// Honest per-tool network behaviour, grounded in the architecture and consistent
+// with the Privacy page. The point is checkable evidence, not a bare "it's private".
+const GEO_NETWORK = [
+  { tool: "Merge PDF", how: "In your browser (pdf-lib)", leaves: "Nothing — 0 bytes uploaded" },
+  { tool: "Word to PDF", how: "In your browser (mammoth + pdf-lib)", leaves: "Nothing — 0 bytes uploaded" },
+  { tool: "Image Compressor", how: "In your browser (Canvas)", leaves: "Nothing — 0 bytes uploaded" },
+  { tool: "PFP Maker", how: "In your browser (Canvas)", leaves: "Nothing — 0 bytes uploaded" },
+  { tool: "Word Counter", how: "In your browser", leaves: "Nothing — 0 bytes uploaded" },
+  { tool: "Word-game solvers", how: "Look words up on our server", leaves: "The letters you type — never a file" },
+];
+
+const GEO_COMPARE = [
+  { f: "Sign-up / account", ebt: "Never", them: "Often required" },
+  { f: "Your file", ebt: "Stays in your browser", them: "Uploaded to their server" },
+  { f: "Watermarks", ebt: "None", them: "Common on the free tier" },
+  { f: "Daily limits", ebt: "None", them: "Common (e.g. 2 files a day)" },
+  { f: "Price", ebt: "Free", them: "“Free,” then an upsell" },
+];
+
+const geoTh = { textAlign: "left", borderBottom: "2px solid currentColor", padding: "8px 10px" };
+const geoTd = { borderBottom: "1px solid var(--line, #ccc)", padding: "8px 10px", verticalAlign: "top" };
+
+function formatUpdated(iso) {
+  try {
+    return new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  } catch (e) {
+    return iso;
+  }
+}
 
 export const metadata = {
   alternates: { canonical: "/" },
@@ -44,6 +89,29 @@ export default function Home() {
           </li>
         </ul>
       </section>
+
+      {GEO_HOMEPAGE_ENABLED && (
+        <section className="block">
+          <p className="lede" style={{ fontSize: 17, color: "var(--ink, inherit)" }}>
+            <strong>
+              Every Boring Tool is a free set of {TOOL_COUNT_LABEL} single-purpose online tools —
+              PDF, image, audio and video, text, converters, calculators and more — that run right
+              in your browser. There is no sign-up and no upload: the files you process never leave
+              your device. Everything works in any modern browser, on desktop or phone, with nothing
+              to install.
+            </strong>
+          </p>
+          <p className="tool-note">
+            Last updated <time dateTime={LAST_UPDATED}>{formatUpdated(LAST_UPDATED)}</time> ·{" "}
+            {TOOL_COUNT_LABEL} tools and counting
+          </p>
+          <ul>
+            {GEO_TAKEAWAYS.map((t, i) => (
+              <li key={i}>{t}</li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {popular.length > 0 && (
         <section className="block">
@@ -112,6 +180,63 @@ export default function Home() {
         </div>
       </section>
 
+      {GEO_HOMEPAGE_ENABLED && (
+        <section className="block">
+          <h2 className="section-title">What actually leaves your browser</h2>
+          <p>
+            Most of these tools do all the work on your own device. Rather than ask you to take
+            “private” on trust, here is exactly what each of the popular tools sends — you can
+            confirm any of it yourself in your browser’s DevTools → Network tab.
+          </p>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <thead>
+                <tr>
+                  <th style={geoTh}>Tool</th>
+                  <th style={geoTh}>Where it runs</th>
+                  <th style={geoTh}>What leaves your device</th>
+                </tr>
+              </thead>
+              <tbody>
+                {GEO_NETWORK.map((r, i) => (
+                  <tr key={i}>
+                    <td style={geoTd}>{r.tool}</td>
+                    <td style={geoTd}>{r.how}</td>
+                    <td style={geoTd}>{r.leaves}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {GEO_HOMEPAGE_ENABLED && (
+        <section className="block">
+          <h2 className="section-title">In-browser tools vs upload-based tools</h2>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <thead>
+                <tr>
+                  <th style={geoTh}></th>
+                  <th style={geoTh}>Every Boring Tool</th>
+                  <th style={geoTh}>Typical “free” tool site</th>
+                </tr>
+              </thead>
+              <tbody>
+                {GEO_COMPARE.map((r, i) => (
+                  <tr key={i}>
+                    <td style={{ ...geoTd, fontWeight: 600 }}>{r.f}</td>
+                    <td style={geoTd}>{r.ebt}</td>
+                    <td style={geoTd}>{r.them}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       <section className="tool-about">
         <h2 className="tool-h2">What is Every Boring Tool?</h2>
         <p>
@@ -170,6 +295,42 @@ export default function Home() {
           }),
         }}
       />
+
+      {GEO_HOMEPAGE_ENABLED && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "@id": `${SITE.url}/#homepage-collection`,
+              url: `${SITE.url}/`,
+              name: "Every Boring Tool — Free Online Tools",
+              description: SITE.description,
+              dateModified: LAST_UPDATED,
+              mainEntity: {
+                "@type": "ItemList",
+                name: "Popular tools",
+                numberOfItems: popular.length,
+                itemListElement: popular.map(({ t, cat }, i) => ({
+                  "@type": "ListItem",
+                  position: i + 1,
+                  item: {
+                    "@type": "WebApplication",
+                    name: t.name,
+                    url: `${SITE.url}/${cat}/${t.slug}`,
+                    applicationCategory: "UtilitiesApplication",
+                    operatingSystem: "Any (web browser)",
+                    isAccessibleForFree: true,
+                    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+                    publisher: { "@type": "Organization", name: SITE.name, url: SITE.url },
+                  },
+                })),
+              },
+            }),
+          }}
+        />
+      )}
     </>
   );
 }
