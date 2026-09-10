@@ -4,6 +4,7 @@ import { categories, getCategory, getTool, getToolBySlug, SITE, LAST_UPDATED } f
 import { toolContent } from "../../../lib/toolContent";
 import { toolHowto } from "../../../lib/toolHowto";
 import { relatedSlugs } from "../../../lib/related";
+import { retargetFor } from "../../../lib/retargets";
 import { HIDDEN_LANDING_URLS } from "../../../lib/typingLanding";
 import ToolMount from "../../../components/ToolMount";
 import AdSlot from "../../../components/AdSlot";
@@ -63,10 +64,12 @@ export function generateMetadata({ params }) {
   const content = toolContent[params.tool];
   const built = !!content;
   const url = `/${params.category}/${params.tool}`;
-  const description = metaDescription(t, content);
+  const rt = retargetFor(params.tool);
+  const description = (rt && rt.metaDescription) || metaDescription(t, content);
   // Optional per-tool SEO title (lib/toolContent seoTitle) for pages where the
   // bare tool name leaves search intent on the table; falls back to the name.
-  const title = content && content.seoTitle ? content.seoTitle : t.name;
+  // A gated retarget (lib/retargets) overrides both to capture a higher-volume term.
+  const title = (rt && rt.seoTitle) || (content && content.seoTitle ? content.seoTitle : t.name);
   // Nested route segments do NOT inherit the root app/opengraph-image.js card,
   // so tool shares rendered as blank cards. Point them at the generated card
   // explicitly (metadataBase resolves it to an absolute URL).
@@ -88,6 +91,10 @@ export default function ToolPage({ params }) {
   if (!c || !t) notFound();
 
   const content = toolContent[t.slug];
+  // Gated SEO retarget (lib/retargets): overrides the display name so the H1,
+  // headings and WebApplication schema all target the higher-volume term.
+  const rt = retargetFor(t.slug);
+  const displayName = (rt && rt.name) || t.name;
 
   const crumb = (
     <nav className="breadcrumb" aria-label="Breadcrumb">
@@ -95,7 +102,7 @@ export default function ToolPage({ params }) {
       <span className="sep">/</span>
       <Link href={`/${c.slug}`}>{c.name}</Link>
       <span className="sep">/</span>
-      <span>{t.name}</span>
+      <span>{displayName}</span>
     </nav>
   );
 
@@ -104,7 +111,7 @@ export default function ToolPage({ params }) {
       <>
         {crumb}
         <header className="page-head">
-          <h1>{t.name}</h1>
+          <h1>{displayName}</h1>
           <p>{t.description}</p>
         </header>
         <div className="empty tool-stub">
@@ -141,12 +148,12 @@ export default function ToolPage({ params }) {
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: SITE.url },
       { "@type": "ListItem", position: 2, name: c.name, item: abs(`/${c.slug}`) },
-      { "@type": "ListItem", position: 3, name: t.name, item: abs(`/${c.slug}/${t.slug}`) },
+      { "@type": "ListItem", position: 3, name: displayName, item: abs(`/${c.slug}/${t.slug}`) },
     ],
   });
   graph.push({
     "@type": "WebApplication",
-    name: t.name,
+    name: displayName,
     url: abs(`/${c.slug}/${t.slug}`),
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Any",
@@ -183,7 +190,7 @@ export default function ToolPage({ params }) {
     <>
       {crumb}
       <header className="page-head">
-        <h1>{t.name}</h1>
+        <h1>{displayName}</h1>
         <p>{content.lede || t.description}</p>
         {updatedLabel && (
           <div className="tool-note tool-updated" style={{ marginTop: 10 }}>
@@ -200,7 +207,7 @@ export default function ToolPage({ params }) {
 
       {toolHowto[t.slug] && toolHowto[t.slug].length > 0 && (
         <section className="tool-howto">
-          <h2 className="tool-h2">How to use {t.name}</h2>
+          <h2 className="tool-h2">How to use {displayName}</h2>
           <ol>
             {toolHowto[t.slug].map((step, i) => (
               <li key={i}>{step}</li>
@@ -219,10 +226,11 @@ export default function ToolPage({ params }) {
 
       {content.about && (
         <section className="tool-about">
-          <h2 className="tool-h2">About {t.name}</h2>
+          <h2 className="tool-h2">About {displayName}</h2>
           {content.about.split("\n\n").map((para, i) => (
             <p key={i}>{para}</p>
           ))}
+          {rt && rt.aboutAppend ? <p>{rt.aboutAppend}</p> : null}
         </section>
       )}
 
