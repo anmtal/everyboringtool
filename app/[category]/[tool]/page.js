@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { categories, getCategory, getTool, getToolBySlug, SITE, LAST_UPDATED } from "../../../lib/tools";
+import { categories, getCategory, getTool, getToolBySlug, SITE, LAST_UPDATED, LOW_VALUE_NOINDEX } from "../../../lib/tools";
 import { toolContent } from "../../../lib/toolContent";
 import { toolHowto } from "../../../lib/toolHowto";
 import { relatedSlugs } from "../../../lib/related";
@@ -78,7 +78,9 @@ export function generateMetadata({ params }) {
     title,
     description,
     // Coming-soon stubs stay out of the index until the tool actually works.
-    robots: built ? { index: true, follow: true } : { index: false, follow: true },
+    // Low-value tools (density trim) are noindexed but stay live/functional; follow:true
+    // keeps their internal link equity flowing to the indexed core.
+    robots: (built && !LOW_VALUE_NOINDEX.has(params.tool)) ? { index: true, follow: true } : { index: false, follow: true },
     alternates: { canonical: url },
     openGraph: { type: "website", url, title, description, images: [ogImage] },
     twitter: { card: "summary_large_image", title, description, images: [ogImage] },

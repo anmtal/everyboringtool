@@ -1,4 +1,4 @@
-import { categories, SITE, LAST_UPDATED } from "../lib/tools";
+import { categories, SITE, LAST_UPDATED, LOW_VALUE_NOINDEX } from "../lib/tools";
 import { toolContent } from "../lib/toolContent";
 import { TYPING_LANDING, LANDING_UPDATED, visibleLandingKeys } from "../lib/typingLanding";
 import { TOOL_LANDINGS, visibleToolLandingKeys } from "../lib/toolLandings";
@@ -58,7 +58,7 @@ export default function sitemap() {
     urls.push({ url: `${base}/${c.slug}`, lastModified: siteDate });
     for (const t of c.tools) {
       // Only list tools that are actually built.
-      if (toolContent[t.slug]) urls.push({ url: `${base}/${c.slug}/${t.slug}`, lastModified: toolDate(t.slug) });
+      if (toolContent[t.slug] && !LOW_VALUE_NOINDEX.has(t.slug)) urls.push({ url: `${base}/${c.slug}/${t.slug}`, lastModified: toolDate(t.slug) });
     }
   }
   return urls;

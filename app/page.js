@@ -17,11 +17,12 @@ const HOME_FAQ = [
 
 // GEO homepage enhancements — the corrected wins from the citability review
 // (answer-first block, "what leaves your browser" original data, comparison,
-// additive schema). GATED OFF until AdSense approval: flip GEO_HOMEPAGE_ENABLED
-// to true AND set HIDE_NEW_TOOLS = false in lib/tools.js at the same time to
-// switch the whole batch on post-approval. Items the site already has (FAQ,
-// Org/WebSite schema, tool-page WebApplication) are deliberately NOT duplicated.
-const GEO_HOMEPAGE_ENABLED = false;
+// additive schema). DECOUPLED + TURNED ON 2026-09-12 for the AdSense "low value
+// content" re-review: this is original, substantive homepage content and adds
+// real editorial depth, independent of the hidden-tool set (HIDE_NEW_TOOLS stays
+// true until approval). Items the site already has (FAQ, Org/WebSite schema,
+// tool-page WebApplication) are deliberately NOT duplicated.
+const GEO_HOMEPAGE_ENABLED = true;
 
 const GEO_TAKEAWAYS = [
   "Free, with no account, no watermark, and no daily limits.",

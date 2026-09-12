@@ -113,6 +113,28 @@ export default function About() {
         </p>
       </section>
 
+      <section className="block">
+        <h2 className="section-title">Who makes it</h2>
+        <p>
+          Every Boring Tool is built and maintained independently — not by a large company — which
+          is exactly why it can stay lean, free, and clear of the sign-up walls, watermarks and
+          upsells that clutter most &ldquo;free tool&rdquo; sites. The full source code is public on{" "}
+          <a href="https://github.com/anmtal/everyboringtool" rel="noopener" style={{ textDecoration: "underline" }}>
+            GitHub
+          </a>
+          , so anyone can read exactly how each tool works and confirm for themselves that files are
+          processed on your own device rather than uploaded somewhere.
+        </p>
+        <p>
+          If you hit a bug, spot something wrong, or wish a particular tool existed, email{" "}
+          <a href="mailto:contact@everyboringtool.com" style={{ textDecoration: "underline" }}>
+            contact@everyboringtool.com
+          </a>{" "}
+          — a real person reads it, and the small, specific requests are usually the ones that turn
+          into the next tool.
+        </p>
+      </section>
+
       <section className="tool-faq block">
         <h2 className="section-title">Common questions</h2>
         <dl>
