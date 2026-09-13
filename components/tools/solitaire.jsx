@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 const SUITS = ["♠", "♥", "♦", "♣"]; // ♠ ♥ ♦ ♣
 const RSTR = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -34,6 +34,23 @@ function newGame() {
   return { stock, waste: [], foundations: [[], [], [], []], tableau, moves: 0, won: false };
 }
 
+// A near-won board used only for demos/recordings (open the tool with ?demo=1):
+// every card is face-up, foundations are already built up to 8, and 9→King of
+// each suit wait on the tableau, so a single "Auto-finish" click sends twenty
+// cards home in one satisfying cascade — no full game required.
+function demoGame() {
+  const foundations = SUITS.map((suit) => {
+    const pile = [];
+    for (let rank = 1; rank <= 8; rank++) pile.push({ suit, rank, up: true });
+    return pile;
+  });
+  const tableau = [[], [], [], [], [], [], []];
+  SUITS.forEach((suit, i) => {
+    for (let rank = 13; rank >= 9; rank--) tableau[i].push({ suit, rank, up: true }); // K,Q,J,10,9 (9 on top)
+  });
+  return { stock: [], waste: [], foundations, tableau, moves: 0, won: false };
+}
+
 // is [cards] a valid descending, alternating-colour run?
 function validRun(cards) {
   for (let i = 0; i < cards.length; i++) {
@@ -53,6 +70,14 @@ function canToFoundation(card, pile) {
   if (pile.length === 0) return card.rank === 1;
   const top = pile[pile.length - 1];
   return card.suit === top.suit && card.rank === top.rank + 1;
+}
+// Auto-finish is offered once every tableau card is face-up: from there the deal
+// is guaranteed solvable by sending cards to the foundations, so we can animate
+// it home instead of making the player click the last few dozen moves by hand.
+function canAutoFinish(g) {
+  if (!g || g.won) return false;
+  for (const col of g.tableau) for (const c of col) if (!c.up) return false;
+  return g.foundations.reduce((s, f) => s + f.length, 0) < 52;
 }
 
 const CARD_W = 44, CARD_H = 62, OVERLAP = 22;
@@ -79,10 +104,20 @@ function keyActivate(fn) {
 export default function Solitaire() {
   const [game, setGame] = useState(null);
   const [sel, setSel] = useState(null); // {type:'waste'} | {type:'tableau', col, idx}
+  const [autoFinishing, setAutoFinishing] = useState(false);
+  const autoTicks = useRef(0);
+  const demoMode = useRef(false);
 
-  useEffect(() => { setGame(newGame()); }, []);
+  useEffect(() => {
+    demoMode.current = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo");
+    setGame(demoMode.current ? demoGame() : newGame());
+  }, []);
 
-  const reset = useCallback(() => { setGame(newGame()); setSel(null); }, []);
+  const reset = useCallback(() => {
+    setAutoFinishing(false);
+    setGame(demoMode.current ? demoGame() : newGame());
+    setSel(null);
+  }, []);
 
   const draw = useCallback(() => {
     setGame((g) => {
@@ -147,12 +182,84 @@ export default function Solitaire() {
     setSel(null);
   }, [sel]);
 
+  const startAutoFinish = useCallback(() => {
+    autoTicks.current = 0;
+    setSel(null);
+    setAutoFinishing(true);
+  }, []);
+
+  // Animated auto-finish: each tick sends one eligible card to a foundation (the
+  // cascade), drawing from the stock when nothing is immediately playable. A tick
+  // cap guarantees it can never spin forever.
+  useEffect(() => {
+    if (!autoFinishing) return undefined;
+    const id = setInterval(() => {
+      setGame((g) => {
+        if (!g || g.won) return g;
+        const ng = {
+          ...g,
+          stock: g.stock.slice(), waste: g.waste.slice(),
+          foundations: g.foundations.map((f) => f.slice()),
+          tableau: g.tableau.map((t) => t.slice()),
+        };
+        const toFoundation = (card) => {
+          for (let i = 0; i < 4; i++) if (canToFoundation(card, ng.foundations[i])) { ng.foundations[i].push(card); return true; }
+          return false;
+        };
+        let moved = false;
+        const wt = ng.waste[ng.waste.length - 1];
+        if (wt && toFoundation(wt)) { ng.waste.pop(); moved = true; }
+        if (!moved) {
+          for (let c = 0; c < 7; c++) {
+            const col = ng.tableau[c];
+            const top = col[col.length - 1];
+            if (top && top.up && toFoundation(top)) {
+              col.pop();
+              if (col.length && !col[col.length - 1].up) col[col.length - 1] = { ...col[col.length - 1], up: true };
+              moved = true;
+              break;
+            }
+          }
+        }
+        if (!moved) {
+          if (ng.stock.length) { const c = ng.stock.pop(); ng.waste.push({ ...c, up: true }); }
+          else if (ng.waste.length) { ng.stock = ng.waste.reverse().map((c) => ({ ...c, up: false })); ng.waste = []; }
+        }
+        ng.moves = g.moves + 1;
+        ng.won = ng.foundations.reduce((s, f) => s + f.length, 0) === 52;
+        return ng;
+      });
+      autoTicks.current += 1;
+      if (autoTicks.current > 400) setAutoFinishing(false);
+    }, 110);
+    return () => clearInterval(id);
+  }, [autoFinishing]);
+
+  // Stop the loop the instant the game is won.
+  useEffect(() => { if (game && game.won) setAutoFinishing(false); }, [game && game.won]);
+
+  // Falling-card confetti for the win cascade (stable per mount).
+  const cascade = useMemo(() => Array.from({ length: 24 }, () => {
+    const rank = 1 + Math.floor(Math.random() * 13);
+    const suit = SUITS[Math.floor(Math.random() * 4)];
+    return {
+      left: Math.round(Math.random() * 92),
+      dur: (1.5 + Math.random() * 1.4).toFixed(2),
+      delay: (Math.random() * 1.6).toFixed(2),
+      rot: Math.round(-160 + Math.random() * 320),
+      label: RSTR[rank] + suit,
+      suit,
+      red: isRed(suit),
+    };
+  }), []);
+
   if (!game) return <div className="tool"><p className="tool-note">Dealing…</p></div>;
 
   const selMatch = (type, col, idx) =>
     sel && sel.type === type && (type === "waste" || (sel.col === col && sel.idx === idx));
 
   const wasteTop = game.waste[game.waste.length - 1];
+  const showAuto = canAutoFinish(game) || autoFinishing;
 
   const cardStyle = (card, selected) => ({
     width: CARD_W, height: CARD_H, borderRadius: 6,
@@ -181,14 +288,53 @@ export default function Solitaire() {
   );
 
   return (
-    <div className="tool">
+    <div className="tool" style={{ position: "relative" }}>
       <div className="tool-actions" style={{ justifyContent: "space-between", alignItems: "center" }}>
-        <button type="button" className="btn btn-primary" onClick={reset}>New game</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button type="button" className="btn btn-primary" onClick={reset}>New game</button>
+          {showAuto && (
+            <button type="button" className="btn" onClick={startAutoFinish} disabled={autoFinishing}>
+              {autoFinishing ? "Finishing…" : "Auto-finish"}
+            </button>
+          )}
+        </div>
         <span className="tool-note" style={{ margin: 0 }}>Moves: {game.moves}</span>
       </div>
 
       {game.won && (
-        <div className="tool-result" role="status" aria-live="polite"><p className="tool-result-value" style={{ textAlign: "center", fontSize: 20 }}>🎉 You won! Well played.</p></div>
+        <>
+          <style>{`
+            @keyframes ebtCascadeFall {
+              0%   { transform: translateY(-70px) rotate(0deg); opacity: 0; }
+              8%   { opacity: 1; }
+              100% { transform: translateY(460px) rotate(var(--ebt-rot,180deg)); opacity: 1; }
+            }
+            @media (prefers-reduced-motion: reduce) { .ebt-cascade-card { display: none !important; } }
+          `}</style>
+          <div aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 2 }}>
+            {cascade.map((cc, i) => (
+              <div
+                key={i}
+                className="ebt-cascade-card"
+                style={{
+                  position: "absolute", top: 40, left: cc.left + "%",
+                  width: 30, height: 42, borderRadius: 5, background: "#fff",
+                  border: "1px solid #b9b4ac", color: cc.red ? "#d23" : "#111",
+                  font: "600 11px/1 ui-sans-serif,system-ui,sans-serif", boxSizing: "border-box",
+                  display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "2px 3px",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+                  "--ebt-rot": cc.rot + "deg",
+                  animation: `ebtCascadeFall ${cc.dur}s ${cc.delay}s cubic-bezier(.35,.65,.4,1) infinite`,
+                }}
+              >
+                <span>{cc.label}</span><span style={{ alignSelf: "flex-end" }}>{cc.suit}</span>
+              </div>
+            ))}
+          </div>
+          <div className="tool-result" role="status" aria-live="polite" style={{ position: "relative", zIndex: 3 }}>
+            <p className="tool-result-value" style={{ textAlign: "center", fontSize: 20 }}>🎉 You won! Well played.</p>
+          </div>
+        </>
       )}
 
       <div style={{ overflowX: "auto" }}>
@@ -291,7 +437,7 @@ export default function Solitaire() {
       <p className="tool-note">
         Klondike solitaire. Click or press Enter on the deck to draw. Click a face-up card to pick it up (it grabs the run below it), then
         click where it goes — a column, or a foundation (top-right, build each suit up from Ace to King). Build columns
-        down in alternating colours. Free, and runs entirely in your browser.
+        down in alternating colours. When every card is face-up, hit <strong>Auto-finish</strong> to send them all home. Free, and runs entirely in your browser.
       </p>
     </div>
   );
