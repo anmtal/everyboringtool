@@ -109,7 +109,15 @@ export default function Solitaire() {
   const demoMode = useRef(false);
 
   useEffect(() => {
-    demoMode.current = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo");
+    // Demo (near-won) board is used for recording the tool video. It turns on
+    // either explicitly via ?demo=1, or automatically whenever the tool is
+    // embedded in our own mobile-frame recorder (a same-origin iframe) — so the
+    // cascade is always one click away in the recorder no matter how you got to
+    // Solitaire, while real visitors on the page always get a normal deal.
+    let inRecorder = false;
+    try { inRecorder = window.self !== window.top && window.top.location.host === window.location.host; } catch { inRecorder = false; }
+    const q = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo");
+    demoMode.current = q || inRecorder;
     setGame(demoMode.current ? demoGame() : newGame());
   }, []);
 
