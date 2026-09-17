@@ -47,6 +47,89 @@ function detectTransparency(img) {
   }
 }
 
+// PNG is lossless, so re-encoding a photo makes it *larger*, not smaller. To
+// actually compress it (the way TinyPNG does) we reduce the image to a small
+// colour palette with median-cut quantization: fewer distinct colours let PNG's
+// DEFLATE pack the file far tighter. The quality slider picks the palette size.
+// Alpha is preserved — only opaque RGB pixels are quantized. Mutates in place.
+function quantizePNG(imageData, maxColors) {
+  const d = imageData.data;
+  const px = d.length >> 2;
+
+  // Build the palette from a stride-capped sample so this stays fast on big photos.
+  const CAP = 40000;
+  const stride = Math.max(1, Math.floor(px / CAP));
+  const samp = [];
+  for (let i = 0; i < px; i += stride) {
+    const o = i << 2;
+    if (d[o + 3] < 8) continue; // ignore (near-)transparent pixels
+    samp.push([d[o], d[o + 1], d[o + 2]]);
+  }
+  if (samp.length < 2) return; // nothing (or one colour) to quantize
+
+  const boxOf = (arr) => {
+    let rmin = 255, rmax = 0, gmin = 255, gmax = 0, bmin = 255, bmax = 0;
+    for (const c of arr) {
+      if (c[0] < rmin) rmin = c[0]; if (c[0] > rmax) rmax = c[0];
+      if (c[1] < gmin) gmin = c[1]; if (c[1] > gmax) gmax = c[1];
+      if (c[2] < bmin) bmin = c[2]; if (c[2] > bmax) bmax = c[2];
+    }
+    const rr = rmax - rmin, gr = gmax - gmin, br = bmax - bmin;
+    const axis = rr >= gr && rr >= br ? 0 : gr >= br ? 1 : 2;
+    return { arr, range: Math.max(rr, gr, br), axis };
+  };
+
+  let boxes = [boxOf(samp)];
+  while (boxes.length < maxColors) {
+    let bi = -1, best = 0;
+    for (let i = 0; i < boxes.length; i++) {
+      if (boxes[i].arr.length > 1 && boxes[i].range > best) { best = boxes[i].range; bi = i; }
+    }
+    if (bi < 0) break; // every remaining box is a single colour
+    const box = boxes[bi];
+    box.arr.sort((a, b) => a[box.axis] - b[box.axis]);
+    const mid = box.arr.length >> 1;
+    boxes.splice(bi, 1, boxOf(box.arr.slice(0, mid)), boxOf(box.arr.slice(mid)));
+  }
+
+  const pal = boxes.map((box) => {
+    let r = 0, g = 0, b = 0;
+    for (const c of box.arr) { r += c[0]; g += c[1]; b += c[2]; }
+    const n = box.arr.length;
+    return [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
+  });
+
+  // 32³ nearest-colour lookup table so mapping the full image is O(1) per pixel.
+  const LUT = new Int16Array(32768).fill(-1);
+  const nearest = (r, g, b) => {
+    const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+    let pi = LUT[key];
+    if (pi >= 0) return pi;
+    let bd = Infinity, bx = 0;
+    for (let i = 0; i < pal.length; i++) {
+      const p = pal[i];
+      const dr = r - p[0], dg = g - p[1], db = b - p[2];
+      const dd = dr * dr + dg * dg + db * db;
+      if (dd < bd) { bd = dd; bx = i; }
+    }
+    LUT[key] = bx;
+    return bx;
+  };
+
+  for (let i = 0; i < px; i++) {
+    const o = i << 2;
+    if (d[o + 3] < 8) continue; // leave transparent pixels alone
+    const p = pal[nearest(d[o], d[o + 1], d[o + 2])];
+    d[o] = p[0]; d[o + 1] = p[1]; d[o + 2] = p[2];
+  }
+}
+
+// Slider position (0.1–1) → palette size for PNG. Quality 1.0 keeps the full
+// 256-colour palette (near-lossless); lower values drop colours for a smaller file.
+function pngColors(quality) {
+  return Math.max(2, Math.min(256, Math.round(quality * 256)));
+}
+
 export default function ImageCompressor() {
   // { img, width, height, size, name, hasAlpha }
   const [source, setSource] = useState(null);
@@ -90,6 +173,19 @@ export default function ImageCompressor() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     ctx.drawImage(source.img, 0, 0);
+
+    // PNG can't compress a photo losslessly, so apply lossy colour reduction
+    // before encoding — that's what lets it come out smaller than the original.
+    if (format === "image/png") {
+      try {
+        const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        quantizePNG(id, pngColors(quality));
+        ctx.putImageData(id, 0, 0);
+      } catch (err) {
+        // If the canvas is tainted or getImageData fails, fall back to a plain
+        // lossless PNG rather than erroring out.
+      }
+    }
 
     canvas.toBlob(
       (blob) => {
@@ -168,6 +264,10 @@ export default function ImageCompressor() {
   const doneInfo = output ? formatInfo(output.type) : outInfo;
   const downloadName = `${baseName}-compressed.${doneInfo.ext}`;
   const flattening = !!source && source.hasAlpha && format === "image/jpeg";
+  const isPng = format === "image/png";
+  const sliderLabel = isPng
+    ? `PNG colours: ${pngColors(quality)}`
+    : `${outInfo.label} quality: ${Math.round(quality * 100)}%`;
 
   return (
     <div className="tool">
@@ -207,11 +307,11 @@ export default function ImageCompressor() {
           </div>
         )}
 
-        {source && outInfo.lossy && (
+        {source && (
           <div className="tool-row">
             <div className="tool-field">
               <label className="tool-label" htmlFor="ic-quality">
-                {`${outInfo.label} quality: ${Math.round(quality * 100)}%`}
+                {sliderLabel}
               </label>
               <input
                 className="tool-input"
@@ -232,10 +332,11 @@ export default function ImageCompressor() {
         <p className="tool-note">Transparency will be flattened to white.</p>
       )}
 
-      {source && !outInfo.lossy && (
+      {source && isPng && (
         <p className="tool-note">
-          PNG is lossless, so the quality slider doesn’t apply — pick JPEG or
-          WebP to trade quality for a smaller file.
+          PNG can’t shrink a photo losslessly, so this reduces the colour palette
+          instead. Lower quality = fewer colours = a smaller file (transparency is
+          kept). For photos, JPEG or WebP will usually go smaller still.
         </p>
       )}
 
@@ -284,7 +385,9 @@ export default function ImageCompressor() {
           <p className="tool-note">
             {`Original dimensions: ${source.width} × ${source.height}px.`}
             {savings !== null && savings < 0
-              ? ` This image is already well compressed — the ${doneInfo.label} is larger than the original at this setting. Try a lower quality or a different format.`
+              ? isPng
+                ? ` Even palette-reduced, PNG is larger than the original here — for a photo, switch to JPEG or WebP to actually shrink it.`
+                : ` This image is already well compressed — the ${doneInfo.label} is larger than the original at this setting. Try a lower quality or a different format.`
               : " Everything runs in your browser — your image is never uploaded."}
           </p>
 
