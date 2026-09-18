@@ -9,6 +9,7 @@ import { HIDDEN_LANDING_URLS } from "../../../lib/typingLanding";
 import ToolMount from "../../../components/ToolMount";
 import AdSlot from "../../../components/AdSlot";
 import { ymylNote } from "../../../lib/ymyl";
+import { guideForTool } from "../../../lib/blogPosts";
 
 // The tool list is a closed set defined in lib/tools — every valid URL is
 // enumerated below, so unknown slugs 404 instead of rendering an empty shell.
@@ -187,6 +188,10 @@ export default function ToolPage({ params }) {
   }
   // On-page YMYL trust note for finance/tax/health calculators (null otherwise).
   const disclaimer = ymylNote(t.slug);
+  // The explainer guide that funnels to this tool, if one exists. Linking down
+  // to it from this (indexed) page is the internal-link half of getting the
+  // guides out of "Crawled - currently not indexed".
+  const guide = guideForTool(t.slug);
 
   return (
     <>
@@ -216,6 +221,18 @@ export default function ToolPage({ params }) {
             ))}
           </ol>
         </section>
+      )}
+
+      {guide && (
+        <div
+          className="block"
+          style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}
+        >
+          <span>Want the how &amp; why?</span>
+          <Link href={`/blog/${guide.slug}`} className="btn">
+            Read: {guide.title} →
+          </Link>
+        </div>
       )}
 
       {related[0] && (
