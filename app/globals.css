@@ -458,11 +458,13 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .braguide-fig { flex: 1 1 150px; min-width: 140px; margin: 0; border: 1px solid var(--border); border-radius: 9px; padding: 10px 8px 8px; text-align: center; }
 .braguide-fig.is-lead { border-color: var(--border-strong); background: var(--bg); }
 .braguide-fig svg { width: 100%; height: 116px; display: block; }
-.braguide-body { fill: var(--muted); fill-opacity: 0.30; stroke: var(--muted); stroke-opacity: 0.6; stroke-width: 1.4; stroke-linejoin: round; }
-.braguide-tape { fill: none; stroke: var(--text); stroke-width: 3; stroke-linecap: round; }
-.braguide-dot { fill: var(--text); }
-.braguide-arrow { fill: none; stroke: var(--text); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; }
-.braguide-surface { stroke: var(--border-strong); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 4; }
+.braguide-body { fill: var(--muted); fill-opacity: 0.24; stroke: var(--muted); stroke-opacity: 0.85; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.braguide-limb { fill: none; stroke: var(--muted); stroke-opacity: 0.85; stroke-width: 1.6; stroke-linecap: round; }
+.braguide-taperib { fill: none; stroke: var(--text); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.braguide-tapetick { fill: none; stroke: var(--text); stroke-width: 1; stroke-linecap: round; opacity: 0.85; }
+.braguide-dot { fill: var(--surface); stroke: var(--text); stroke-width: 2; }
+.braguide-arrow { fill: none; stroke: var(--text); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.7; }
+.braguide-surface { stroke: var(--border-strong); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 5; }
 .braguide-name { font-size: 12.5px; font-weight: 700; margin: 4px 0 3px; }
 .braguide-cap { font-size: 11px; line-height: 1.4; color: var(--muted); margin: 0; }
 .braguide-fig.is-lead .braguide-name { color: var(--text); }

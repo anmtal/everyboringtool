@@ -45,38 +45,60 @@ function buildCards(bandRow, cupIndex) {
   }));
 }
 
-// Visual guide for the three bust positions (Standing / Leaning / Lying), shown in
-// the "Most accurate" method. Original monochrome side-profile silhouettes — the
-// bold line marks where the tape sits and the dot is the fullest point. Leaning is
-// the one people get wrong, so it's highlighted and drawn with the tissue hanging.
+// A measuring-tape ribbon along a centre line: two parallel edges + tick marks, so it
+// reads as an actual tape measure rather than a plain line. Returns SVG paths.
+function tapeRibbon(x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+  const px = -dy / len, py = dx / len, off = 2.7;
+  const p = (x, y) => `${x.toFixed(1)},${y.toFixed(1)}`;
+  const edges = `M${p(x1 + px * off, y1 + py * off)} L${p(x2 + px * off, y2 + py * off)} M${p(x1 - px * off, y1 - py * off)} L${p(x2 - px * off, y2 - py * off)}`;
+  let ticks = "";
+  const n = Math.max(3, Math.round(len / 8));
+  for (let i = 1; i < n; i++) {
+    const t = i / n, cx = x1 + dx * t, cy = y1 + dy * t;
+    ticks += `M${p(cx + px * off, cy + py * off)} L${p(cx - px * off, cy - py * off)} `;
+  }
+  return (
+    <>
+      <path className="braguide-taperib" d={edges} />
+      <path className="braguide-tapetick" d={ticks} />
+    </>
+  );
+}
+
+// Visual guide for the three bust positions (Standing / Leaning / Lying), shown in the
+// "Most accurate" method. Original monochrome side-profile silhouettes with a measuring-tape
+// band (ticks) at the tape line and a ring at the fullest point. Leaning is the one people
+// get wrong, so it's highlighted and drawn with the tissue hanging.
 function BustGuide() {
   return (
     <div className="braguide">
       <p className="braguide-h">How to take each bust measurement</p>
       <p className="braguide-sub">
-        Same tape, three positions. The bold line is where the tape sits; the dot is the fullest
-        point. Keep it level and snug, never tight.
+        Same tape, three positions. The ticked band is where the tape sits; the ring marks the
+        fullest point. Keep it level and snug, never tight.
       </p>
       <div className="braguide-figs">
         <figure className="braguide-fig">
-          <svg viewBox="0 0 130 138" aria-hidden="true">
-            <circle className="braguide-body" cx="56" cy="22" r="13" />
-            <path className="braguide-body" d="M44,37 C 39,55 39,78 44,95 C 50,101 60,101 64,94 C 69,80 66,66 74,58 C 82,51 82,42 72,39 C 64,36 50,34 44,37 Z" />
-            <path className="braguide-body" d="M46,100 L47,132 M62,100 L61,132" />
-            <line className="braguide-tape" x1="34" y1="53" x2="86" y2="53" />
-            <circle className="braguide-dot" cx="80" cy="53" r="3.4" />
+          <svg viewBox="0 0 150 150" aria-hidden="true">
+            <circle className="braguide-body" cx="58" cy="25" r="13" />
+            <path className="braguide-limb" d="M67,20 q6,4 4,9" />
+            <path className="braguide-body" d="M49,39 C 41,55 40,80 45,104 C 47,116 47,130 50,144 C 58,148 60,148 68,144 C 70,128 66,114 68,104 C 71,90 65,74 75,62 C 86,53 86,42 73,40 C 64,37 53,35 49,39 Z" />
+            {tapeRibbon(38, 54, 87, 54)}
+            <circle className="braguide-dot" cx="80" cy="54" r="3.6" />
           </svg>
           <figcaption className="braguide-name">1 · Standing</figcaption>
           <p className="braguide-cap">Stand tall. Tape level and parallel to the floor, around the fullest part.</p>
         </figure>
         <figure className="braguide-fig is-lead">
-          <svg viewBox="0 0 152 140" aria-hidden="true">
-            <circle className="braguide-body" cx="118" cy="74" r="11" />
-            <path className="braguide-body" d="M38,72 C 54,60 84,58 106,64 C 112,68 110,78 101,80 C 84,84 64,84 54,80 L 54,128 L 40,128 L 38,74 Z" />
-            <path className="braguide-body" d="M90,80 C 87,96 99,98 100,82 C 100,80 94,79 90,80 Z" />
-            <path className="braguide-arrow" d="M95,58 L95,72 M91,68 L95,73 L99,68" />
-            <line className="braguide-tape" x1="80" y1="92" x2="104" y2="92" />
-            <circle className="braguide-dot" cx="95" cy="95" r="3.4" />
+          <svg viewBox="0 0 152 150" aria-hidden="true">
+            <path className="braguide-body" d="M36,74 C 56,60 88,58 110,66 C 116,70 114,80 104,82 C 86,86 64,86 54,82 L 54,132 C 54,138 40,138 40,132 L 36,74 Z" />
+            <circle className="braguide-body" cx="120" cy="76" r="11" />
+            <path className="braguide-limb" d="M112,70 q7,-1 6,6" />
+            <path className="braguide-body" d="M88,82 C 84,100 101,103 101,84 C 101,80 93,79 88,82 Z" />
+            {tapeRibbon(77, 96, 105, 96)}
+            <circle className="braguide-dot" cx="94" cy="96" r="3.6" />
+            <path className="braguide-arrow" d="M95,52 L95,66 M91,61 L95,67 L99,61" />
           </svg>
           <figcaption className="braguide-name">2 · Leaning</figcaption>
           <p className="braguide-cap">
@@ -85,12 +107,13 @@ function BustGuide() {
           </p>
         </figure>
         <figure className="braguide-fig">
-          <svg viewBox="0 0 152 130" aria-hidden="true">
-            <line className="braguide-surface" x1="16" y1="112" x2="136" y2="112" />
-            <circle className="braguide-body" cx="30" cy="92" r="11" />
-            <path className="braguide-body" d="M40,86 C 52,82 56,70 66,76 C 80,84 100,94 120,96 L 132,100 C 132,104 128,104 126,101 C 100,106 60,106 40,102 Z" />
-            <line className="braguide-tape" x1="60" y1="66" x2="70" y2="103" />
-            <circle className="braguide-dot" cx="62" cy="70" r="3.4" />
+          <svg viewBox="0 0 152 150" aria-hidden="true">
+            <line className="braguide-surface" x1="16" y1="118" x2="138" y2="118" />
+            <circle className="braguide-body" cx="32" cy="96" r="11" />
+            <path className="braguide-limb" d="M40,90 q-4,-4 -9,-2" />
+            <path className="braguide-body" d="M42,90 C 54,86 60,72 70,78 C 84,86 104,98 122,100 L 134,104 C 134,108 130,108 128,105 C 102,110 60,110 42,106 Z" />
+            {tapeRibbon(63, 70, 72, 108)}
+            <circle className="braguide-dot" cx="65" cy="74" r="3.6" />
           </svg>
           <figcaption className="braguide-name">3 · Lying down</figcaption>
           <p className="braguide-cap">Lie flat on your back. The tissue settles evenly; tape around the fullest part.</p>
