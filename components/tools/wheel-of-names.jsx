@@ -89,12 +89,19 @@ export default function WheelOfNames() {
           {N >= 2 ? (
             <>
               <g style={{ transform: `rotate(${rotation}deg)`, transformOrigin: "110px 110px", transition: spinning && !reduce ? "transform 4s cubic-bezier(0.16,0.73,0.09,1)" : "none" }}>
-                {slices.map((s, i) => (
-                  <g key={i}>
-                    <path d={s.d} fill={s.fill} stroke="#ffffff" strokeWidth="1" />
-                    <text x={s.lx} y={s.ly} fill="#ffffff" fontSize={fontSize} fontWeight="700" textAnchor="middle" dominantBaseline="central" transform={`rotate(${s.rot} ${s.lx} ${s.ly})`}>{s.label}</text>
-                  </g>
-                ))}
+                {slices.map((s, i) => {
+                  // Labels are drawn radially and centred at r=58, so a long one
+                  // extends past the rim (r=100). Cap the on-wheel length and let
+                  // SVG compress the glyphs to fit, so no name ever spills out.
+                  const estW = s.label.length * fontSize * 0.62;
+                  const tl = estW > 74 ? 74 : undefined;
+                  return (
+                    <g key={i}>
+                      <path d={s.d} fill={s.fill} stroke="#ffffff" strokeWidth="1" />
+                      <text x={s.lx} y={s.ly} fill="#ffffff" fontSize={fontSize} fontWeight="700" textAnchor="middle" dominantBaseline="central" transform={`rotate(${s.rot} ${s.lx} ${s.ly})`} textLength={tl} lengthAdjust={tl ? "spacingAndGlyphs" : undefined}>{s.label}</text>
+                    </g>
+                  );
+                })}
                 <circle cx="110" cy="110" r="16" fill="var(--surface)" stroke="var(--border-strong)" strokeWidth="2" />
               </g>
               <polygon points="110,28 94,2 126,2" fill="var(--text)" stroke="var(--surface)" strokeWidth="2" strokeLinejoin="round" />
