@@ -42,7 +42,7 @@ export default function WheelOfNames() {
     const d = `M ${CX} ${CY} L ${x0.toFixed(2)} ${y0.toFixed(2)} A ${R} ${R} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z`;
     const [lx, ly] = pt(R * 0.58, mid);
     const rot = mid > 180 ? mid + 90 : mid - 90; // keep labels upright & radial
-    const label = name.length > 14 ? name.slice(0, 13) + "…" : name;
+    const label = name.length > 24 ? name.slice(0, 23) + "…" : name;
     return { d, lx, ly, rot, label, fill: PALETTE[i % PALETTE.length] };
   }), [names, SEG]);
 
@@ -90,15 +90,18 @@ export default function WheelOfNames() {
             <>
               <g style={{ transform: `rotate(${rotation}deg)`, transformOrigin: "110px 110px", transition: spinning && !reduce ? "transform 4s cubic-bezier(0.16,0.73,0.09,1)" : "none" }}>
                 {slices.map((s, i) => {
-                  // Labels are drawn radially and centred at r=58, so a long one
-                  // extends past the rim (r=100). Cap the on-wheel length and let
-                  // SVG compress the glyphs to fit, so no name ever spills out.
-                  const estW = s.label.length * fontSize * 0.62;
+                  // Labels are drawn radially, centred at r=58, with ~74px of room
+                  // before the rim. Shrink the font so a long name fits in full
+                  // instead of truncating; only very long names (>24 chars) get an
+                  // ellipsis. textLength is a final safety cap so nothing can ever
+                  // spill past the rim even on the widest glyphs.
+                  const fs = Math.max(7, Math.min(fontSize, Math.floor(74 / (s.label.length * 0.6))));
+                  const estW = s.label.length * fs * 0.62;
                   const tl = estW > 74 ? 74 : undefined;
                   return (
                     <g key={i}>
                       <path d={s.d} fill={s.fill} stroke="#ffffff" strokeWidth="1" />
-                      <text x={s.lx} y={s.ly} fill="#ffffff" fontSize={fontSize} fontWeight="700" textAnchor="middle" dominantBaseline="central" transform={`rotate(${s.rot} ${s.lx} ${s.ly})`} textLength={tl} lengthAdjust={tl ? "spacingAndGlyphs" : undefined}>{s.label}</text>
+                      <text x={s.lx} y={s.ly} fill="#ffffff" fontSize={fs} fontWeight="700" textAnchor="middle" dominantBaseline="central" transform={`rotate(${s.rot} ${s.lx} ${s.ly})`} textLength={tl} lengthAdjust={tl ? "spacingAndGlyphs" : undefined}>{s.label}</text>
                     </g>
                   );
                 })}
