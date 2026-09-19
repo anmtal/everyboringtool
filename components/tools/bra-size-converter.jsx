@@ -45,6 +45,61 @@ function buildCards(bandRow, cupIndex) {
   }));
 }
 
+// Visual guide for the three bust positions (Standing / Leaning / Lying), shown in
+// the "Most accurate" method. Original monochrome side-profile silhouettes — the
+// bold line marks where the tape sits and the dot is the fullest point. Leaning is
+// the one people get wrong, so it's highlighted and drawn with the tissue hanging.
+function BustGuide() {
+  return (
+    <div className="braguide">
+      <p className="braguide-h">How to take each bust measurement</p>
+      <p className="braguide-sub">
+        Same tape, three positions. The bold line is where the tape sits; the dot is the fullest
+        point. Keep it level and snug, never tight.
+      </p>
+      <div className="braguide-figs">
+        <figure className="braguide-fig">
+          <svg viewBox="0 0 130 138" aria-hidden="true">
+            <circle className="braguide-body" cx="56" cy="22" r="13" />
+            <path className="braguide-body" d="M44,37 C 39,55 39,78 44,95 C 50,101 60,101 64,94 C 69,80 66,66 74,58 C 82,51 82,42 72,39 C 64,36 50,34 44,37 Z" />
+            <path className="braguide-body" d="M46,100 L47,132 M62,100 L61,132" />
+            <line className="braguide-tape" x1="34" y1="53" x2="86" y2="53" />
+            <circle className="braguide-dot" cx="80" cy="53" r="3.4" />
+          </svg>
+          <figcaption className="braguide-name">1 · Standing</figcaption>
+          <p className="braguide-cap">Stand tall. Tape level and parallel to the floor, around the fullest part.</p>
+        </figure>
+        <figure className="braguide-fig is-lead">
+          <svg viewBox="0 0 152 140" aria-hidden="true">
+            <circle className="braguide-body" cx="118" cy="74" r="11" />
+            <path className="braguide-body" d="M38,72 C 54,60 84,58 106,64 C 112,68 110,78 101,80 C 84,84 64,84 54,80 L 54,128 L 40,128 L 38,74 Z" />
+            <path className="braguide-body" d="M90,80 C 87,96 99,98 100,82 C 100,80 94,79 90,80 Z" />
+            <path className="braguide-arrow" d="M95,58 L95,72 M91,68 L95,73 L99,68" />
+            <line className="braguide-tape" x1="80" y1="92" x2="104" y2="92" />
+            <circle className="braguide-dot" cx="95" cy="95" r="3.4" />
+          </svg>
+          <figcaption className="braguide-name">2 · Leaning</figcaption>
+          <p className="braguide-cap">
+            Bend forward 90° at the hips so your torso is parallel to the floor. Let the tissue fall
+            away from your chest, and wrap the tape around the fullest hanging point.
+          </p>
+        </figure>
+        <figure className="braguide-fig">
+          <svg viewBox="0 0 152 130" aria-hidden="true">
+            <line className="braguide-surface" x1="16" y1="112" x2="136" y2="112" />
+            <circle className="braguide-body" cx="30" cy="92" r="11" />
+            <path className="braguide-body" d="M40,86 C 52,82 56,70 66,76 C 80,84 100,94 120,96 L 132,100 C 132,104 128,104 126,101 C 100,106 60,106 40,102 Z" />
+            <line className="braguide-tape" x1="60" y1="66" x2="70" y2="103" />
+            <circle className="braguide-dot" cx="62" cy="70" r="3.4" />
+          </svg>
+          <figcaption className="braguide-name">3 · Lying down</figcaption>
+          <p className="braguide-cap">Lie flat on your back. The tissue settles evenly; tape around the fullest part.</p>
+        </figure>
+      </div>
+    </div>
+  );
+}
+
 export default function BraSizeConverter() {
   // Default to the measurement calculator: most searchers ("bra size calculator")
   // don't know their size yet. The "I know my size" converter is one tab away.
@@ -367,6 +422,7 @@ export default function BraSizeConverter() {
               <p className="tool-note" style={{ marginTop: 0 }}>
                 The most accurate DIY method (used by r/ABraThatFits). Take a firm tape and measure to the nearest ¼&nbsp;inch or ½&nbsp;cm.
               </p>
+              <BustGuide />
               <div className="tool-fields">
                 <div className="tool-field">
                   <span className="tool-label">Under-bust — around your ribcage, three ways</span>
@@ -392,14 +448,17 @@ export default function BraSizeConverter() {
                     <div className="tool-field">
                       <label className="tool-label" htmlFor="b-stand">Standing</label>
                       <input {...numProps} id="b-stand" placeholder={unit === "cm" ? "86" : "34"} value={bStand} onChange={(e) => setBStand(e.target.value)} />
+                      <span className="braguide-hint">upright, tape level</span>
                     </div>
                     <div className="tool-field">
                       <label className="tool-label" htmlFor="b-lean">Leaning</label>
                       <input {...numProps} id="b-lean" placeholder={unit === "cm" ? "89" : "35"} value={bLean} onChange={(e) => setBLean(e.target.value)} />
+                      <span className="braguide-hint">bent forward 90°, let it hang</span>
                     </div>
                     <div className="tool-field">
                       <label className="tool-label" htmlFor="b-lie">Lying</label>
                       <input {...numProps} id="b-lie" placeholder={unit === "cm" ? "86" : "34"} value={bLie} onChange={(e) => setBLie(e.target.value)} />
+                      <span className="braguide-hint">flat on your back</span>
                     </div>
                   </div>
                 </div>
