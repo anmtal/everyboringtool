@@ -52,9 +52,10 @@ function buildCards(bandRow, cupIndex) {
 function BustGuide() {
   return (
     <div className="braguide">
-      <p className="braguide-h">How to take each bust measurement</p>
+      <p className="braguide-h">How to measure your bust (the fullest part)</p>
       <p className="braguide-sub">
-        Same tape, three positions. The dashed line is where the tape sits; the ring marks the
+        These three positions are for your <strong>bust</strong>, not the under-bust — the under-bust is
+        just a snug ribcage measurement. The dashed line is where the tape sits; the ring marks the
         fullest point. Keep it level and snug, never tight.
       </p>
       <div className="braguide-figs">
@@ -409,7 +410,6 @@ export default function BraSizeConverter() {
               <p className="tool-note" style={{ marginTop: 0 }}>
                 The most accurate DIY method (used by r/ABraThatFits). Take a firm tape and measure to the nearest ¼&nbsp;inch or ½&nbsp;cm.
               </p>
-              <BustGuide />
               <div className="tool-fields">
                 <div className="tool-field">
                   <span className="tool-label">Under-bust — around your ribcage, three ways</span>
@@ -428,6 +428,8 @@ export default function BraSizeConverter() {
                     </div>
                   </div>
                 </div>
+
+                <BustGuide />
 
                 <div className="tool-field">
                   <span className="tool-label">Bust — around the fullest part, three positions</span>
