@@ -60,14 +60,14 @@ function BustGuide() {
       <div className="braguide-figs">
         <figure className="braguide-fig">
           <span className="braguide-imgwrap">
-            <img className="braguide-img" src="/bra/standing.png" alt="Measuring the bust standing upright" width="132" height="272" loading="lazy" />
+            <img className="braguide-img" src="/bra/standing.png" alt="Measuring the bust standing upright" width="240" height="210" loading="lazy" />
           </span>
           <figcaption className="braguide-name">1 · Standing</figcaption>
           <p className="braguide-cap">Stand tall. Tape level and parallel to the floor, around the fullest part.</p>
         </figure>
         <figure className="braguide-fig is-lead">
           <span className="braguide-imgwrap">
-            <img className="braguide-img" src="/bra/leaning.png" alt="Measuring the bust leaning forward 90 degrees" width="284" height="160" loading="lazy" />
+            <img className="braguide-img" src="/bra/leaning.png" alt="Measuring the bust leaning forward 90 degrees" width="240" height="210" loading="lazy" />
           </span>
           <figcaption className="braguide-name">2 · Leaning</figcaption>
           <p className="braguide-cap">
@@ -77,7 +77,7 @@ function BustGuide() {
         </figure>
         <figure className="braguide-fig">
           <span className="braguide-imgwrap">
-            <img className="braguide-img" src="/bra/lying.png" alt="Measuring the bust lying on your back" width="244" height="116" loading="lazy" />
+            <img className="braguide-img" src="/bra/lying.png" alt="Measuring the bust lying on your back" width="240" height="210" loading="lazy" />
           </span>
           <figcaption className="braguide-name">3 · Lying down</figcaption>
           <p className="braguide-cap">Lie flat on your back. The tissue settles evenly; tape around the fullest part.</p>
