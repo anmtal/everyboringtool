@@ -458,7 +458,7 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .braguide-fig { flex: 1 1 150px; min-width: 140px; margin: 0; border: 1px solid var(--border); border-radius: 9px; padding: 10px 8px 8px; text-align: center; background: var(--surface-2); }
 .braguide-fig.is-lead { border-color: var(--border-strong); }
 .braguide-imgwrap { display: flex; align-items: center; justify-content: center; height: 150px; }
-.braguide-img { max-height: 150px; max-width: 100%; width: auto; height: auto; filter: invert(1); }
+.braguide-img { max-height: 150px; max-width: 100%; width: auto; height: auto; filter: invert(1); outline: none; border: 0; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .braguide-img { filter: none; } }
 :root[data-theme="dark"] .braguide-img { filter: none; }
 :root[data-theme="light"] .braguide-img { filter: invert(1); }
