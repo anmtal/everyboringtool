@@ -45,61 +45,30 @@ function buildCards(bandRow, cupIndex) {
   }));
 }
 
-// A measuring-tape ribbon along a centre line: two parallel edges + tick marks, so it
-// reads as an actual tape measure rather than a plain line. Returns SVG paths.
-function tapeRibbon(x1, y1, x2, y2) {
-  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
-  const px = -dy / len, py = dx / len, off = 2.7;
-  const p = (x, y) => `${x.toFixed(1)},${y.toFixed(1)}`;
-  const edges = `M${p(x1 + px * off, y1 + py * off)} L${p(x2 + px * off, y2 + py * off)} M${p(x1 - px * off, y1 - py * off)} L${p(x2 - px * off, y2 - py * off)}`;
-  let ticks = "";
-  const n = Math.max(3, Math.round(len / 8));
-  for (let i = 1; i < n; i++) {
-    const t = i / n, cx = x1 + dx * t, cy = y1 + dy * t;
-    ticks += `M${p(cx + px * off, cy + py * off)} L${p(cx - px * off, cy - py * off)} `;
-  }
-  return (
-    <>
-      <path className="braguide-taperib" d={edges} />
-      <path className="braguide-tapetick" d={ticks} />
-    </>
-  );
-}
-
 // Visual guide for the three bust positions (Standing / Leaning / Lying), shown in the
-// "Most accurate" method. Original monochrome side-profile silhouettes with a measuring-tape
-// band (ticks) at the tape line and a ring at the fullest point. Leaning is the one people
-// get wrong, so it's highlighted and drawn with the tissue hanging.
+// "Most accurate" method. The figures are line-art illustrations under /public/bra; they're
+// authored light-on-dark, so light mode inverts them via CSS (.braguide-img). The dashed
+// line on each shows where the tape sits, with a ring at the fullest point.
 function BustGuide() {
   return (
     <div className="braguide">
       <p className="braguide-h">How to take each bust measurement</p>
       <p className="braguide-sub">
-        Same tape, three positions. The ticked band is where the tape sits; the ring marks the
+        Same tape, three positions. The dashed line is where the tape sits; the ring marks the
         fullest point. Keep it level and snug, never tight.
       </p>
       <div className="braguide-figs">
         <figure className="braguide-fig">
-          <svg viewBox="0 0 150 150" aria-hidden="true">
-            <circle className="braguide-body" cx="58" cy="25" r="13" />
-            <path className="braguide-limb" d="M67,20 q6,4 4,9" />
-            <path className="braguide-body" d="M49,39 C 41,55 40,80 45,104 C 47,116 47,130 50,144 C 58,148 60,148 68,144 C 70,128 66,114 68,104 C 71,90 65,74 75,62 C 86,53 86,42 73,40 C 64,37 53,35 49,39 Z" />
-            {tapeRibbon(38, 54, 87, 54)}
-            <circle className="braguide-dot" cx="80" cy="54" r="3.6" />
-          </svg>
+          <span className="braguide-imgwrap">
+            <img className="braguide-img" src="/bra/standing.png" alt="Measuring the bust standing upright" width="132" height="272" loading="lazy" />
+          </span>
           <figcaption className="braguide-name">1 · Standing</figcaption>
           <p className="braguide-cap">Stand tall. Tape level and parallel to the floor, around the fullest part.</p>
         </figure>
         <figure className="braguide-fig is-lead">
-          <svg viewBox="0 0 152 150" aria-hidden="true">
-            <path className="braguide-body" d="M36,74 C 56,60 88,58 110,66 C 116,70 114,80 104,82 C 86,86 64,86 54,82 L 54,132 C 54,138 40,138 40,132 L 36,74 Z" />
-            <circle className="braguide-body" cx="120" cy="76" r="11" />
-            <path className="braguide-limb" d="M112,70 q7,-1 6,6" />
-            <path className="braguide-body" d="M88,82 C 84,100 101,103 101,84 C 101,80 93,79 88,82 Z" />
-            {tapeRibbon(77, 96, 105, 96)}
-            <circle className="braguide-dot" cx="94" cy="96" r="3.6" />
-            <path className="braguide-arrow" d="M95,52 L95,66 M91,61 L95,67 L99,61" />
-          </svg>
+          <span className="braguide-imgwrap">
+            <img className="braguide-img" src="/bra/leaning.png" alt="Measuring the bust leaning forward 90 degrees" width="284" height="160" loading="lazy" />
+          </span>
           <figcaption className="braguide-name">2 · Leaning</figcaption>
           <p className="braguide-cap">
             Bend forward 90° at the hips so your torso is parallel to the floor. Let the tissue fall
@@ -107,14 +76,9 @@ function BustGuide() {
           </p>
         </figure>
         <figure className="braguide-fig">
-          <svg viewBox="0 0 152 150" aria-hidden="true">
-            <line className="braguide-surface" x1="16" y1="118" x2="138" y2="118" />
-            <circle className="braguide-body" cx="32" cy="96" r="11" />
-            <path className="braguide-limb" d="M40,90 q-4,-4 -9,-2" />
-            <path className="braguide-body" d="M42,90 C 54,86 60,72 70,78 C 84,86 104,98 122,100 L 134,104 C 134,108 130,108 128,105 C 102,110 60,110 42,106 Z" />
-            {tapeRibbon(63, 70, 72, 108)}
-            <circle className="braguide-dot" cx="65" cy="74" r="3.6" />
-          </svg>
+          <span className="braguide-imgwrap">
+            <img className="braguide-img" src="/bra/lying.png" alt="Measuring the bust lying on your back" width="244" height="116" loading="lazy" />
+          </span>
           <figcaption className="braguide-name">3 · Lying down</figcaption>
           <p className="braguide-cap">Lie flat on your back. The tissue settles evenly; tape around the fullest part.</p>
         </figure>

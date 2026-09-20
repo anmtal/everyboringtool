@@ -449,22 +449,19 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .doc-preview a { color: #1558b0; text-decoration: underline; }
 
 /* Bra Size Calculator — bust-position measurement diagram (Standing / Leaning / Lying).
-   Monochrome + theme-aware: a faint body silhouette with a bold "tape" line so the
-   tape and fullest-point dot stay high-contrast in both light and dark. */
+   Figures are line-art PNGs (/public/bra) authored light-on-dark; light mode inverts them
+   so they read dark-on-light. Transparent backgrounds sit on the card in either theme. */
 .braguide { border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px 12px 10px; margin: 0 0 14px; background: var(--surface-2); }
 .braguide-h { font-size: 13.5px; font-weight: 700; margin: 0 0 3px; }
 .braguide-sub { font-size: 12px; color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
 .braguide-figs { display: flex; flex-wrap: wrap; gap: 10px; }
 .braguide-fig { flex: 1 1 150px; min-width: 140px; margin: 0; border: 1px solid var(--border); border-radius: 9px; padding: 10px 8px 8px; text-align: center; }
 .braguide-fig.is-lead { border-color: var(--border-strong); background: var(--bg); }
-.braguide-fig svg { width: 100%; height: 116px; display: block; }
-.braguide-body { fill: var(--muted); fill-opacity: 0.24; stroke: var(--muted); stroke-opacity: 0.85; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
-.braguide-limb { fill: none; stroke: var(--muted); stroke-opacity: 0.85; stroke-width: 1.6; stroke-linecap: round; }
-.braguide-taperib { fill: none; stroke: var(--text); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.braguide-tapetick { fill: none; stroke: var(--text); stroke-width: 1; stroke-linecap: round; opacity: 0.85; }
-.braguide-dot { fill: var(--surface); stroke: var(--text); stroke-width: 2; }
-.braguide-arrow { fill: none; stroke: var(--text); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.7; }
-.braguide-surface { stroke: var(--border-strong); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 5; }
+.braguide-imgwrap { display: flex; align-items: center; justify-content: center; height: 124px; }
+.braguide-img { max-height: 124px; max-width: 100%; width: auto; height: auto; filter: invert(1); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .braguide-img { filter: none; } }
+:root[data-theme="dark"] .braguide-img { filter: none; }
+:root[data-theme="light"] .braguide-img { filter: invert(1); }
 .braguide-name { font-size: 12.5px; font-weight: 700; margin: 4px 0 3px; }
 .braguide-cap { font-size: 11px; line-height: 1.4; color: var(--muted); margin: 0; }
 .braguide-fig.is-lead .braguide-name { color: var(--text); }
