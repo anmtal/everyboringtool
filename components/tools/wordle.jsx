@@ -147,23 +147,33 @@ export default function Wordle() {
   // and first client render agree — no Math.random hydration mismatch). In demo
   // mode (recording), seed a fixed answer and auto-play the scripted solve.
   useEffect(() => {
-    if (isDemoMode()) {
-      setAnswer(DEMO_ANSWER);
-      setRows([]);
-      setCurrent("");
-      setStatus("playing");
-      setError("");
-      const timers = [];
-      let delay = 1000;
-      const CHAR = 180, AFTER_WORD = 1500;
-      for (const word of DEMO_GUESSES) {
-        for (const ch of word) { timers.push(setTimeout(() => doChar(ch), delay)); delay += CHAR; }
-        timers.push(setTimeout(() => doEnter(), delay)); delay += AFTER_WORD;
-      }
-      return () => timers.forEach(clearTimeout);
-    }
-    newGame();
-  }, [newGame, doChar, doEnter]);
+    if (!isDemoMode()) { newGame(); return; }
+    setAnswer(DEMO_ANSWER);
+    setRows([]);
+    setCurrent("");
+    setStatus("playing");
+    setError("");
+    // Deterministic sequencer: type each word by setting the exact prefix, then
+    // append the fully-scored row directly (not via the keypress handlers, whose
+    // batched timing could drop a word). Guarantees ADIEU -> TONES -> MONEY.
+    const timers = [];
+    let delay = 900;
+    const CHAR = 170, HOLD = 650, GAP = 550;
+    DEMO_GUESSES.forEach((word) => {
+      word.split("").forEach((ch, ci) => {
+        timers.push(setTimeout(() => setCurrent(word.slice(0, ci + 1)), delay));
+        delay += CHAR;
+      });
+      delay += HOLD;
+      timers.push(setTimeout(() => {
+        setRows((prev) => [...prev, { guess: word, result: scoreGuess(word, DEMO_ANSWER) }]);
+        setCurrent("");
+        if (word === DEMO_ANSWER) setStatus("won");
+      }, delay));
+      delay += GAP;
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [newGame]);
 
   // Physical keyboard support.
   useEffect(() => {
