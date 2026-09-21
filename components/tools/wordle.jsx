@@ -78,6 +78,21 @@ const KEY_ROWS = [
   ["ENTER", ..."ZXCVBNM".split(""), "DEL"],
 ];
 
+// Demo auto-play (recording only): seed a fixed answer and play a scripted winning
+// game that opens with ADIEU (the word the VO roasts) and solves cleanly —
+// ADIEU (E green) -> TONES (ONE green) -> MONEY (win). Gated behind ?demo=1 or the
+// same-origin recorder iframe, so normal play is completely unaffected.
+const DEMO_ANSWER = "MONEY";
+const DEMO_GUESSES = ["ADIEU", "TONES", "MONEY"];
+function isDemoMode() {
+  try {
+    if (typeof window === "undefined") return false;
+    if (new URLSearchParams(window.location.search).get("demo") === "1") return true;
+    if (window.self !== window.top && window.top.location.host === window.location.host) return true;
+  } catch (e) {}
+  return false;
+}
+
 export default function Wordle() {
   const [answer, setAnswer] = useState("");
   const [rows, setRows] = useState([]); // [{ guess, result }]
@@ -98,12 +113,6 @@ export default function Wordle() {
     setStatus("playing");
     setError("");
   }, []);
-
-  // Choose the secret word on the client only, so the server render and first
-  // client render agree (no hydration mismatch from Math.random).
-  useEffect(() => {
-    newGame();
-  }, [newGame]);
 
   const doChar = useCallback((ch) => {
     const g = gameRef.current;
@@ -133,6 +142,28 @@ export default function Wordle() {
     if (g.current === g.answer) setStatus("won");
     else if (nextRows.length >= ROWS) setStatus("lost");
   }, []);
+
+  // Mount: normally pick a random secret word on the client only (so the server
+  // and first client render agree — no Math.random hydration mismatch). In demo
+  // mode (recording), seed a fixed answer and auto-play the scripted solve.
+  useEffect(() => {
+    if (isDemoMode()) {
+      setAnswer(DEMO_ANSWER);
+      setRows([]);
+      setCurrent("");
+      setStatus("playing");
+      setError("");
+      const timers = [];
+      let delay = 1000;
+      const CHAR = 180, AFTER_WORD = 1500;
+      for (const word of DEMO_GUESSES) {
+        for (const ch of word) { timers.push(setTimeout(() => doChar(ch), delay)); delay += CHAR; }
+        timers.push(setTimeout(() => doEnter(), delay)); delay += AFTER_WORD;
+      }
+      return () => timers.forEach(clearTimeout);
+    }
+    newGame();
+  }, [newGame, doChar, doEnter]);
 
   // Physical keyboard support.
   useEffect(() => {
