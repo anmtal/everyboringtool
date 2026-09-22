@@ -47,16 +47,22 @@ function wrapLines(text, font, size, maxWidth) {
 
 let uid = 0;
 const newItem = (description = "", qty = "1", price = "") => ({ id: ++uid, description, qty, price });
-const PROFILE_KEY = "ebt_invoice_profile_v1";
+// v2: v1 had persisted the old "Acme Studio" placeholder defaults on devices
+// that loaded the tool before it shipped blank. Bumping the key drops those
+// stale saved profiles so the fields start empty (placeholders visible).
+const PROFILE_KEY = "ebt_invoice_profile_v2";
 
 export default function InvoiceGenerator({ initialTaxLabel = "Tax", initialCurrency = "USD" } = {}) {
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const due = useMemo(() => { const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().slice(0, 10); }, []);
 
-  const [fromName, setFromName] = useState("Acme Studio LLC");
-  const [fromDetails, setFromDetails] = useState("123 Market Street\nSan Francisco, CA 94103\nbilling@acmestudio.com");
-  const [toName, setToName] = useState("Client Co.");
-  const [toDetails, setToDetails] = useState("456 Client Avenue\nAustin, TX 78701\naccounts@clientco.com");
+  // Start blank so every field shows its placeholder as a hint, not someone
+  // else's prefilled data — the live preview fills in as you type. A saved
+  // business profile (below) still repopulates your own From details/logo.
+  const [fromName, setFromName] = useState("");
+  const [fromDetails, setFromDetails] = useState("");
+  const [toName, setToName] = useState("");
+  const [toDetails, setToDetails] = useState("");
   const [invoiceNo, setInvoiceNo] = useState("INV-001");
   const [date, setDate] = useState(today);
   const [dueDate, setDueDate] = useState(due);
@@ -65,8 +71,8 @@ export default function InvoiceGenerator({ initialTaxLabel = "Tax", initialCurre
   const [taxRate, setTaxRate] = useState("0");
   const [discount, setDiscount] = useState("0");
   const [logo, setLogo] = useState("");
-  const [notes, setNotes] = useState("Payment due within 14 days. Thank you for your business!");
-  const [items, setItems] = useState([newItem("Website design", "1", "1200"), newItem("Copywriting (hours)", "6", "85")]);
+  const [notes, setNotes] = useState("");
+  const [items, setItems] = useState([newItem()]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const busyRef = useRef(false);
