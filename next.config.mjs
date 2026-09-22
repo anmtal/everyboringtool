@@ -86,6 +86,8 @@ const nextConfig = {
   async redirects() {
     return [
       { source: "/text/word-unscrambler", destination: "/unscramble", permanent: true },
+      // Renamed the bra tool's slug to lead with the head term ("bra size calculator", 135k).
+      { source: "/converters/bra-size-converter", destination: "/converters/bra-size-calculator", permanent: true },
       { source: "/pdf/unlock-pdf", destination: "/pdf", permanent: true },
       // Retired the "coming soon" placeholders (need a paid API / server / model):
       // parked in memory to build later. 301 their nav-linked URLs to the category.
