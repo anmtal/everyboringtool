@@ -25,7 +25,15 @@ export default function robots() {
       { userAgent: "*", allow: "/" },
       ...BLOCKED.map((userAgent) => ({ userAgent, disallow: "/" })),
     ],
-    sitemap: `${SITE.url}/sitemap.xml`,
+    sitemap: [
+      `${SITE.url}/sitemap.xml`,
+      // TEMPORARY (added 2026-10-08): lists ~2.9K noindexed word pages that Google
+      // still had indexed (from GSC: the indexed-pages sample + every word page
+      // with search impressions in the last 3 months). Its only job is to get them
+      // re-crawled so Google sees the noindex and drops them. Remove this line and
+      // public/sitemap-recrawl.xml once GSC shows them as "Excluded by 'noindex'".
+      `${SITE.url}/sitemap-recrawl.xml`,
+    ],
     host: SITE.url,
   };
 }
