@@ -12,7 +12,7 @@
  *   4. If the master switch is ON, the sitemap must import the allowlist (i.e. the
  *      curated params are actually being submitted) — a forward guard for Phase 1.
  *
- * The master switch (PROGRAMMATIC_INDEX_ENABLED in lib/wordSeo.js) is independent:
+ * The master switch (PROGRAMMATIC_INDEX_ENABLED in lib/wordIndexSwitch.js) is independent:
  * this validates the gate is SAFE to enable, whether or not it currently is.
  */
 "use strict";
@@ -85,7 +85,7 @@ for (const [family, rel] of Object.entries(ROUTES)) {
 }
 
 // 4: forward guard — if indexing is ON, the sitemap must submit the curated params.
-const seo = fs.readFileSync(path.join(ROOT, "lib", "wordSeo.js"), "utf8");
+const seo = fs.readFileSync(path.join(ROOT, "lib", "wordIndexSwitch.js"), "utf8");
 const enabled = /PROGRAMMATIC_INDEX_ENABLED\s*=\s*true/.test(seo);
 if (enabled) {
   const sitemap = fs.readFileSync(path.join(ROOT, "app", "sitemap.js"), "utf8");

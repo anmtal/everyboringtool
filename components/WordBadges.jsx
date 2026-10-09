@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { PROGRAMMATIC_INDEX_ENABLED } from "../lib/wordIndexSwitch";
 
 // Inlined so this stays client-safe (lib/wordEngine imports `fs`). Values match
 // wordEngine.scrabbleScore + groupByLength exactly.
@@ -23,7 +25,12 @@ function chip(active) {
   };
 }
 
+const BADGE_STYLE = { textDecoration: "none", fontSize: 14, padding: "4px 9px" };
+// Resets so a <button> renders identically to the <a> badge.
+const BUTTON_RESET = { fontFamily: "inherit", lineHeight: "inherit", cursor: "pointer" };
+
 export default function WordBadges({ words = [], linkBase = "/unscramble" }) {
+  const router = useRouter();
   const [filter, setFilter] = useState("all"); // "all" or a length (number)
   const [shown, setShown] = useState(INITIAL);
 
@@ -39,11 +46,21 @@ export default function WordBadges({ words = [], linkBase = "/unscramble" }) {
 
   const renderBadges = (list) => (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-      {list.map((w) => (
-        <Link key={w} href={`${linkBase}/${w}`} prefetch={false} className="badge" style={{ textDecoration: "none", fontSize: 14, padding: "4px 9px" }} title={`${score(w)} points`}>
-          {w} <span style={{ opacity: 0.55, fontSize: 11 }}>{score(w)}</span>
-        </Link>
-      ))}
+      {list.map((w) => {
+        const label = <>{w} <span style={{ opacity: 0.55, fontSize: 11 }}>{score(w)}</span></>;
+        // While the word pages are noindexed, a crawlable <a href> per result word
+        // only feeds crawlers an endless chain of noindex pages (and starves the
+        // real tool pages of crawl budget). Visitors can still tap through.
+        return PROGRAMMATIC_INDEX_ENABLED ? (
+          <Link key={w} href={`${linkBase}/${w}`} prefetch={false} className="badge" style={BADGE_STYLE} title={`${score(w)} points`}>
+            {label}
+          </Link>
+        ) : (
+          <button key={w} type="button" onClick={() => router.push(`${linkBase}/${w}`)} className="badge" style={{ ...BADGE_STYLE, ...BUTTON_RESET }} title={`${score(w)} points`}>
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 

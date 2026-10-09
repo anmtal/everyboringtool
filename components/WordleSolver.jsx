@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { PROGRAMMATIC_INDEX_ENABLED } from "../lib/wordIndexSwitch";
 
 export default function WordleSolver() {
+  const router = useRouter();
   const [words, setWords] = useState(null);
   const [green, setGreen] = useState(["", "", "", "", ""]);
   const [yellow, setYellow] = useState("");
@@ -85,9 +88,15 @@ export default function WordleSolver() {
             {matches.length > 300 ? " — add more clues to narrow it down." : ""}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {matches.slice(0, 300).map((w) => (
-              <a key={w} href={`/unscramble/${w}`} className="badge" style={{ textDecoration: "none", fontSize: 15, padding: "5px 10px" }}>{w}</a>
-            ))}
+            {matches.slice(0, 300).map((w) => {
+              const style = { textDecoration: "none", fontSize: 15, padding: "5px 10px" };
+              // Not a crawlable link while /unscramble/<word> pages are noindexed (see lib/wordIndexSwitch.js).
+              return PROGRAMMATIC_INDEX_ENABLED ? (
+                <a key={w} href={`/unscramble/${w}`} className="badge" style={style}>{w}</a>
+              ) : (
+                <button key={w} type="button" onClick={() => router.push(`/unscramble/${w}`)} className="badge" style={{ ...style, fontFamily: "inherit", lineHeight: "inherit", cursor: "pointer" }}>{w}</button>
+              );
+            })}
           </div>
         </>
       )}
