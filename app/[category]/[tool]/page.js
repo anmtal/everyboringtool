@@ -4,7 +4,7 @@ import { categories, getCategory, getTool, getToolBySlug, SITE, LAST_UPDATED, LO
 import { toolContent } from "../../../lib/toolContent";
 import { toolHowto } from "../../../lib/toolHowto";
 import { relatedSlugs } from "../../../lib/related";
-import { retargetFor } from "../../../lib/retargets";
+import { retargetFor, withRetargetDate } from "../../../lib/retargets";
 import { HIDDEN_LANDING_URLS } from "../../../lib/typingLanding";
 import ToolMount from "../../../components/ToolMount";
 import AdSlot from "../../../components/AdSlot";
@@ -131,7 +131,7 @@ export default function ToolPage({ params }) {
   // node describing the free browser tool. No aggregateRating without real data.
   // One honest "last reviewed" date, shown on the page and claimed in the
   // JSON-LD, so the two can never drift apart.
-  const updated = content.updated || LAST_UPDATED;
+  const updated = withRetargetDate(t.slug, content.updated || LAST_UPDATED);
   const updatedLabel = formatUpdated(updated);
 
   const abs = (p) => `${SITE.url}${p}`;

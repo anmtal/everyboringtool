@@ -86,18 +86,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={inter.variable}>
       <body>
-        {/* Internal-traffic gate. Runs before the ad and analytics tags below and
-            silences both for the owner's browsers (cookie set at /internal) and
+        {/* Internal-traffic gate. Silences ads and analytics for the owner's
+            browsers (cookie set at /internal), for previews and localhost, and
             for automated browsers: the DeadPan recorder drives production in
             Playwright, which sends an "EBT-Internal" user-agent token and
             reports navigator.webdriver (Google's own crawlers are exempt from
             that check, so ad and site review see the page unchanged).
-            Previews and localhost are treated as internal too.
-            Self-generated ad impressions or
-            clicks risk an AdSense invalid-traffic strike. Both switches are
-            Google's documented ones: ga-disable-<ID> stops every GA4 hit, and
-            pauseAdRequests holds all ad requests. Client-side on purpose, so
-            every page stays static. */}
+            Self-generated ad impressions or clicks risk an AdSense
+            invalid-traffic strike. Both switches are Google's documented ones:
+            ga-disable-<ID> stops every GA4 hit (gtag.js only sends once the
+            config call below runs, which is after this), and pauseAdRequests
+            holds all ad requests. Client-side on purpose, so every page stays
+            static. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var n=navigator,u=n.userAgent||"",c=document.cookie||"";if(/(?:^|;\\s*)ebt_internal=1(?:;|$)/.test(c)||u.indexOf("EBT-Internal")>-1||(n.webdriver&&!/Google/i.test(u))||!/(^|\\.)everyboringtool\\.com$/.test(location.hostname)){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;window.__ebtInternal=true;}}catch(e){}})();`,
@@ -105,12 +105,15 @@ export default function RootLayout({ children }) {
         />
         {/* Raw <script> so the AdSense crawler sees it in the server HTML (a
             next/script afterInteractive tag is JS-injected and invisible to the
-            non-JS verification crawler). async = non-blocking. The
-            google-adsense-account meta tag above stays unconditional, so site
-            verification still works while this loader is off. */}
+            non-JS verification crawler). defer, not async: React hoists async
+            scripts into <head>, ahead of the gate above, and a cached loader
+            could then start requesting ads before pauseAdRequests is set.
+            A deferred script stays here and runs only after parsing, so the
+            gate always runs first. The google-adsense-account meta tag above
+            stays unconditional, so site verification works while this is off. */}
         {adsenseEnabled && (
           <script
-            async
+            defer
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
             crossOrigin="anonymous"
           />

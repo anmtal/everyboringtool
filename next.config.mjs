@@ -9,6 +9,9 @@
 // protection); ad creatives (images/video) come from countless advertiser
 // domains, so img-/media-src open to https:. object-src 'none', base-uri,
 // frame-ancestors and form-action still lock down the highest-risk vectors.
+// Keep in sync with lib/wordFamilies.js (WORD_FAMILIES keys).
+const WORD_HUBS = ["unscramble", "anagram", "words-starting-with", "words-ending-with", "words-containing", "crossword-solver"];
+
 const GOOGLE_ADS = "https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://*.doubleclick.net https://*.google.com";
 const CSP = [
   "default-src 'self'",
@@ -33,19 +36,22 @@ const CSP = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // The word-game hubs read public/words/dict.txt with fs at request time (?q=
-  // results). That dynamic path isn't auto-traced into the serverless bundle, so
-  // include it explicitly.
+  // Word-game results (app/word-results/[family]) read public/words/dict.txt
+  // with fs at request time. That dynamic path isn't auto-traced into the
+  // serverless bundle, so include it explicitly.
   experimental: {
     outputFileTracingIncludes: {
-      "/unscramble": ["./public/words/dict.txt"],
-      "/anagram": ["./public/words/dict.txt"],
-      "/words-starting-with": ["./public/words/dict.txt"],
-      "/words-ending-with": ["./public/words/dict.txt"],
-      "/words-containing": ["./public/words/dict.txt"],
-      "/crossword-solver": ["./public/words/dict.txt"],
+      "/word-results/[family]": ["./public/words/dict.txt"],
       "/[category]": ["./public/words/dict.txt"],
     },
+  },
+  // The word hubs (/unscramble, /anagram, …) are static pages. A search adds
+  // ?q=, which is rewritten to the dynamic results route, so the visitor keeps
+  // the hub URL and the plain hubs stay CDN-cached. Bare hub URLs never match.
+  async rewrites() {
+    return {
+      beforeFiles: WORD_HUBS.map((h) => ({ source: `/${h}`, has: [{ type: "query", key: "q" }], destination: `/word-results/${h}` })),
+    };
   },
   // /text/word-unscrambler was a second, weaker Word Unscrambler: it shipped a
   // hand-typed 8,767-word list to the browser (61 KB) and competed with

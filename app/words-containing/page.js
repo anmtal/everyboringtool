@@ -1,12 +1,21 @@
-import AffixWordHub, { affixMetadata } from "../../components/AffixWordHub";
+import Link from "next/link";
+import WordSearchBox from "../../components/WordSearchBox";
 
-// Results render per request from ?q=, so the hub is never prerendered.
-export const dynamic = "force-dynamic";
+export const metadata = {
+  title: { absolute: "Words Containing… — free word finder by letters inside" },
+  description: "Find every word that contains a sequence of letters, like QU or OUGH. Free lists sorted by length with Scrabble scores for Scrabble, Words With Friends and crosswords.",
+  alternates: { canonical: "/words-containing" },
+};
 
-export function generateMetadata({ searchParams }) {
-  return affixMetadata("/words-containing", searchParams);
-}
-
-export default function ContainingHub({ searchParams }) {
-  return <AffixWordHub base="/words-containing" searchParams={searchParams} />;
+export default function ContainingHub() {
+  return (
+    <>
+      <nav className="breadcrumb" aria-label="Breadcrumb"><Link href="/">Home</Link><span className="sep">/</span><span>Words Containing</span></nav>
+      <header className="page-head">
+        <h1><span aria-hidden="true">🔍</span> Words Containing…</h1>
+        <p>Type a sequence of letters to see every word that contains it anywhere — handy for crosswords, Scrabble and Words With Friends.</p>
+      </header>
+      <div className="block" style={{ marginTop: 0 }}><WordSearchBox basePath="/words-containing" placeholder="Enter letters to find inside words" buttonLabel="Find words" allowWild={false} min={1} /></div>
+    </>
+  );
 }

@@ -2,7 +2,7 @@
 // every built tool with its "About" explainer and FAQ answers concatenated, so an
 // agent can lift a direct answer without fetching each page. Generated from the
 // live catalog. Larger than /llms.txt by design.
-import { categories, SITE } from "../../lib/tools";
+import { categories, SITE, LOW_VALUE_NOINDEX } from "../../lib/tools";
 import { toolContent } from "../../lib/toolContent";
 
 export const dynamic = "force-static";
@@ -18,7 +18,7 @@ function buildFull() {
   );
 
   for (const c of categories) {
-    const built = c.tools.filter((t) => toolContent[t.slug]);
+    const built = c.tools.filter((t) => toolContent[t.slug] && !LOW_VALUE_NOINDEX.has(t.slug));
     if (built.length === 0) continue;
     L.push(`## ${c.name}`);
     if (c.description) L.push(c.description, "");

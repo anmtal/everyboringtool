@@ -3,6 +3,7 @@ import { toolContent } from "../lib/toolContent";
 import { TYPING_LANDING, LANDING_UPDATED, visibleLandingKeys } from "../lib/typingLanding";
 import { TOOL_LANDINGS, visibleToolLandingKeys } from "../lib/toolLandings";
 import { sortedPosts, BLOG_UPDATED } from "../lib/blogPosts";
+import { withRetargetDate } from "../lib/retargets";
 
 export default function sitemap() {
   const base = SITE.url;
@@ -11,7 +12,7 @@ export default function sitemap() {
   // `updated`); everything else falls back to the site-wide review date.
   const siteDate = new Date(LAST_UPDATED);
   const toolDate = (slug) => {
-    const u = toolContent[slug] && toolContent[slug].updated;
+    const u = withRetargetDate(slug, toolContent[slug] && toolContent[slug].updated);
     const d = u ? new Date(u) : null;
     return d && !isNaN(d.getTime()) ? d : siteDate;
   };
