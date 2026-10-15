@@ -121,6 +121,24 @@ export default function DrillBitSizeConverter() {
       )}
 
       <section className="tool-about" style={{ marginTop: 26 }}>
+        <h2 className="tool-h2">Drill bit size chart</h2>
+        <p className="tool-note" style={{ marginTop: 0 }}>Every fraction (1/64″ steps), number (#1–#80) and letter (A–Z) drill, smallest first.</p>
+        <div className="csc-table-wrap">
+          <table className="csc-table">
+            <thead><tr><th>Fraction</th><th>Number</th><th>Letter</th><th>Decimal in</th><th>mm</th></tr></thead>
+            <tbody>
+              {TABLE.map((r) => (
+                <tr key={r.dec}>
+                  <td>{r.frac ? r.frac + "″" : ""}</td><td>{r.num || ""}</td><td>{r.letter || ""}</td>
+                  <td>{fmt(r.dec, 4)}</td><td>{fmt(r.mm, 2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="tool-about" style={{ marginTop: 26 }}>
         <h2 className="tool-h2">Common tap-drill sizes</h2>
         <div className="csc-table-wrap">
           <table className="csc-table">

@@ -45,6 +45,40 @@ function buildCards(bandRow, cupIndex) {
   }));
 }
 
+// Band and cup equivalents across every system, straight from BANDS and CUPS,
+// so the chart can never disagree with the converter.
+function BraSizeChart() {
+  const cupRows = CUPS.UK.map((_, i) => i);
+  return (
+    <section className="tool-about" style={{ marginTop: 26 }}>
+      <h2 className="tool-h2">Bra size chart</h2>
+      <h3 style={{ fontSize: "1rem", margin: "6px 0 0" }}>Band sizes</h3>
+      <div className="csc-table-wrap">
+        <table className="csc-table">
+          <thead><tr>{SYSTEMS.map((s) => <th key={s.key}>{s.label}</th>)}</tr></thead>
+          <tbody>
+            {BANDS.map((b) => <tr key={b.US}>{SYSTEMS.map((s) => <td key={s.key}>{b[s.key]}</td>)}</tr>)}
+          </tbody>
+        </table>
+      </div>
+      <h3 style={{ fontSize: "1rem", margin: "18px 0 0" }}>Cup sizes (bust minus band)</h3>
+      <div className="csc-table-wrap">
+        <table className="csc-table">
+          <thead><tr><th>Difference</th>{SYSTEMS.map((s) => <th key={s.key}>{s.label}</th>)}</tr></thead>
+          <tbody>
+            {cupRows.map((i) => (
+              <tr key={i}>
+                <td>{i === 0 ? "< 1 in" : `${i} in / ${Math.round(i * 2.54)} cm`}</td>
+                {SYSTEMS.map((s) => <td key={s.key}>{CUPS[s.key][i] || "—"}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 // Visual guide for the three bust positions (Standing / Leaning / Lying), shown in the
 // "Most accurate" method. The figures are line-art illustrations under /public/bra; they're
 // authored light-on-dark, so light mode inverts them via CSS (.braguide-img). The dashed
@@ -515,6 +549,7 @@ export default function BraSizeConverter() {
           )}
         </>
       )}
+      <BraSizeChart />
     </div>
   );
 }

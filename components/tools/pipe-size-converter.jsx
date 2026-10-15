@@ -88,6 +88,20 @@ export default function PipeSizeConverter() {
         </div>
       )}
 
+      <section className="tool-about" style={{ marginTop: 26 }}>
+        <h2 className="tool-h2">Pipe size chart</h2>
+        <div className="csc-table-wrap">
+          <table className="csc-table">
+            <thead><tr><th>NPS (in)</th><th>DN</th><th>OD (in)</th><th>OD (mm)</th></tr></thead>
+            <tbody>
+              {ROWS.map((r) => (
+                <tr key={r.nps}><td>{r.nps}″</td><td>{r.dn}</td><td>{r.odIn.toFixed(3)}″</td><td>{r.odMm.toFixed(1)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <p className="tool-note">
         Nominal pipe size is not the real diameter: a "2-inch" (NPS 2 / DN 50) pipe actually measures 60.3 mm (2.375 in)
         across the outside. Note DN is a nominal metric label, not NPS × 25.4 (NPS 2 → DN 50, not DN 51). The outside

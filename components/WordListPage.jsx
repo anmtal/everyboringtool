@@ -2,7 +2,7 @@ import Link from "next/link";
 import { wordStats } from "../lib/wordEngine";
 import WordBadges from "./WordBadges";
 
-export default function WordListPage({ crumbs = [], h1, lead, box, words = [], linkBase = "/unscramble", faq = [], related = null, note = null }) {
+export default function WordListPage({ crumbs = [], h1, lead, box, words = [], linkBase = "/unscramble", faq = [], related = null, note = null, queryKey }) {
   const stats = wordStats(words);
   const faqLd = {
     "@context": "https://schema.org", "@type": "FAQPage",
@@ -41,7 +41,9 @@ export default function WordListPage({ crumbs = [], h1, lead, box, words = [], l
         </>
       )}
 
-      <WordBadges words={words} linkBase={linkBase} />
+      {/* queryKey remounts the badges per search, so the length filter and
+          show-more state don't carry over (Next keeps the page mounted). */}
+      <WordBadges key={queryKey} words={words} linkBase={linkBase} />
 
       {faq.length > 0 && (
         <section className="block">

@@ -61,6 +61,7 @@ export default function WordResults({ params, searchParams }) {
   const up = f.show(q);
   return (
     <WordListPage
+      queryKey={`${params.family}:${q}`}
       crumbs={[{ label: "Home", href: "/" }, { label: f.crumb, href: f.base }, { label: up }]}
       h1={f.h1(up)}
       lead={f.lead(up, words.length, q)}
