@@ -3,10 +3,8 @@
 //
 // Usage:
 //   node scripts/indexnow.mjs                 submit every URL in the live sitemap (the curated set)
-//   node scripts/indexnow.mjs --all           submit the FULL enumerable set: sitemap + all word-game
-//                                             seeds + browse pages (wider than the sitemap on purpose —
-//                                             Bing is volume-friendly, and this feeds Copilot/ChatGPT.
-//                                             Google stays on the cautious sitemap.)
+//   node scripts/indexnow.mjs --recrawl       submit public/sitemap-recrawl.xml: the retired word pages
+//                                             that now answer 410 Gone, so Bing drops them quickly
 //   node scripts/indexnow.mjs /games/coin-flip /pdf   submit only these path(s) or full URL(s)
 //
 // Run after a deploy is live. Requires Node 18+ (global fetch).
@@ -29,18 +27,11 @@ async function sitemapUrls() {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
 }
 
-// The full enumerable page set: sitemap + every word-game seed/browse page. This
-// mirrors what the site pre-renders, minus the unbounded ISR long-tail.
-function fullUrls(sitemap) {
-  const u = new Set(sitemap);
-  const words = [...readFileSync(join(REPO, "lib/wordPopular.js"), "utf8").matchAll(/"([a-z]{2,15})"/g)].map((m) => m[1]);
-  for (const w of words) { u.add(`${ORIGIN}/unscramble/${w}`); u.add(`${ORIGIN}/anagram/${w}`); }
-  const az = "abcdefghijklmnopqrstuvwxyz".split("");
-  az.forEach((l) => u.add(`${ORIGIN}/words-starting-with/${l}`));
-  ["s", "e", "d", "y", "ing", "ed", "er", "ly", "ion", "ness", "ment", "able", "est", "ous", "ful"].forEach((s) => u.add(`${ORIGIN}/words-ending-with/${s}`));
-  ["qu", "zz", "oo", "ee", "th", "ch", "ph", "ck", "igh", "ough", "x", "z", "j"].forEach((s) => u.add(`${ORIGIN}/words-containing/${s}`));
-  ["c-t", "-at", "s--e", "c--se", "p--nt", "w-rd", "-ing"].forEach((p) => u.add(`${ORIGIN}/crossword-solver/${p}`));
-  return [...u];
+// URLs that changed status: the retired per-query word pages (410 since 2026-10-15).
+// IndexNow accepts removed URLs too; engines re-fetch them and drop the 410s.
+function recrawlUrls() {
+  const xml = readFileSync(join(REPO, "public/sitemap-recrawl.xml"), "utf8");
+  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
 }
 
 function toUrl(a) {
@@ -61,7 +52,7 @@ async function submit(urlList) {
 const args = process.argv.slice(2);
 const paths = args.filter((a) => !a.startsWith("--"));
 let urls;
-if (args.includes("--all")) urls = fullUrls(await sitemapUrls());
+if (args.includes("--recrawl")) urls = recrawlUrls();
 else if (paths.length) urls = paths.map(toUrl);
 else urls = await sitemapUrls();
 

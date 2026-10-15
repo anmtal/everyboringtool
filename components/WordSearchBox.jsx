@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { wordHref } from "../lib/wordQuery";
 
 export default function WordSearchBox({ basePath = "/unscramble", placeholder = "Enter letters", buttonLabel = "Search", initial = "", allowWild = true, pattern = false, min = 1 }) {
   const [v, setV] = useState(initial);
@@ -11,13 +12,12 @@ export default function WordSearchBox({ basePath = "/unscramble", placeholder = 
     e.preventDefault();
     if (pattern) {
       const l = v.toLowerCase().replace(/[_.?\s]/g, "-").replace(/[^a-z-]/g, "").slice(0, 15);
-      if (l.length >= 2 && /[a-z]/.test(l)) router.push(`${basePath}/${l}`);
+      if (l.length >= 2 && /[a-z]/.test(l)) router.push(wordHref(basePath, l));
       return;
     }
     const re = allowWild ? /[^a-z?]/g : /[^a-z]/g;
     const l = v.toLowerCase().replace(re, "").slice(0, 15);
-    // encode so a "?" wildcard isn't parsed as the URL query delimiter
-    if (l.replace(/\?/g, "").length >= min) router.push(`${basePath}/${encodeURIComponent(l)}`);
+    if (l.replace(/\?/g, "").length >= min) router.push(wordHref(basePath, l));
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { PROGRAMMATIC_INDEX_ENABLED } from "../lib/wordIndexSwitch";
+import { wordHref } from "../lib/wordQuery";
 
 export default function WordleSolver() {
   const router = useRouter();
@@ -90,11 +90,9 @@ export default function WordleSolver() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {matches.slice(0, 300).map((w) => {
               const style = { textDecoration: "none", fontSize: 15, padding: "5px 10px" };
-              // Not a crawlable link while /unscramble/<word> pages are noindexed (see lib/wordIndexSwitch.js).
-              return PROGRAMMATIC_INDEX_ENABLED ? (
-                <a key={w} href={`/unscramble/${w}`} className="badge" style={style}>{w}</a>
-              ) : (
-                <button key={w} type="button" onClick={() => router.push(`/unscramble/${w}`)} className="badge" style={{ ...style, fontFamily: "inherit", lineHeight: "inherit", cursor: "pointer" }}>{w}</button>
+              // A button, not a crawlable link: unscramble results (?q=) are noindexed.
+              return (
+                <button key={w} type="button" onClick={() => router.push(wordHref("/unscramble", w))} className="badge" style={{ ...style, fontFamily: "inherit", lineHeight: "inherit", cursor: "pointer" }}>{w}</button>
               );
             })}
           </div>

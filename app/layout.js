@@ -86,6 +86,23 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={inter.variable}>
       <body>
+        {/* Internal-traffic gate. Runs before the ad and analytics tags below and
+            silences both for the owner's browsers (cookie set at /internal) and
+            for automated browsers: the DeadPan recorder drives production in
+            Playwright, which sends an "EBT-Internal" user-agent token and
+            reports navigator.webdriver (Google's own crawlers are exempt from
+            that check, so ad and site review see the page unchanged).
+            Previews and localhost are treated as internal too.
+            Self-generated ad impressions or
+            clicks risk an AdSense invalid-traffic strike. Both switches are
+            Google's documented ones: ga-disable-<ID> stops every GA4 hit, and
+            pauseAdRequests holds all ad requests. Client-side on purpose, so
+            every page stays static. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var n=navigator,u=n.userAgent||"",c=document.cookie||"";if(/(?:^|;\\s*)ebt_internal=1(?:;|$)/.test(c)||u.indexOf("EBT-Internal")>-1||(n.webdriver&&!/Google/i.test(u))||!/(^|\\.)everyboringtool\\.com$/.test(location.hostname)){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;window.__ebtInternal=true;}}catch(e){}})();`,
+          }}
+        />
         {/* Raw <script> so the AdSense crawler sees it in the server HTML (a
             next/script afterInteractive tag is JS-injected and invisible to the
             non-JS verification crawler). async = non-blocking. The

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { wordHref } from "../lib/wordQuery";
 
 export default function UnscrambleBox({ initial = "" }) {
   const [v, setV] = useState(initial);
@@ -10,8 +11,7 @@ export default function UnscrambleBox({ initial = "" }) {
   function go(e) {
     e.preventDefault();
     const l = v.toLowerCase().replace(/[^a-z?]/g, "").slice(0, 15);
-    // encode so a "?" wildcard isn't parsed as the URL query delimiter
-    if (l.replace(/\?/g, "").length >= 2) router.push(`/unscramble/${encodeURIComponent(l)}`);
+    if (l.replace(/\?/g, "").length >= 2) router.push(wordHref("/unscramble", l));
   }
 
   return (

@@ -35,11 +35,10 @@ export default function sitemap() {
       });
     }
   }
-  // Word-game + convert HUBS only. The per-combination pages (unscramble/<letters>,
-  // convert/<pair>, words-*, crossword-solver/<pattern>) are noindexed as of
-  // 2026-09-03 (AdSense flagged "low value content" — the auto-generated word-page
-  // volume was the driver), so they are deliberately NOT submitted here. Re-add
-  // individual pages if the word engine is later re-indexed as a curated subset.
+  // Word-game + convert HUBS only. The per-query word pages (unscramble/<letters>,
+  // words-*/<x>, crossword-solver/<pattern>) were retired on 2026-10-15 and answer
+  // 410 Gone (lib/wordGone.js); results now render on the hub at ?q=, noindexed.
+  // convert/<pair> pages are real converters but stay noindexed and unlisted.
   for (const u of ["/unscramble", "/anagram", "/wordle-solver", "/words-starting-with", "/words-ending-with", "/words-containing", "/crossword-solver", "/convert"]) {
     urls.push({ url: `${base}${u}`, lastModified: siteDate, priority: 0.6 });
   }

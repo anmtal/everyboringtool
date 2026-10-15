@@ -27,11 +27,12 @@ export default function robots() {
     ],
     sitemap: [
       `${SITE.url}/sitemap.xml`,
-      // TEMPORARY (added 2026-10-08): lists ~2.9K noindexed word pages that Google
+      // TEMPORARY (added 2026-10-08): lists ~2.9K retired word pages that Google
       // still had indexed (from GSC: the indexed-pages sample + every word page
       // with search impressions in the last 3 months). Its only job is to get them
-      // re-crawled so Google sees the noindex and drops them. Remove this line and
-      // public/sitemap-recrawl.xml once GSC shows them as "Excluded by 'noindex'".
+      // re-crawled so Google sees the 410 (since 2026-10-15; a noindex before that)
+      // and drops them. Remove this line and public/sitemap-recrawl.xml once GSC
+      // shows them as no longer indexed.
       `${SITE.url}/sitemap-recrawl.xml`,
     ],
     host: SITE.url,

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PROGRAMMATIC_INDEX_ENABLED } from "../lib/wordIndexSwitch";
+import { wordHref } from "../lib/wordQuery";
 
 // Inlined so this stays client-safe (lib/wordEngine imports `fs`). Values match
 // wordEngine.scrabbleScore + groupByLength exactly.
@@ -26,7 +25,7 @@ function chip(active) {
 }
 
 const BADGE_STYLE = { textDecoration: "none", fontSize: 14, padding: "4px 9px" };
-// Resets so a <button> renders identically to the <a> badge.
+// Resets so a <button> renders identically to an <a> badge.
 const BUTTON_RESET = { fontFamily: "inherit", lineHeight: "inherit", cursor: "pointer" };
 
 export default function WordBadges({ words = [], linkBase = "/unscramble" }) {
@@ -48,15 +47,11 @@ export default function WordBadges({ words = [], linkBase = "/unscramble" }) {
     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
       {list.map((w) => {
         const label = <>{w} <span style={{ opacity: 0.55, fontSize: 11 }}>{score(w)}</span></>;
-        // While the word pages are noindexed, a crawlable <a href> per result word
-        // only feeds crawlers an endless chain of noindex pages (and starves the
-        // real tool pages of crawl budget). Visitors can still tap through.
-        return PROGRAMMATIC_INDEX_ENABLED ? (
-          <Link key={w} href={`${linkBase}/${w}`} prefetch={false} className="badge" style={BADGE_STYLE} title={`${score(w)} points`}>
-            {label}
-          </Link>
-        ) : (
-          <button key={w} type="button" onClick={() => router.push(`${linkBase}/${w}`)} className="badge" style={{ ...BADGE_STYLE, ...BUTTON_RESET }} title={`${score(w)} points`}>
+        // Buttons, not <a href>: a crawlable link per result word fed crawlers an
+        // endless chain of thin pages (~9.2K got indexed by 2026-10-08). Result
+        // views (?q=) are for visitors only, and visitors can still tap through.
+        return (
+          <button key={w} type="button" onClick={() => router.push(wordHref(linkBase, w))} className="badge" style={{ ...BADGE_STYLE, ...BUTTON_RESET }} title={`${score(w)} points`}>
             {label}
           </button>
         );

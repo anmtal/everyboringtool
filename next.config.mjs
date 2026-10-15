@@ -33,17 +33,18 @@ const CSP = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // The word-game pages read public/words/dict.txt with fs at runtime (ISR). That
-  // dynamic path isn't auto-traced into the serverless bundle, so include it explicitly.
+  // The word-game hubs read public/words/dict.txt with fs at request time (?q=
+  // results). That dynamic path isn't auto-traced into the serverless bundle, so
+  // include it explicitly.
   experimental: {
     outputFileTracingIncludes: {
-      "/unscramble/[letters]": ["./public/words/dict.txt"],
-      "/anagram/[letters]": ["./public/words/dict.txt"],
-      "/words-starting-with/[prefix]": ["./public/words/dict.txt"],
-      "/words-ending-with/[suffix]": ["./public/words/dict.txt"],
-      "/words-containing/[substr]": ["./public/words/dict.txt"],
+      "/unscramble": ["./public/words/dict.txt"],
+      "/anagram": ["./public/words/dict.txt"],
+      "/words-starting-with": ["./public/words/dict.txt"],
+      "/words-ending-with": ["./public/words/dict.txt"],
+      "/words-containing": ["./public/words/dict.txt"],
+      "/crossword-solver": ["./public/words/dict.txt"],
       "/[category]": ["./public/words/dict.txt"],
-      "/crossword-solver/[pattern]": ["./public/words/dict.txt"],
     },
   },
   // /text/word-unscrambler was a second, weaker Word Unscrambler: it shipped a
