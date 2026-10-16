@@ -64,7 +64,7 @@ export default function ChartsHub() {
       <header className="page-head">
         <h1>Printable Reference Charts</h1>
         <p>
-          Reference tables you can read on screen, print on a single sheet, photocopy for a class
+          Reference tables you can read on screen, print in a page or two, photocopy for a class
           and link to. Every value is generated and checked by code, not typed in by hand.
         </p>
       </header>

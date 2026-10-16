@@ -307,7 +307,7 @@ const RULES = [
   },
   {
     h: "There is no zero and no negative numbers, and the standard numerals are whole numbers only.",
-    p: `Roman numerals count from ${R(1)} (one). Medieval writers sometimes used the Latin word nulla ("none") for zero, but it was never a numeral. The Romans did write fractions, but in a separate base-12 notation: S (semis) for one half and a dot for each twelfth (uncia).`,
+    p: `Roman numerals count from ${R(1)} (one). There is no symbol for zero: around AD 725 the scholar Bede and his colleagues wrote the Latin word nulla ("none"), or just the letter N, for zero in their calculation tables, but it never became part of the everyday system. The Romans did write fractions, but in a separate base-12 notation: S (semis) for one half and a dot for each twelfth (uncia).`,
   },
   {
     h: `The standard form stops at ${fmt(ROMAN_MAX)}.`,
@@ -332,7 +332,7 @@ const UNI_TWELVE = (() => {
 const FAQ = [
   {
     q: "Is there a zero in Roman numerals?",
-    a: `No. Roman numerals start at ${R(1)} (1) and have no symbol for zero, because the system has no place value that needs one. Medieval writers sometimes wrote the Latin word nulla ("none") where we would write 0, but it was never part of the numeral system.`,
+    a: `No. Roman numerals start at ${R(1)} (1) and have no symbol for zero, because the system has no place value that needs one. Around AD 725 the scholar Bede and his colleagues wrote the Latin word nulla ("none"), or just the letter N, for zero in their calculation tables, but that never became part of the everyday system.`,
   },
   {
     q: "What is the largest Roman numeral?",
@@ -348,7 +348,7 @@ const FAQ = [
   },
   {
     q: "What is the longest Roman numeral?",
-    a: `Below 4,000 the longest is ${fmt(LONGEST.n)} = ${LONGEST.roman}, with ${LONGEST.roman.length} letters, which is why it is often called the hardest number to write. Among the years 1900 to 2099 the longest is ${LONGEST_YEAR.n} = ${LONGEST_YEAR.roman} (${LONGEST_YEAR.roman.length} letters).`,
+    a: `Below 4,000 the longest is ${fmt(LONGEST.n)} = ${LONGEST.roman}, with ${LONGEST.roman.length} letters, the longest standard Roman numeral. Among the years 1900 to 2099 the longest is ${LONGEST_YEAR.n} = ${LONGEST_YEAR.roman} (${LONGEST_YEAR.roman.length} letters).`,
   },
   {
     q: "What are 48, 67, 69 and 96 in Roman numerals?",
@@ -385,7 +385,7 @@ const SHEETS = [
   { id: "chart20", title: "1–20, large print", pages: 1, desc: "Numbers 1 to 20 in capitals and lowercase, with two clock faces." },
   { id: "chart100", title: "1–100 chart", pages: 1, desc: "The 10 × 10 tens-and-ones grid, the chart most classrooms use." },
   { id: "chart1000", title: "1–1000 chart", pages: 10, desc: "The 1–100 grid plus one page for each hundred up to 999, then 1000." },
-  { id: "years", title: "Years 1900–2099", pages: 2, desc: "Every year of the 20th and 21st centuries, one century per page." },
+  { id: "years", title: "Years 1900–2099", pages: 2, desc: "Every year from 1900 to 2099, one hundred years per page." },
   { id: "worksheet", title: "Worksheet + answer key", pages: 2, desc: "20 questions at four levels, or a fill-in 1–100 grid. Answer key on page 2.", practice: true },
 ];
 
@@ -410,7 +410,7 @@ function embedHtml() {
     '<table style="border-collapse:collapse;font-family:sans-serif;font-size:13px;text-align:center">',
     '<caption style="padding:6px;font-weight:bold">Roman numerals 1 to 100</caption>',
     `<tbody>${rows.join("")}</tbody></table>`,
-    `<p style="font-size:12px">Chart from the <a href="${PAGE_URL}">Roman numerals chart</a> by Every Boring Tool</p>`,
+    `<p style="font-size:12px">Chart from the <a href="${PAGE_URL}" rel="nofollow">Roman numerals chart</a> by Every Boring Tool</p>`,
   ].join("\n");
 }
 
@@ -501,7 +501,7 @@ export default function RomanNumeralsChartPage() {
           Printables
         </h1>
         <p>
-          Every Roman numeral from 1 to {fmt(ROMAN_MAX)}, with free printable charts and worksheets. Each numeral
+          Roman numerals from 1 to 1,000, every year from 1900 to 2099 and milestones up to {fmt(ROMAN_MAX)} (the largest standard numeral), with free printable charts and worksheets. Each numeral
           below is generated and checked by code, not typed by hand.
         </p>
         <div className="tool-actions chart-noprint" style={{ marginTop: 16 }}>
@@ -926,9 +926,10 @@ export default function RomanNumeralsChartPage() {
         <h3 className="rn-h3">The Super Bowl</h3>
         <p className="chart-prose">
           The first Super Bowl was played in January 1967 and there has been one every year since, so Super Bowl{" "}
-          <em>n</em> was played in 1966 + <em>n</em>: Super Bowl {R(60)} (60) was played in {superBowlYear(60)}. The one
-          exception to the numerals was Super Bowl 50 in {superBowlYear(50)}, which was branded with Arabic numerals
-          instead of {R(50)}.
+          <em>n</em> was played in 1966 + <em>n</em>: Super Bowl {R(60)} (60) was played in {superBowlYear(60)}. Roman
+          numerals were first used for Super Bowl {R(5)} in {superBowlYear(5)}; the first four games were numbered
+          later. Super Bowl 50 in {superBowlYear(50)} was branded with Arabic numerals instead of {R(50)}, and the
+          numerals came back the next year with Super Bowl {R(51)}.
         </p>
         <details className="rn-details">
           <summary>All 60 Super Bowl numerals with the year each was played</summary>
@@ -995,8 +996,8 @@ export default function RomanNumeralsChartPage() {
           Family historians and archivists meet numerals that break the modern rules. Scribes often wrote them in
           lowercase, ended a run of i&apos;s with a j ({R(3).toLowerCase().replace(/i$/, "j")} = 3,{" "}
           {R(6).toLowerCase().replace(/i$/, "j")} = 6, {R(8).toLowerCase().replace(/i$/, "j")} = 8), and freely used
-          additive forms such as {toAdditiveRoman(4).toLowerCase().replace(/i$/, "j")} for 4 or {toAdditiveRoman(1985)}{" "}
-          for 1985 (today {R(1985)}). The UK National Archives has a{" "}
+          additive forms such as {toAdditiveRoman(4).toLowerCase().replace(/i$/, "j")} for 4 or {toAdditiveRoman(1490)}{" "}
+          for 1490 (today {R(1490)}). The UK National Archives has a{" "}
           <a href="https://www.nationalarchives.gov.uk/help-with-your-research/reading-old-documents/roman-numerals/" rel="noopener" style={{ textDecoration: "underline" }}>
             guide to Roman numerals in historical documents
           </a>

@@ -29,7 +29,7 @@ function buildFull() {
       L.push(`URL: ${b}/${c.slug}/${t.slug}`);
       L.push(t.description, "");
       if (content.about) {
-        for (const para of content.about.split("\n\n")) L.push(para.replace(/\s+/g, " ").trim());
+        for (const para of content.about.split("\n\n")) L.push(para.replace(/\s+/g, " ").trim().replace(/\]\(\//g, `](${SITE.url}/`));
         L.push("");
       }
       if (content.faq && content.faq.length) {
