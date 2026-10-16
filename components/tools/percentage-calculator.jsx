@@ -10,17 +10,20 @@ function toNumber(value) {
   return Number.isFinite(n) ? n : null;
 }
 
-// Rounds to at most maxDecimals places. A nonzero number that would round to
-// 0 is shown to 4 significant figures instead, so a tiny value never prints as
-// "0" (which would make a working line false, e.g. "30 ÷ 0 = 300,000,000").
+// Rounds to at most maxDecimals places. A small nonzero number is shown to 4
+// significant figures instead, so a working line never states a false step
+// (e.g. "30 ÷ 0 = 300,000,000" or "234.68 ÷ 0.000004 = 65,188,888").
 // Negatives use a real minus sign (U+2212) everywhere, so labels, results and
 // working lines in one box never mix "-" and "−".
 function formatNumber(n, maxDecimals = 4) {
   if (n === null || n === undefined || !Number.isFinite(n)) return "—";
   // `|| 0` turns a rounded -0 into 0.
   const rounded = Number(n.toFixed(maxDecimals)) || 0;
+  // Small values (below 0.1 at 4 decimals, below 0.001 at 6) use significant
+  // figures: fixed decimals would round 0.00036 to 0.0004 and make a working
+  // line false.
   const s =
-    rounded === 0 && n !== 0
+    n !== 0 && Math.abs(n) < 10 ** (3 - maxDecimals)
       ? n.toLocaleString(undefined, { maximumSignificantDigits: 4 })
       : rounded.toLocaleString(undefined, {
           minimumFractionDigits: 0,
@@ -245,7 +248,7 @@ export default function PercentageCalculator() {
           </div>
         </div>
         <div className="tool-result">
-          <div role="status" aria-live="polite">
+          <div role="status" aria-live="polite" style={{ overflowWrap: "anywhere" }}>
             <p className="tool-result-label">
               {result1
                 ? `${formatNumber(p1)}% of ${formatNumber(y1)} is`
@@ -324,7 +327,7 @@ export default function PercentageCalculator() {
           <p className="tool-error" role="alert">{result2.error}</p>
         ) : (
           <div className="tool-result">
-            <div role="status" aria-live="polite">
+            <div role="status" aria-live="polite" style={{ overflowWrap: "anywhere" }}>
               <p className="tool-result-label">
                 {result2
                   ? `${formatNumber(toNumber(part2))} is this percent of ${formatNumber(toNumber(whole2))}`
@@ -372,7 +375,7 @@ export default function PercentageCalculator() {
           <p className="tool-error" role="alert">{result3.error}</p>
         ) : (
           <div className="tool-result">
-            <div role="status" aria-live="polite">
+            <div role="status" aria-live="polite" style={{ overflowWrap: "anywhere" }}>
               <p className="tool-result-label">
                 {result3
                   ? result3.value > 0
@@ -453,7 +456,7 @@ export default function PercentageCalculator() {
           </button>
         </div>
         <div className="tool-result">
-          <div role="status" aria-live="polite">
+          <div role="status" aria-live="polite" style={{ overflowWrap: "anywhere" }}>
             <p className="tool-result-label">
               {result4
                 ? `${formatNumber(x4)} ${down4 ? "decreased" : "increased"} by ${formatNumber(p4)}% is`
@@ -502,7 +505,7 @@ export default function PercentageCalculator() {
           <p className="tool-error" role="alert">{result5.error}</p>
         ) : (
           <div className="tool-result">
-            <div role="status" aria-live="polite">
+            <div role="status" aria-live="polite" style={{ overflowWrap: "anywhere" }}>
               <p className="tool-result-label">
                 {result5
                   ? `${formatNumber(toNumber(part5))} is ${formatNumber(toNumber(pct5))}% of`
@@ -549,7 +552,7 @@ export default function PercentageCalculator() {
           </div>
         </div>
         <div className="tool-result">
-          <div role="status" aria-live="polite">
+          <div role="status" aria-live="polite" style={{ overflowWrap: "anywhere" }}>
             <p className="tool-result-label">
               {result6
                 ? `Difference between ${formatNumber(toNumber(a6))} and ${formatNumber(toNumber(b6))}`
@@ -590,7 +593,7 @@ export default function PercentageCalculator() {
           </table>
         </div>
         <p className="tool-note">
-          Results are rounded to at most 4 decimal places. A number too small to show that way is given to 4
+          Results are rounded to at most 4 decimal places; a number between −0.1 and 0.1 is given to 4
           significant figures.
         </p>
       </div>
