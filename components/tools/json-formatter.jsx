@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { copyText } from "../../lib/copyText";
 
 const LS_KEY = "ebt-json-formatter";
@@ -8,6 +8,7 @@ const LS_KEY = "ebt-json-formatter";
 // first two, so keep them in sync if they change.
 const HIGHLIGHT_MAX_CHARS = 500000; // colour highlighting off above this output length
 const TREE_MAX_NODES = 20000; // tree view off above this many values
+const TREE_OPEN_MAX_KIDS = 50; // second level starts open only when the top level has at most this many children
 const STATS_MAX_NODES = 1000000; // depth is not counted above this many values
 const EXACT_MAX_CHARS = 20000000; // the exact-number reviver slows parsing; skip it above ~20 MB
 const MAX_SCAN_DEPTH = 2000; // findJsonError gives up (falls back to the browser message) past this
@@ -395,7 +396,14 @@ function needsExact(src) {
 function parseJson(text) {
   if (!needsExact(text)) return { value: JSON.parse(text), exact: true };
   if (canRaw && text.length <= EXACT_MAX_CHARS) {
-    return { value: JSON.parse(text, exactReviver), exact: true };
+    try {
+      return { value: JSON.parse(text, exactReviver), exact: true };
+    } catch (e) {
+      // The reviver walk is recursive, so valid JSON nested deeply enough (about
+      // 2,000 levels in Chrome) runs out of stack there although the plain parse
+      // is fine. Syntax errors are rethrown for describeParseError.
+      if (!(e instanceof RangeError)) throw e;
+    }
   }
   return { value: JSON.parse(text), exact: false };
 }
@@ -465,10 +473,12 @@ function byteLength(s) {
   return new TextEncoder().encode(s).length;
 }
 
-// 1 KB = 1,024 B.
+// 1 KB = 1,024 B. The unit is picked after rounding, so 1,048,575 B is
+// "1.00 MB", not "1024.0 KB".
 function formatBytes(b) {
   if (b < 1024) return `${b.toLocaleString("en-US")} B`;
-  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+  const kb = (b / 1024).toFixed(1);
+  if (Number(kb) < 1024) return `${kb} KB`;
   return `${(b / (1024 * 1024)).toFixed(2)} MB`;
 }
 
@@ -513,7 +523,7 @@ const ERROR_ROWS = [
   { code: "single-key", mistake: "Single-quoted key", example: "{'a': 1}", says: "Expected property name or '}'", fix: "Use double quotes" },
   { code: "single-str", mistake: "Single-quoted string", example: "{\"a\": 'x'}", says: "Unexpected token '''", fix: 'Use "x"' },
   { code: "missing-comma", mistake: "Missing comma", example: '{"a": 1 "b": 2}', says: "Expected ',' or '}' after property value", fix: "Add a comma between pairs" },
-  { code: "comment", mistake: "Comment", example: '{"a": 1 // note}', says: "Expected ',' or '}' after property value (varies with where the comment is)", fix: "Delete it; JSON has no comments" },
+  { code: "comment", mistake: "Comment", example: '{"a": 1 /* note */}', says: "Expected ',' or '}' after property value (varies with where the comment is)", fix: "Delete it; JSON has no comments" },
   { code: "pyjs", mistake: "Python/JS values", example: "True, None, NaN, undefined", says: "Unexpected token 'T' (or 'N', 'u')", fix: "Use true, false or null" },
   { code: "eof", mistake: "Missing bracket or cut-off file", example: '{"a": [1, 2', says: "Expected ',' or ']' after array element", fix: "Add the missing ] and }" },
   { code: "ctrl", mistake: "Real line break inside a string", example: '"line1⏎line2"', says: "Bad control character in string literal", fix: "Write \\n" },
@@ -588,8 +598,18 @@ function TreeLeafValue({ v }) {
   return <span className="json-lit">{String(v)}</span>;
 }
 
-function TreeBranch({ name, isIndex, value, isArr, keys, level, mode }) {
-  const [open, setOpen] = useState(mode === "open" ? true : mode === "closed" ? level === 1 : level <= 2);
+// Which branches start open. "open" (Expand all) opens everything and "closed"
+// (Collapse all) only the root. By default the root is open, and its child
+// branches too unless the root has more than TREE_OPEN_MAX_KIDS children:
+// opening every element of a wide top-level array took seconds.
+function startsOpen(mode, level, siblings) {
+  if (mode === "open" || level === 1) return true;
+  if (mode === "closed") return false;
+  return level === 2 && siblings <= TREE_OPEN_MAX_KIDS;
+}
+
+function TreeBranch({ name, isIndex, value, isArr, keys, level, mode, siblings }) {
+  const [open, setOpen] = useState(() => startsOpen(mode, level, siblings));
   const count = isArr ? value.length : keys.length;
   return (
     <details open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
@@ -601,17 +621,22 @@ function TreeBranch({ name, isIndex, value, isArr, keys, level, mode }) {
       {open
         ? isArr
           ? value.map((item, idx) => (
-              <TreeNode key={idx} name={idx} isIndex value={item} level={level + 1} mode={mode} />
+              <TreeNode key={idx} name={idx} isIndex value={item} level={level + 1} mode={mode} siblings={count} />
             ))
-          : keys.map((k) => <TreeNode key={k} name={k} value={value[k]} level={level + 1} mode={mode} />)
+          : keys.map((k) => (
+              <TreeNode key={k} name={k} value={value[k]} level={level + 1} mode={mode} siblings={count} />
+            ))
         : null}
     </details>
   );
 }
 
 // Objects and arrays are <details> whose children render only while open, so
-// collapsed branches cost no DOM.
-function TreeNode({ name, isIndex, value, level, mode }) {
+// collapsed branches cost no DOM. Memoized (all props are primitives or the
+// parsed values, which never change for a given result), so a re-render of the
+// page component, such as every keystroke in the input box, stops at the root
+// instead of walking the whole tree.
+const TreeNode = memo(function TreeNode({ name, isIndex, value, level, mode, siblings }) {
   const isArr = Array.isArray(value);
   const isObj = !isArr && value !== null && typeof value === "object" && !isRaw(value);
   if (!isArr && !isObj) {
@@ -631,8 +656,19 @@ function TreeNode({ name, isIndex, value, level, mode }) {
       </div>
     );
   }
-  return <TreeBranch name={name} isIndex={isIndex} value={value} isArr={isArr} keys={keys} level={level} mode={mode} />;
-}
+  return (
+    <TreeBranch
+      name={name}
+      isIndex={isIndex}
+      value={value}
+      isArr={isArr}
+      keys={keys}
+      level={level}
+      mode={mode}
+      siblings={siblings}
+    />
+  );
+});
 
 function ErrorTable({ matchCode }) {
   return (
@@ -843,6 +879,9 @@ export default function JsonFormatter() {
     const v = e.target.value;
     setInput(v);
     setBomRemoved(false);
+    // Typed or pasted text is no longer the opened file (readFile sets input
+    // directly, not through here), so drop its name from the note and download.
+    setFileName("");
     if (pasteRef.current) {
       pasteRef.current = false;
       if (v.trim()) run("format", { text: v });
@@ -954,6 +993,21 @@ export default function JsonFormatter() {
     () => (!showTree && output && output.length <= HIGHLIGHT_MAX_CHARS ? highlight(output) : null),
     [output, showTree]
   );
+  // Built once per result: typing in the input box re-renders this component,
+  // and an unchanged element lets React skip the whole result box instead of
+  // walking every highlighted span or tree row on each keystroke.
+  const resultView = useMemo(() => {
+    if (!output) return null;
+    return showTree ? (
+      <div className="json-out json-tree" id="json-output" role="region" aria-labelledby="json-output-label">
+        <TreeNode key={treeKey} value={treeData.value} level={1} mode={treeMode} siblings={1} />
+      </div>
+    ) : (
+      <pre className="tool-output json-out" id="json-output" role="region" aria-labelledby="json-output-label">
+        {highlighted || output}
+      </pre>
+    );
+  }, [output, showTree, highlighted, treeData, treeKey, treeMode]);
   const stale = ranOn !== null && input !== ranOn;
   const base = fileName ? fileName.replace(/\.(json|geojson|jsonc|txt)$/i, "") : "";
   const dlName =
@@ -1014,9 +1068,7 @@ export default function JsonFormatter() {
             </select>
           </div>
           <div className="tool-field">
-            <label className="tool-label" htmlFor="json-sort">
-              Options
-            </label>
+            <div className="tool-label">Options</div>
             <label
               htmlFor="json-sort"
               style={{ display: "flex", alignItems: "center", gap: "0.5rem", minHeight: "2.5rem" }}
@@ -1208,15 +1260,7 @@ export default function JsonFormatter() {
           <div className="tool-label" id="json-output-label">
             Result
           </div>
-          {showTree ? (
-            <div className="json-out json-tree" id="json-output" aria-labelledby="json-output-label">
-              <TreeNode key={treeKey} value={treeData.value} level={1} mode={treeMode} />
-            </div>
-          ) : (
-            <pre className="tool-output json-out" id="json-output" aria-labelledby="json-output-label">
-              {highlighted || output}
-            </pre>
-          )}
+          {resultView}
         </div>
       ) : null}
 

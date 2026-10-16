@@ -450,7 +450,7 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .json-lit { color: var(--json-lit); }
 .json-ok { color: var(--json-str); font-weight: 600; }
 .json-warn { color: var(--json-num); }
-.json-out { margin: 0; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm); max-height: 70vh; overflow: auto; tab-size: 4; }
+.json-out { margin: 0; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm); max-height: 70vh; overflow: auto; tab-size: 4; contain: layout paint; } /* not contain: content: its style containment made the tree's Expand all ~5x slower in Chrome */
 .json-tree { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
 .json-tree details, .json-tree .json-leaf { margin-left: 1.1em; }
 .json-tree > details, .json-tree > .json-leaf { margin-left: 0; }
