@@ -8,6 +8,9 @@ import { retargetFor, withRetargetDate } from "../../../lib/retargets";
 import { HIDDEN_LANDING_URLS } from "../../../lib/typingLanding";
 import ToolMount from "../../../components/ToolMount";
 import AdSlot from "../../../components/AdSlot";
+import EmbedBox from "../../../components/EmbedBox";
+import { getEmbed, embedSnippet } from "../../../lib/embeds";
+import { adsAllowedOn } from "../../../lib/noAds";
 import { ymylNote } from "../../../lib/ymyl";
 import { guideForTool } from "../../../lib/blogPosts";
 
@@ -192,6 +195,8 @@ export default function ToolPage({ params }) {
   // to it from this (indexed) page is the internal-link half of getting the
   // guides out of "Crawled - currently not indexed".
   const guide = guideForTool(t.slug);
+  // Tools other sites may iframe (lib/embeds.js) get an "Embed this tool" box.
+  const embed = getEmbed(t.slug);
 
   return (
     <>
@@ -222,6 +227,8 @@ export default function ToolPage({ params }) {
           </ol>
         </section>
       )}
+
+      {embed && <EmbedBox slug={t.slug} title={embed.title} snippet={embedSnippet(t.slug)} />}
 
       {guide && (
         <div
@@ -291,7 +298,8 @@ export default function ToolPage({ params }) {
         </section>
       )}
 
-      <AdSlot slot={process.env.NEXT_PUBLIC_ADSLOT_TOOL} minHeight={280} />
+      {/* Never on the pages in lib/noAds.js (e.g. classroom-timer), even with ads on. */}
+      {adsAllowedOn(t.slug) && <AdSlot slot={process.env.NEXT_PUBLIC_ADSLOT_TOOL} minHeight={280} />}
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>

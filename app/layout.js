@@ -5,6 +5,7 @@ import { SITE, categories } from "../lib/tools";
 import { TOOL_COUNT_LABEL } from "../lib/toolCount";
 import CategoryNav from "../components/CategoryNav";
 import BrandLogo from "../components/BrandLogo";
+import SiteChrome from "../components/SiteChrome";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
@@ -97,10 +98,12 @@ export default function RootLayout({ children }) {
             ga-disable-<ID> stops every GA4 hit (gtag.js only sends once the
             config call below runs, which is after this), and pauseAdRequests
             holds all ad requests. Client-side on purpose, so every page stays
-            static. */}
+            static. The second clause makes embeds ad-free and analytics-free:
+            any /embed/* page (lib/embeds.js), and any page shown inside a
+            frame, gets the same two switches (but isn't marked internal). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var n=navigator,u=n.userAgent||"",c=document.cookie||"";if(/(?:^|;\\s*)ebt_internal=1(?:;|$)/.test(c)||u.indexOf("EBT-Internal")>-1||(n.webdriver&&!/Google/i.test(u))||!/(^|\\.)everyboringtool\\.com$/.test(location.hostname)){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;window.__ebtInternal=true;}}catch(e){}})();`,
+            __html: `(function(){try{var n=navigator,u=n.userAgent||"",c=document.cookie||"";if(/(?:^|;\\s*)ebt_internal=1(?:;|$)/.test(c)||u.indexOf("EBT-Internal")>-1||(n.webdriver&&!/Google/i.test(u))||!/(^|\\.)everyboringtool\\.com$/.test(location.hostname)){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;window.__ebtInternal=true;}if(/^\\/embed\\//.test(location.pathname)||window.self!==window.top){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;}}catch(e){}})();`,
           }}
         />
         {/* Raw <script> so the AdSense crawler sees it in the server HTML (a
@@ -129,6 +132,9 @@ export default function RootLayout({ children }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_LD) }}
         />
+        {/* SiteChrome renders its children everywhere except /embed/* (the
+            iframe-able tool pages), which must show only the tool. */}
+        <SiteChrome>
         <a href="#main" className="skip-link">Skip to content</a>
         <header className="site-header">
           <div className="container header-inner">
@@ -140,9 +146,11 @@ export default function RootLayout({ children }) {
           </div>
           <CategoryNav />
         </header>
+        </SiteChrome>
 
         <main id="main" className="container main" tabIndex={-1}>{children}</main>
 
+        <SiteChrome>
         <footer className="site-footer">
           <div className="footer-grid">
             <div className="footer-brand">
@@ -193,6 +201,7 @@ export default function RootLayout({ children }) {
             <span>Boring, but it works.</span>
           </div>
         </footer>
+        </SiteChrome>
       </body>
     </html>
   );

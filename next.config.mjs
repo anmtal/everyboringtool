@@ -13,11 +13,13 @@
 const WORD_HUBS = ["unscramble", "anagram", "words-starting-with", "words-ending-with", "words-containing", "crossword-solver"];
 
 const GOOGLE_ADS = "https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://*.doubleclick.net https://*.google.com";
-const CSP = [
+// One policy for every page; only frame-ancestors differs: 'self' site-wide,
+// * on the /embed/* pages that other sites are meant to iframe.
+const cspWith = (frameAncestors) => [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
-  "frame-ancestors 'self'",
+  `frame-ancestors ${frameAncestors}`,
   "form-action 'self'",
   `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net https://www.googletagmanager.com ${GOOGLE_ADS}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -33,6 +35,27 @@ const CSP = [
   "frame-src 'self' blob: https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net https://*.googlesyndication.com https://*.google.com https://fundingchoicesmessages.google.com",
   "manifest-src 'self'",
 ].join("; ");
+const CSP = cspWith("'self'");
+const CSP_EMBED = cspWith("*");
+
+// Security headers. `embed` drops X-Frame-Options and opens frame-ancestors so
+// the /embed/* pages can be iframed anywhere; everything else is identical.
+function securityHeaders({ embed = false } = {}) {
+  return [
+    { key: "X-Content-Type-Options", value: "nosniff" },
+    ...(embed ? [] : [{ key: "X-Frame-Options", value: "SAMEORIGIN" }]),
+    { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+    // camera=(self) — the QR scanner needs it; everything else is off.
+    { key: "Permissions-Policy", value: "camera=(self), geolocation=(), microphone=(), payment=(), interest-cohort=()" },
+    { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+    { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+    // Enforcing. Verified Report-Only first: homepage inline scripts/styles/
+    // fonts, blob workers (regex), object URLs/data URIs, the iframe PDF
+    // preview, ffmpeg, and the OCR/transcribe CDNs (jsDelivr + Hugging Face)
+    // all pass; unknown origins are correctly blocked.
+    { key: "Content-Security-Policy", value: embed ? CSP_EMBED : CSP },
+  ];
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -60,21 +83,17 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
-        headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          // camera=(self) — the QR scanner needs it; everything else is off.
-          { key: "Permissions-Policy", value: "camera=(self), geolocation=(), microphone=(), payment=(), interest-cohort=()" },
-          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
-          // Enforcing. Verified Report-Only first: homepage inline scripts/styles/
-          // fonts, blob workers (regex), object URLs/data URIs, the iframe PDF
-          // preview, ffmpeg, and the OCR/transcribe CDNs (jsDelivr + Hugging Face)
-          // all pass; unknown origins are correctly blocked.
-          { key: "Content-Security-Policy", value: CSP },
-        ],
+        // Every path EXCEPT /embed/* (negative lookahead), so the framing
+        // headers below are the only ones the embed pages get. Matches "/" too.
+        source: "/((?!embed/).*)",
+        headers: securityHeaders(),
+      },
+      {
+        // The iframe-able tools (lib/embeds.js): same security headers minus
+        // X-Frame-Options, with frame-ancestors *, and kept out of the index.
+        // `:path+` (not `*`) so bare /embed keeps the site-wide headers only.
+        source: "/embed/:path+",
+        headers: [...securityHeaders({ embed: true }), { key: "X-Robots-Tag", value: "noindex" }],
       },
       {
         // These files have STABLE names (not content-hashed), so `immutable` would
