@@ -62,23 +62,20 @@ function parseEntries(text) {
   return String(text || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
 }
 
-// Remove one entry from the raw text, leaving every other line as typed. Prefers
-// the idx-th entry when it still holds `name` (the slice that actually won), and
-// falls back to the first entry holding `name` if the list was edited since.
+// Remove the idx-th entry from the raw text, leaving every other line as typed —
+// but only if that entry still holds `name`. There is deliberately no fallback to
+// "the first line with that name": a list edited since the spin could hold a
+// different person with the same name.
 function removeEntry(text, idx, name) {
   const lines = String(text || "").split(/\r?\n/);
   const pos = [];
   lines.forEach((l, i) => { if (l.trim()) pos.push(i); });
-  let at = -1;
-  if (idx >= 0 && idx < pos.length && lines[pos[idx]].trim() === name) at = pos[idx];
-  else {
-    const k = pos.findIndex((p) => lines[p].trim() === name);
-    if (k >= 0) at = pos[k];
-  }
-  if (at < 0) return text;
-  lines.splice(at, 1);
+  if (!(idx >= 0 && idx < pos.length) || lines[pos[idx]].trim() !== name) return text;
+  lines.splice(pos[idx], 1);
   return lines.join("\n");
 }
+
+const range = (n) => Array.from({ length: n }, (_, i) => i);
 
 // Fisher-Yates with the secure generator.
 function shuffled(items) {
@@ -90,8 +87,26 @@ function shuffled(items) {
   return a;
 }
 
+// Index order that sorts `items` A–Z (equal names keep their order).
+function sortOrder(items) {
+  return range(items.length).sort((a, b) => items[a].localeCompare(items[b], undefined, { sensitivity: "base", numeric: true }) || a - b);
+}
+
 function sortedAZ(items) {
-  return items.slice().sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base", numeric: true }));
+  return sortOrder(items).map((i) => items[i]);
+}
+
+// The list tools return the new entries plus where entry `idx` ended up (-1 when
+// not tracked), so a pending winner removal follows its own entry.
+function reordered(items, order, idx) {
+  return { items: order.map((i) => items[i]), idx: idx >= 0 ? order.indexOf(idx) : -1 };
+}
+const shuffleTracked = (items, idx) => reordered(items, shuffled(range(items.length)), idx);
+const sortTracked = (items, idx) => reordered(items, sortOrder(items), idx);
+// Copies of a name merge into its first copy, so the entry follows the name there.
+function dedupeTracked(items, idx) {
+  const out = withoutDuplicates(items);
+  return { items: out, idx: idx >= 0 && idx < items.length ? out.indexOf(items[idx]) : -1 };
 }
 
 // Keeps the first occurrence of each entry (case-sensitive, as on the wheel).
@@ -164,7 +179,11 @@ export default function WheelOfNames() {
   const [loaded, setLoaded] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  const [winner, setWinner] = useState(null); // { name, idx }
+  const [winner, setWinner] = useState(null); // { name, restored? } — what the result card shows
+  // The winning entry ({ name, idx } in the list) while its position is known for sure:
+  // the list tools move it along, a manual edit or a new list drops it. Auto-remove
+  // takes it off at the next spin, and the Remove button uses it.
+  const [pending, setPending] = useState(null);
   const [history, setHistory] = useState([]); // [{ n, name }], session only
   const [undoText, setUndoText] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -204,10 +223,22 @@ export default function WheelOfNames() {
       if (raw) {
         const s = JSON.parse(raw);
         if (s && typeof s === "object") {
-          if (typeof s.text === "string" && s.text.trim()) setText(s.text);
+          const hasText = typeof s.text === "string" && s.text.trim();
+          if (hasText) setText(s.text);
           if (typeof s.autoRemove === "boolean") setAutoRemove(s.autoRemove);
           if (typeof s.spinLength === "string" && Object.prototype.hasOwnProperty.call(SPIN_LENGTHS, s.spinLength)) setSpinLength(s.spinLength);
           if (typeof s.sound === "boolean") setSound(s.sound);
+          // A winner still waiting to come off (auto-remove) — only if that line still holds it.
+          const p = s.pending;
+          if (hasText && s.autoRemove === true && p && typeof p.name === "string" && Number.isInteger(p.idx)) {
+            const list = parseEntries(s.text);
+            if (list[p.idx] === p.name) {
+              setPending({ name: p.name, idx: p.idx });
+              setWinner({ name: p.name, restored: true });
+              const n = Math.min(list.length, MAX_SLICES);
+              if (p.idx < n) setRotation(landingRotation(0, p.idx, n, 0.5, 0)); // pointer back on that slice
+            }
+          }
         }
       }
     } catch (e) { /* private mode / blocked storage — start with the sample list */ }
@@ -219,9 +250,12 @@ export default function WheelOfNames() {
     if (!loaded) return;
     try {
       if (text === "") localStorage.removeItem(LS_KEY);
-      else localStorage.setItem(LS_KEY, JSON.stringify({ text, autoRemove, spinLength, sound }));
+      else {
+        const p = autoRemove && pending ? { name: pending.name, idx: pending.idx } : null;
+        localStorage.setItem(LS_KEY, JSON.stringify({ text, autoRemove, spinLength, sound, pending: p }));
+      }
     } catch (e) { /* ignore */ }
-  }, [loaded, text, autoRemove, spinLength, sound]);
+  }, [loaded, text, autoRemove, spinLength, sound, pending]);
 
   // ---- fullscreen (not offered where element fullscreen is unsupported, e.g. iPhone Safari) ----
   useEffect(() => {
@@ -246,7 +280,14 @@ export default function WheelOfNames() {
   const N = names.length;
   const extra = allNames.length - N;
   const SEG = N > 0 ? 360 / N : 360;
-  const dups = useMemo(() => duplicateCounts(names), [names]);
+  // What the next spin draws from: with auto-remove on, the last winner comes off first.
+  const pendingAuto = autoRemove && !!pending;
+  const nextNames = useMemo(
+    () => (pendingAuto ? parseEntries(removeEntry(text, pending.idx, pending.name)) : allNames).slice(0, MAX_SLICES),
+    [pendingAuto, pending, text, allNames]
+  );
+  const nextN = nextNames.length;
+  const dups = useMemo(() => duplicateCounts(nextNames), [nextNames]);
   const anyDups = useMemo(() => new Set(allNames).size !== allNames.length, [allNames]);
   const spinCount = history.length ? history[history.length - 1].n : 0;
   const soundOn = sound && !reduce;
@@ -339,13 +380,14 @@ export default function WheelOfNames() {
   function spin() {
     if (spinningRef.current) return;
     let entries = allNames;
-    if (autoRemove && winner) {
+    if (autoRemove && pending) {
       // The previous winner stays under the pointer until now, then comes off.
-      const next = removeEntry(text, winner.idx, winner.name);
+      const next = removeEntry(text, pending.idx, pending.name);
       if (next !== text) {
         setText(next);
         entries = parseEntries(next);
       }
+      setPending(null);
       setWinner(null);
     }
     const wheel = entries.slice(0, MAX_SLICES);
@@ -364,6 +406,7 @@ export default function WheelOfNames() {
     spinningRef.current = true;
     setSpinning(true);
     setWinner(null);
+    setPending(null);
     setRotation(landingRotation(rotation, idx, count, frac, turns));
     if (soundOn && ensureAudio()) startTicks(360 / count);
 
@@ -372,7 +415,8 @@ export default function WheelOfNames() {
       stopTicks();
       spinningRef.current = false;
       setSpinning(false);
-      setWinner(result);
+      setWinner({ name: result.name });
+      setPending(result);
       setHistory((h) => {
         const n = h.length ? h[h.length - 1].n + 1 : 1;
         const next = h.concat({ n, name: result.name });
@@ -382,33 +426,48 @@ export default function WheelOfNames() {
   }
 
   const removeWinner = () => {
-    if (!winner) return;
-    setText(removeEntry(text, winner.idx, winner.name));
+    if (!pending) return;
+    setText(removeEntry(text, pending.idx, pending.name));
+    setPending(null);
     setWinner(null);
   };
 
   // ---- list tools ----
-  const replaceList = (next, { keepWinner = false } = {}) => {
+  // `moved` is where the winning entry sits in the new list (shuffle / sort / dedupe):
+  // the winner card stays and a pending removal follows it. A new list (moved
+  // undefined) starts fresh.
+  const replaceList = (next, moved) => {
     if (next === text) return;
     setUndoText(text);
     setText(next);
-    if (!keepWinner) setWinner(null);
+    if (moved === undefined) {
+      setWinner(null);
+      setPending(null);
+    } else {
+      setPending(pending && moved >= 0 ? { name: pending.name, idx: moved } : null);
+    }
   };
-  const doShuffle = () => replaceList(shuffled(allNames).join("\n"), { keepWinner: true });
-  const doSort = () => replaceList(sortedAZ(allNames).join("\n"), { keepWinner: true });
-  const doDedupe = () => replaceList(withoutDuplicates(allNames).join("\n"), { keepWinner: true });
+  const runListTool = (fn) => {
+    const r = fn(allNames, pending ? pending.idx : -1);
+    replaceList(r.items.join("\n"), r.idx);
+  };
+  const doShuffle = () => runListTool(shuffleTracked);
+  const doSort = () => runListTool(sortTracked);
+  const doDedupe = () => runListTool(dedupeTracked);
   const doQuickList = (items) => replaceList(items.join("\n"));
   const doUndo = () => {
     if (undoText === null) return;
     setText(undoText);
     setUndoText(null);
     setWinner(null);
+    setPending(null);
   };
   const doClear = () => {
     if (text !== "") setUndoText(text);
     setText("");
     setHistory([]);
     setWinner(null);
+    setPending(null);
     setCopied(false);
     try { localStorage.removeItem(LS_KEY); } catch (e) { /* ignore */ }
   };
@@ -508,14 +567,21 @@ export default function WheelOfNames() {
             </svg>
           </div>
 
-          <div className="sr-only" role="status" aria-live="polite">{spinning ? "Spinning the wheel" : winner ? `Winner: ${winner.name}` : ""}</div>
+          <div className="sr-only" role="status" aria-live="polite">{spinning ? "Spinning the wheel" : winner && !winner.restored ? `Winner: ${winner.name}` : ""}</div>
 
           {winner && !spinning && (
             <div className="tool-result" style={{ textAlign: "center", minWidth: isFs ? "min(420px, 90vw)" : undefined }}>
-              <p className="tool-result-label">Winner</p>
+              <p className="tool-result-label">{winner.restored ? "Last winner" : "Winner"}</p>
               <p className="tool-result-value" style={{ fontSize: isFs ? 44 : 32, fontWeight: 800, margin: 0 }}>{winner.name}</p>
-              {autoRemove && (
+              {pendingAuto && (
                 <p className="tool-note" style={{ marginTop: 6 }}>“{short(winner.name)}” comes off the wheel when you spin again.</p>
+              )}
+              {!pending && allNames.includes(winner.name) && (
+                <p className="tool-note" style={{ marginTop: 6 }}>
+                  {autoRemove
+                    ? `You edited the list, so “${short(winner.name)}” won't come off automatically. Delete it from the list if it shouldn't be drawn again.`
+                    : `You edited the list, so delete “${short(winner.name)}” from the list yourself if it shouldn't be drawn again.`}
+                </p>
               )}
             </div>
           )}
@@ -524,7 +590,7 @@ export default function WheelOfNames() {
             <button type="button" className="btn btn-primary" onClick={spin} disabled={!canSpin}>
               {spinning ? "Spinning…" : winner ? "Spin again" : "Spin the wheel"}
             </button>
-            {winner && !spinning && !autoRemove && (
+            {winner && pending && !spinning && !autoRemove && (
               <button type="button" className="btn" onClick={removeWinner}>Remove “{short(winner.name)}”</button>
             )}
             {fsEnabled && (
@@ -542,7 +608,11 @@ export default function WheelOfNames() {
               className="tool-textarea"
               rows={8}
               value={text}
-              onChange={(e) => { setText(e.target.value); setUndoText(null); }}
+              onChange={(e) => {
+                setText(e.target.value);
+                setUndoText(null);
+                setPending(null); // can't tell where the winner went any more, so nothing comes off by name
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); spin(); }
               }}
@@ -556,7 +626,9 @@ export default function WheelOfNames() {
                 ? "No entries yet — add at least 2 to spin."
                 : N === 1
                   ? `Only “${short(names[0])}” is left — add at least one more entry to spin.`
-                  : `${N} entries on the wheel. Ctrl+Enter (⌘+Enter on Mac) spins from here.`}
+                  : pendingAuto
+                    ? `${N} entries on the wheel — “${short(pending.name)}” comes off before the next spin, leaving ${nextN}. Ctrl+Enter (⌘+Enter on Mac) spins from here.`
+                    : `${N} entries on the wheel. Ctrl+Enter (⌘+Enter on Mac) spins from here.`}
             </p>
           </div>
 
@@ -569,7 +641,9 @@ export default function WheelOfNames() {
 
           {dups.length > 0 && (
             <p className="tool-note" role="note">
-              {dups.slice(0, 3).map((d) => `“${short(d.name)}” is on the wheel ${d.count} times, so it has a ${d.count} in ${N} (${fmtPct((d.count / N) * 100)}) chance each spin.`).join(" ")}
+              {dups.slice(0, 3).map((d) => (pendingAuto
+                ? `“${short(d.name)}” has ${d.count} entries in the next spin, so a ${d.count} in ${nextN} (${fmtPct((d.count / nextN) * 100)}) chance.`
+                : `“${short(d.name)}” is on the wheel ${d.count} times, so it has a ${d.count} in ${nextN} (${fmtPct((d.count / nextN) * 100)}) chance each spin.`)).join(" ")}
               {dups.length > 3 ? ` ${dups.length - 3} more ${dups.length - 3 === 1 ? "entry is" : "entries are"} listed more than once.` : ""}
               {" "}Remove duplicates evens everyone out.
             </p>
@@ -630,6 +704,7 @@ export default function WheelOfNames() {
                   aria-pressed={spinLength === k}
                   onClick={() => setSpinLength(k)}
                   disabled={spinning}
+                  style={offStyle(spinning)}
                 >
                   {SPIN_LENGTHS[k].label} {SPIN_LENGTHS[k].secs} s
                 </button>
@@ -641,12 +716,12 @@ export default function WheelOfNames() {
 
       <div className="tool-stat-grid">
         <div className="tool-stat">
-          <div className="tool-stat-num">{N}</div>
-          <div className="tool-stat-label">Entries on the wheel</div>
+          <div className="tool-stat-num">{nextN}</div>
+          <div className="tool-stat-label">{pendingAuto ? "Entries in the next spin" : "Entries on the wheel"}</div>
         </div>
         <div className="tool-stat">
-          <div className="tool-stat-num">{N >= 2 ? fmtPct(100 / N) : "—"}</div>
-          <div className="tool-stat-label">Chance per entry, each spin</div>
+          <div className="tool-stat-num">{nextN >= 2 ? fmtPct(100 / nextN) : "—"}</div>
+          <div className="tool-stat-label">{pendingAuto ? "Chance per entry, next spin" : "Chance per entry, each spin"}</div>
         </div>
         <div className="tool-stat">
           <div className="tool-stat-num">{spinCount}</div>
@@ -668,6 +743,7 @@ export default function WheelOfNames() {
             </button>
             <button type="button" className="btn btn-sm" onClick={clearHistory} disabled={spinning} style={offStyle(spinning)}>Clear history</button>
           </div>
+          <p className="tool-note" style={{ margin: "8px 0 0" }}>The history isn&apos;t saved: it clears when you refresh or leave the page, so copy it if you need a record.</p>
         </div>
       )}
 
