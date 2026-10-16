@@ -439,6 +439,29 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 }
 .tool-output { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
 
+/* JSON Formatter (components/tools/json-formatter.jsx): syntax colours, result box,
+   tree view, error snippet and the common-errors table. Every colour is >= 4.5:1 on
+   --surface and --surface-2 in its theme (light lowest: 4.81:1, dark lowest: 7.89:1). */
+:root { --json-key: #6f42c1; --json-str: #1a7f4b; --json-num: #b45309; --json-lit: #1558b0; }
+@media (prefers-color-scheme: dark) { :root { --json-key: #c4a7ff; --json-str: #7ee2a8; --json-num: #f5b971; --json-lit: #8ab4f8; } }
+.json-key { color: var(--json-key); }
+.json-str { color: var(--json-str); }
+.json-num { color: var(--json-num); }
+.json-lit { color: var(--json-lit); }
+.json-ok { color: var(--json-str); font-weight: 600; }
+.json-warn { color: var(--json-num); }
+.json-out { margin: 0; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm); max-height: 70vh; overflow: auto; tab-size: 4; }
+.json-tree { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.json-tree details, .json-tree .json-leaf { margin-left: 1.1em; }
+.json-tree > details, .json-tree > .json-leaf { margin-left: 0; }
+.json-tree summary { cursor: pointer; }
+.json-meta { color: var(--muted); }
+.json-view .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.json-err .btn { color: var(--text); }
+.json-snippet { margin: 8px 0 0; padding: 8px 10px; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-xs); white-space: pre; word-break: normal; overflow-x: auto; }
+.json-err-table th, .json-err-table td { white-space: normal; text-align: left; vertical-align: top; }
+.json-err-table code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; white-space: pre; }
+
 /* document preview (Word to PDF) — always a white "paper" sheet, theme-neutral */
 .doc-preview { margin-top: 18px; background: #ffffff; color: #1a1a1a; border: 1px solid var(--border); border-radius: var(--r); padding: 30px 34px; overflow-x: auto; line-height: 1.6; }
 .doc-preview h1, .doc-preview h2, .doc-preview h3, .doc-preview h4 { color: #111; margin: 0.6em 0 0.3em; }
