@@ -55,40 +55,58 @@ function gcd(a, b) {
   return a;
 }
 
+// Decimal places in the shortest form of n: 2 for 8452616.62, 7 for 1e-7
+// (which String() prints in exponent form), 0 for 1e21.
+function decimalsOf(n) {
+  const m = /^\d+(?:\.(\d+))?(?:e([+-]\d+))?$/.exec(String(Math.abs(n)));
+  return m ? Math.max(0, (m[1] || "").length - Number(m[2] || 0)) : 0;
+}
+
+// n × 10^places rounded to a whole number. The decimal point is moved in n's
+// shortest form and the result parsed, instead of multiplying in floating
+// point (8452616.62 × 100 is 845261661.9999999).
+function shiftDecimal(n, places) {
+  const [mant, exp = "0"] = String(Math.abs(n)).split("e");
+  const r = Math.round(Number(`${mant}e${Number(exp) + places}`));
+  return n < 0 && r !== 0 ? -r : r;
+}
+
 // Reduce a ratio of any number of terms to lowest whole-number terms, coping
 // with decimals. Returns null when every term is, or rounds to, zero.
 function simplifyTerms(values) {
   if (!values.length || values.every((v) => v === 0)) return null;
-  // Counting decimal places off String(n) read 0 places for exponent-form
-  // values (0.0000001 prints as "1e-7"), so tiny decimals scaled by 1 and
-  // rounded straight to 0:1. Grow the scale until every term is a whole
-  // number instead, capped so the products stay inside safe-integer range.
-  let scale = 1;
-  while (scale < 1e9 && values.some((v) => !Number.isInteger(v * scale))) {
-    scale *= 10;
+  // Scale by 10^(most decimal places of any term), at most 10^9.
+  const dec = Math.max(...values.map(decimalsOf));
+  let places = Math.min(dec, 9);
+  let scaled = values.map((v) => shiftDecimal(v, places));
+  // Keep every scaled term a safe integer so the GCD is exact; dropping
+  // decimal places to do that counts as rounding.
+  while (places > 0 && scaled.some((n) => !Number.isSafeInteger(n))) {
+    places -= 1;
+    scaled = values.map((v) => shiftDecimal(v, places));
   }
-  let scaled = values.map((v) => Math.round(v * scale));
-  // More than nine decimal places: the extra digits were rounded off.
-  const rounded = values.some((v, i) => Math.abs(v * scale - scaled[i]) > 1e-6);
-  // Float noise can push the scale past what the decimals need (1.1 × 10 is
-  // 11.000000000000002), so drop shared trailing zeros. The simplified ratio is
-  // the same; the shown working just uses the smallest scale (×10, not ×10^9).
-  while (scale > 1 && scaled.every((n) => n % 10 === 0)) {
-    scaled = scaled.map((n) => n / 10);
-    scale /= 10;
-  }
+  const rounded = dec > places;
   const g = scaled.reduce((acc, n) => gcd(acc, n), 0);
   if (g === 0) return null;
-  return { terms: scaled.map((n) => n / g), scaled, scale, g, rounded };
+  return { terms: scaled.map((n) => n / g), scaled, scale: 10 ** places, places, g, rounded };
+}
+
+// The simplest form only when it is exact, not a rounded approximation.
+function exactSimplest(values) {
+  const s = simplifyTerms(values);
+  return s && !s.rounded ? s : null;
 }
 
 // "Multiply by 10 to clear decimals: 25 : 50 · GCD(25, 50) = 25 · 25 ÷ 25 : 50 ÷ 25 = 1 : 2"
 function simplifyWorking(s) {
   const steps = [];
-  if (s.scale > 1) {
-    steps.push(
-      `Multiply by ${fmtW(s.scale)} to clear decimals: ${s.scaled.map((n) => fmtW(n)).join(" : ")}`
-    );
+  const scaledText = s.scaled.map((n) => fmtW(n)).join(" : ");
+  if (s.rounded && s.scale === 1) {
+    steps.push(`Round to whole numbers: ${scaledText}`);
+  } else if (s.rounded) {
+    steps.push(`Multiply by ${fmtW(s.scale)} and round to whole numbers: ${scaledText}`);
+  } else if (s.scale > 1) {
+    steps.push(`Multiply by ${fmtW(s.scale)} to clear decimals: ${scaledText}`);
   }
   const gcdArgs = s.scaled.map((n) => fmtW(Math.abs(n))).join(", ");
   const result = s.terms.map((n) => fmtW(n)).join(" : ");
@@ -198,18 +216,24 @@ function solveProportion(a, b, c, d) {
     const lhs = values.a * values.d;
     const rhs = values.b * values.c;
     const holds = Math.abs(lhs - rhs) <= 1e-9 * Math.max(1, Math.abs(lhs), Math.abs(rhs));
-    const working = `A × D = ${fmtOp(values.a)} × ${fmtOp(values.d)} = ${fmtW(lhs)} · B × C = ${fmtOp(
-      values.b
-    )} × ${fmtOp(values.c)} = ${fmtW(rhs)} → ${
-      holds ? "equal" : `${fmtW(lhs)} ≠ ${fmtW(rhs)}, not equal`
+    // Unequal products can match to six decimal places (3.0000001 and 3), so
+    // print more places until they visibly differ rather than "3 ≠ 3".
+    let dp = 6;
+    while (!holds && dp < 12 && fmtW(lhs, dp) === fmtW(rhs, dp)) dp += 1;
+    const eq = (n) => (isRounded(n, dp) ? "≈" : "=");
+    const working = `A × D = ${fmtOp(values.a, dp)} × ${fmtOp(values.d, dp)} ${eq(lhs)} ${fmtW(
+      lhs,
+      dp
+    )} · B × C = ${fmtOp(values.b, dp)} × ${fmtOp(values.c, dp)} ${eq(rhs)} ${fmtW(rhs, dp)} → ${
+      holds ? "equal" : `${fmtW(lhs, dp)} ≠ ${fmtW(rhs, dp)}, not equal`
     }`;
     return {
       status: "full",
       holds,
       values,
       working,
-      simplestAB: simplifyTerms([values.a, values.b]),
-      simplestCD: simplifyTerms([values.c, values.d]),
+      simplestAB: exactSimplest([values.a, values.b]),
+      simplestCD: exactSimplest([values.c, values.d]),
     };
   }
   if (blanks.length > 1) {
@@ -264,7 +288,7 @@ function solveProportion(a, b, c, d) {
     solved,
     values: full,
     working,
-    simplest: simplifyTerms(known),
+    simplest: exactSimplest(known),
   };
 }
 
@@ -315,7 +339,7 @@ function scaleRatio(rawValues, scaleMethod, scaleFactor, scaleDir, scaleTargetId
   if (vals.every((v) => v === 0)) {
     return { status: "error", message: "Enter a non-zero value for at least one term." };
   }
-  const simplest = simplifyTerms(vals);
+  const simplest = exactSimplest(vals);
   const inLowest = !!simplest && simplest.terms.every((t, i) => t === vals[i]);
   const rows = [];
   for (let m = 1; m <= 10; m += 1) {
@@ -949,7 +973,11 @@ export default function RatioCalculator() {
                 </p>
                 {simplifyResult.s.rounded && (
                   <p className="tool-note" style={{ marginTop: 6 }}>
-                    Digits past the ninth decimal place were rounded off.
+                    {simplifyResult.s.places > 0
+                      ? `The terms were rounded to ${simplifyResult.s.places} decimal place${
+                          simplifyResult.s.places === 1 ? "" : "s"
+                        } first, so this is the simplest form of the rounded ratio.`
+                      : "The terms were rounded to whole numbers first, so this is the simplest form of the rounded ratio."}
                   </p>
                 )}
                 <div className="tool-actions" style={{ marginTop: 10 }}>
@@ -1012,7 +1040,7 @@ export default function RatioCalculator() {
                           {`${sh.frac} (${formatNumber(sh.pct, 2)}%)`}
                         </div>
                         <div className="tool-stat-label">
-                          {letterLabel(i)} as part of total
+                          {letterLabel(i)} share of total
                         </div>
                       </div>
                     ))}
@@ -1040,7 +1068,9 @@ export default function RatioCalculator() {
                   <p className="tool-note">
                     {`Share of total: ${simplifyResult.s.terms
                       .map((t) => fmtW(t))
-                      .join(" + ")} = ${fmtW(simplifyResult.sum)} parts · `}
+                      .join(" + ")} = ${fmtW(simplifyResult.sum)} part${
+                      simplifyResult.sum === 1 ? "" : "s"
+                    } · `}
                     {simplifyResult.shares
                       .map(
                         (sh, i) =>
@@ -1484,7 +1514,7 @@ export default function RatioCalculator() {
         </>
       )}
 
-      <section className="tool-about" style={{ marginTop: 26 }}>
+      <section style={{ marginTop: 26, paddingTop: 26, borderTop: "1px solid var(--border)" }}>
         <h2 className="tool-h2">Common ratios as shares of a total</h2>
         <p className="tool-note">
           Each ratio as the share of the total each part gets, and what that means for
