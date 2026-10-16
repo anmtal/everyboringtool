@@ -1,3 +1,5 @@
+import { EMBED_SLUGS } from "./lib/embedSlugs.mjs";
+
 // Content-Security-Policy allowlisting exactly what the tools load: Next's inline
 // hydration scripts + inline style attributes ('unsafe-inline'), WebAssembly
 // (ffmpeg / tesseract / onnx-runtime via 'wasm-unsafe-eval'), blob: workers and
@@ -13,11 +15,13 @@
 const WORD_HUBS = ["unscramble", "anagram", "words-starting-with", "words-ending-with", "words-containing", "crossword-solver"];
 
 const GOOGLE_ADS = "https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://*.doubleclick.net https://*.google.com";
-const CSP = [
+// One policy for every page; only frame-ancestors differs: 'self' site-wide,
+// * on the /embed/* pages that other sites are meant to iframe.
+const cspWith = (frameAncestors) => [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
-  "frame-ancestors 'self'",
+  `frame-ancestors ${frameAncestors}`,
   "form-action 'self'",
   `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net https://www.googletagmanager.com ${GOOGLE_ADS}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -33,6 +37,36 @@ const CSP = [
   "frame-src 'self' blob: https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net https://*.googlesyndication.com https://*.google.com https://fundingchoicesmessages.google.com",
   "manifest-src 'self'",
 ].join("; ");
+const CSP = cspWith("'self'");
+const CSP_EMBED = cspWith("*");
+
+// The iframe-able pages: exactly /embed/<slug> for the slugs in
+// lib/embedSlugs.mjs. Any other path, including a 404 under /embed/, keeps the
+// site-wide headers, so it can't be framed and used to reach the rest of the
+// site through client-side (next/link) navigation inside the frame.
+if (!EMBED_SLUGS.every((s) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s))) {
+  throw new Error(`lib/embedSlugs.mjs: slugs must be lowercase letters, digits and hyphens: ${EMBED_SLUGS.join(", ")}`);
+}
+const EMBED_ALT = EMBED_SLUGS.join("|");
+
+// Security headers. `embed` drops X-Frame-Options and opens frame-ancestors so
+// the /embed/* pages can be iframed anywhere; everything else is identical.
+function securityHeaders({ embed = false } = {}) {
+  return [
+    { key: "X-Content-Type-Options", value: "nosniff" },
+    ...(embed ? [] : [{ key: "X-Frame-Options", value: "SAMEORIGIN" }]),
+    { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+    // camera=(self) — the QR scanner needs it; everything else is off.
+    { key: "Permissions-Policy", value: "camera=(self), geolocation=(), microphone=(), payment=(), interest-cohort=()" },
+    { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+    { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+    // Enforcing. Verified Report-Only first: homepage inline scripts/styles/
+    // fonts, blob workers (regex), object URLs/data URIs, the iframe PDF
+    // preview, ffmpeg, and the OCR/transcribe CDNs (jsDelivr + Hugging Face)
+    // all pass; unknown origins are correctly blocked.
+    { key: "Content-Security-Policy", value: embed ? CSP_EMBED : CSP },
+  ];
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -40,6 +74,12 @@ const nextConfig = {
   // with fs at request time. That dynamic path isn't auto-traced into the
   // serverless bundle, so include it explicitly.
   experimental: {
+    // Match header, redirect and rewrite sources case-sensitively. By default
+    // Next matches them case-insensitively, so /EMBED/<slug> would get the
+    // embed (frameable) headers while rendering a 404 with the full site chrome.
+    // Vercel's router may still match header sources case-insensitively; the
+    // frame guard in app/layout.js hides any non-embed page framed that way.
+    caseSensitiveRoutes: true,
     outputFileTracingIncludes: {
       "/word-results/[family]": ["./public/words/dict.txt"],
       "/[category]": ["./public/words/dict.txt"],
@@ -60,22 +100,24 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
-        headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          // camera=(self) — the QR scanner needs it; everything else is off.
-          { key: "Permissions-Policy", value: "camera=(self), geolocation=(), microphone=(), payment=(), interest-cohort=()" },
-          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
-          // Enforcing. Verified Report-Only first: homepage inline scripts/styles/
-          // fonts, blob workers (regex), object URLs/data URIs, the iframe PDF
-          // preview, ffmpeg, and the OCR/transcribe CDNs (jsDelivr + Hugging Face)
-          // all pass; unknown origins are correctly blocked.
-          { key: "Content-Security-Policy", value: CSP },
-        ],
+        // Every path EXCEPT the registered embed pages (negative lookahead,
+        // anchored with $ so /embed/<slug>/x and unknown /embed/* paths are
+        // covered), so the framing headers below are the only ones the embed
+        // pages get. Matches "/" too.
+        source: EMBED_SLUGS.length ? `/((?!embed/(?:${EMBED_ALT})$).*)` : "/(.*)",
+        headers: securityHeaders(),
       },
+      ...(EMBED_SLUGS.length
+        ? [
+            {
+              // The iframe-able tools (lib/embedSlugs.mjs) and nothing else:
+              // same security headers minus X-Frame-Options, with
+              // frame-ancestors *, and kept out of the index.
+              source: `/embed/:slug(${EMBED_ALT})`,
+              headers: [...securityHeaders({ embed: true }), { key: "X-Robots-Tag", value: "noindex" }],
+            },
+          ]
+        : []),
       {
         // These files have STABLE names (not content-hashed), so `immutable` would
         // pin a stale copy for a year if we ever update the dictionary or ffmpeg

@@ -363,7 +363,7 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .tool-error { color: #b3261e; font-size: 14px; margin: 0; }
 @media (prefers-color-scheme: dark) { .tool-error { color: #f2b8b5; } }
 
-.tool-about, .tool-faq, .tool-related { margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--border); }
+.tool-about, .tool-faq, .tool-related, .tool-embed { margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--border); }
 .tool-h2 { font-size: 18px; font-weight: 640; letter-spacing: -0.01em; margin: 0 0 14px; }
 .tool-about p { color: var(--muted); margin: 0 0 12px; text-wrap: pretty; }
 .tool-faq dl { margin: 0; }
@@ -467,3 +467,116 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .braguide-cap { font-size: 11px; line-height: 1.4; color: var(--muted); margin: 0; }
 .braguide-fig.is-lead .braguide-name { color: var(--text); }
 .braguide-hint { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* Classroom Timer (components/tools/classroom-timer.jsx). The digits are sized
+   with container-query units, so they fill whatever box they get: the tool page,
+   a ~460px-tall embed iframe, or full screen on a classroom board. Phase colours:
+   idle (neutral) → calm → amber for the last 20% → red for the final 10 s / done. */
+.ct {
+  --ct-calm: #1a7f4b; --ct-calm-bg: rgba(26, 127, 75, 0.07);
+  --ct-warn: #b45309; --ct-warn-bg: rgba(217, 119, 6, 0.13);
+  --ct-danger: #b91c1c; --ct-danger-bg: rgba(220, 38, 38, 0.12); --ct-danger-bg-strong: rgba(220, 38, 38, 0.28);
+  gap: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  .ct {
+    --ct-calm: #4ade80; --ct-calm-bg: rgba(74, 222, 128, 0.08);
+    --ct-warn: #fbbf24; --ct-warn-bg: rgba(251, 191, 36, 0.12);
+    --ct-danger: #f87171; --ct-danger-bg: rgba(248, 113, 113, 0.14); --ct-danger-bg-strong: rgba(248, 113, 113, 0.3);
+  }
+}
+.ct-stage {
+  --ct-accent: var(--border-strong); --ct-tint: var(--surface-2);
+  display: flex; flex-direction: column; gap: 10px; padding: 12px;
+  background: var(--ct-tint); border: 2px solid var(--ct-accent); border-radius: var(--r-lg);
+  transition-property: background-color, border-color; transition-duration: 300ms; transition-timing-function: ease-out;
+}
+.ct[data-phase="calm"] .ct-stage { --ct-accent: var(--ct-calm); --ct-tint: var(--ct-calm-bg); }
+.ct[data-phase="warn"] .ct-stage { --ct-accent: var(--ct-warn); --ct-tint: var(--ct-warn-bg); }
+.ct[data-phase="danger"] .ct-stage, .ct[data-phase="done"] .ct-stage { --ct-accent: var(--ct-danger); --ct-tint: var(--ct-danger-bg); }
+.ct-display {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  height: 200px; height: clamp(130px, min(34vh, 42vw), 440px);
+  container-type: size;
+}
+.ct-pill {
+  position: absolute; top: 0; left: 0; z-index: 1;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+}
+.ct-digits {
+  /* Fallback first; browsers with container queries use the second value. */
+  font-size: clamp(56px, 15vw, 200px);
+  font-size: min(72cqh, calc(92cqw / var(--ct-em, 2.8)));
+  line-height: 1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+  white-space: nowrap; color: var(--text);
+}
+.ct[data-phase="warn"] .ct-digits { color: var(--ct-warn); }
+.ct[data-phase="danger"] .ct-digits, .ct[data-phase="done"] .ct-digits { color: var(--ct-danger); }
+.ct-bar { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.ct-bar-fill {
+  height: 100%; background: var(--ct-accent); transform-origin: left center;
+  transition: transform 200ms linear, background-color 300ms ease-out;
+}
+.ct[data-phase="idle"] .ct-bar-fill { background: var(--faint); }
+.ct-controls { justify-content: center; }
+.ct-setup { display: flex; flex-direction: column; gap: 10px; }
+.ct-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.ct-preset { padding: 7px 13px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.ct-preset[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.ct-custom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ct-custom-label { font-size: 13px; font-weight: 560; color: var(--muted); margin-right: 2px; }
+.ct-custom .tool-input { width: 76px; padding: 8px 10px; text-align: center; }
+.ct-unit { font-size: 14px; color: var(--muted); }
+/* Full screen: the Fullscreen API, or a fixed overlay where it isn't available. */
+.ct.is-full { background: var(--bg); padding: clamp(12px, 2.5vw, 32px); overflow: auto; }
+.ct.is-faux { position: fixed; inset: 0; z-index: 2147483000; }
+.ct.is-full .ct-stage { flex: 1 1 auto; min-height: 0; }
+.ct.is-full .ct-display { flex: 1 1 auto; height: auto; min-height: 120px; }
+.ct.is-full .ct-pill { font-size: 14px; }
+@media (prefers-reduced-motion: no-preference) {
+  .ct[data-phase="done"] .ct-stage { animation: ct-flash 1s ease-in-out 3; }
+}
+@keyframes ct-flash { 50% { background-color: var(--ct-danger-bg-strong); } }
+
+/* Embeds (/embed/<slug>, iframed by other sites). The layout renders no header,
+   nav or footer there (components/SiteChrome.jsx), so tighten the page box to
+   the tool plus its credit line. */
+.main:has(> .embed-page) { padding: 8px 10px 0; min-height: 0; }
+.embed-page .tool-shell { margin: 0; }
+.embed-credit { margin: 8px 0 10px; font-size: 12.5px; color: var(--muted); text-align: center; }
+.embed-credit a { text-decoration: underline; text-underline-offset: 2px; }
+.embed-credit a:hover { color: var(--text); }
+/* Classroom Timer in an embed. The snippet's iframe is 460px tall at every
+   width (lib/embeds.js), so below 720px the buttons, presets and custom-time
+   row go compact, and below 560px the keyboard hint and the "Custom" label are
+   visually hidden (screen readers still get them; the form is labelled
+   "Custom time"). Measured: tool + credit fit in 460px from 320px wide up. */
+@media (max-width: 719px) {
+  .embed-page .ct { gap: 10px; }
+  .embed-page .ct-stage { padding: 10px; gap: 8px; }
+  .embed-page .ct-controls { gap: 8px; }
+  .embed-page .ct .btn { min-height: 34px; padding: 6px 12px; font-size: 13px; }
+  .embed-page .ct-setup { gap: 8px; }
+  .embed-page .ct-presets { gap: 6px; }
+  .embed-page .ct-preset { padding: 5px 10px; font-size: 13px; }
+  .embed-page .ct-custom { gap: 6px; }
+  .embed-page .ct-custom .tool-input { width: 60px; padding: 6px 8px; }
+}
+@media (max-width: 559px) {
+  .embed-page .ct-custom-label, .embed-page .ct-hint {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+}
+/* Frame guard (app/layout.js): a page other than /embed/<slug> that ends up in
+   another site's frame shows a line of text and nothing to click. */
+html[data-framed="blocked"] body > * { display: none !important; }
+html[data-framed="blocked"] body::before {
+  content: "This page can\2019t be shown inside another site. Open everyboringtool.com in a new tab.";
+  display: block; padding: 16px; font-size: 14px; color: var(--muted);
+}
+/* "Embed this tool" box on the tool pages listed in lib/embeds.js */
+.tool-embed .tool-textarea { min-height: 0; font-size: 12.5px; }
+.tool-embed .tool-actions { margin-top: 10px; }
+.tool-embed > .tool-note { margin-top: 8px; }
