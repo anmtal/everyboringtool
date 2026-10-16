@@ -215,7 +215,9 @@ function solveProportion(a, b, c, d) {
     // 0.06000000000000001 in binary floating point.
     const lhs = values.a * values.d;
     const rhs = values.b * values.c;
-    const holds = Math.abs(lhs - rhs) <= 1e-9 * Math.max(1, Math.abs(lhs), Math.abs(rhs));
+    // Purely relative (no floor of 1), so tiny ratios like
+    // 0.00001 : 0.00001 = 0.00001 : 0.00002 aren't reported as equal.
+    const holds = Math.abs(lhs - rhs) <= 1e-9 * Math.max(Math.abs(lhs), Math.abs(rhs));
     // Unequal products can match to six decimal places (3.0000001 and 3), so
     // print more places until they visibly differ rather than "3 ≠ 3".
     let dp = 6;
@@ -232,6 +234,7 @@ function solveProportion(a, b, c, d) {
       holds,
       values,
       working,
+      dp,
       simplestAB: exactSimplest([values.a, values.b]),
       simplestCD: exactSimplest([values.c, values.d]),
     };
@@ -681,12 +684,17 @@ export default function RatioCalculator() {
     }
   };
 
+  // A false proportion is printed at the same precision as its working line,
+  // so "1 : 3 = 1 : 3.0000001" never reads "1 : 3 = 1 : 3".
+  const headDp = solveResult.status === "full" && solveResult.dp ? solveResult.dp : 6;
   const solvedRatioText =
     solveResult.status === "solved" || solveResult.status === "full"
-      ? `${formatNumber(solveResult.values.a)} : ${formatNumber(
-          solveResult.values.b
-        )} = ${formatNumber(solveResult.values.c)} : ${formatNumber(
-          solveResult.values.d
+      ? `${formatNumber(solveResult.values.a, headDp)} : ${formatNumber(
+          solveResult.values.b,
+          headDp
+        )} = ${formatNumber(solveResult.values.c, headDp)} : ${formatNumber(
+          solveResult.values.d,
+          headDp
         )}`
       : "";
 
