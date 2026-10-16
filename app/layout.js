@@ -69,6 +69,7 @@ const ORG_LD = {
         "https://www.instagram.com/everyboringtool/",
         "https://www.facebook.com/profile.php?id=61594195742039",
         "https://www.producthunt.com/products/every-boring-tool",
+        "https://x.com/everyboringtool",
       ],
     },
     {
