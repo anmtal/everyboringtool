@@ -69,11 +69,12 @@ function round2(n) {
   return Math.round(n * 100) / 100;
 }
 
-// Value written back into an input when the Solve-for mode changes: two decimals,
-// unless that would round a small positive number down to zero.
+// Value written back into an input when the Solve-for mode changes. It keeps ten
+// significant digits instead of rounding to cents, so switching modes and back
+// doesn't drift the numbers the user typed ($500 / 213,220 impressions -> CPM
+// 2.344995779 -> cost 500, not 498.93 as a 2.34 CPM would give).
 function toInputValue(n) {
-  const s = n.toFixed(2);
-  return n > 0 && Number(s) === 0 ? String(Number(n.toPrecision(4))) : s;
+  return String(Number(n.toPrecision(10)));
 }
 
 // Round comparison values for the "What these numbers mean" tables. They are not
@@ -171,7 +172,10 @@ export default function CpmCalculator({ initialSolveFor = "cpm" } = {}) {
     const rch = toNumber(reach);
     const out = {};
     if (clk != null && clk > 0) out.cpc = C / clk;
-    if (clk != null && I > 0) out.ctr = (clk / I) * 100;
+    // CTR only for 0 <= clicks <= impressions; more clicks than impressions
+    // would be a CTR over 100%, so flag it instead.
+    if (clk != null && clk > I) out.clicksError = true;
+    else if (clk != null && clk >= 0 && I > 0) out.ctr = (clk / I) * 100;
     if (conv != null && conv > 0) out.cpa = C / conv;
     if (rch != null && rch > 0) {
       if (rch > I) {
@@ -198,7 +202,7 @@ export default function CpmCalculator({ initialSolveFor = "cpm" } = {}) {
       cost: I > 0 ? (v * I) / 1000 : null,
     }));
     const clk = toNumber(clicks);
-    const actualCtr = clk != null && clk >= 0 && I > 0 ? (clk / I) * 100 : null;
+    const actualCtr = clk != null && clk >= 0 && clk <= I && I > 0 ? (clk / I) * 100 : null;
     const ctrRows = ladderRows(CTR_LADDER, actualCtr).map(({ v, own }) => ({
       own,
       ctr: v,
@@ -404,6 +408,9 @@ export default function CpmCalculator({ initialSolveFor = "cpm" } = {}) {
               {derived.frequency != null && <div className="tool-stat"><div className="tool-stat-num">{derived.frequency.toLocaleString("en-US", { maximumFractionDigits: 2 })}</div><div className="tool-stat-label">Frequency (impressions per person)</div></div>}
               {derived.costPerReach != null && <div className="tool-stat"><div className="tool-stat-num">{money(derived.costPerReach, currency)}</div><div className="tool-stat-label">Cost per 1,000 people reached</div></div>}
             </div>
+          )}
+          {derived && derived.clicksError && (
+            <p className="tool-error">Clicks are higher than impressions, which would be a CTR over 100% — check that both figures come from the same report.</p>
           )}
           {derived && derived.reachError && (
             <p className="tool-error">Reach can&apos;t be higher than impressions — everyone reached saw the ad at least once.</p>
