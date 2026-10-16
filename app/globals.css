@@ -474,7 +474,13 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
    chart-noprint, chart-sheet-skip, chart-print-source, chart-break-before) so
    future charts can reuse it; rn- classes are the Roman numerals chart's own.
    ========================================================================= */
-.chart-section { margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--border); scroll-margin-top: 16px; }
+.chart-section { margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--border); }
+/* Jump links land below the sticky .site-header. ChartPageEffects measures the
+   header into --chart-header-h; these values cover the moment before it runs. */
+.chart-page { --chart-header-h: 112px; }
+@media (min-width: 768px) { .chart-page { --chart-header-h: 202px; } }
+@media (min-width: 840px) { .chart-page { --chart-header-h: 170px; } }
+.chart-page .chart-section, .chart-page [id] { scroll-margin-top: calc(var(--chart-header-h) + 16px); }
 .chart-prose { max-width: 72ch; line-height: 1.65; margin: 0 0 12px; text-wrap: pretty; }
 .chart-print-source, .chart-print-footer { display: none; }
 .rn-jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
@@ -637,6 +643,8 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
   .chart-page .rn-table th, .chart-page .rn-table td { border: 0.5pt solid #999; padding: 1.2mm 1.6mm; }
   .chart-page .rn-table thead th { color: #000; }
   .chart-page .rn-table tr { break-inside: avoid; }
+  /* a whole grid or list moves to the next page rather than splitting */
+  .chart-page .rn-table-wrap:has(> .rn-grid), .chart-page .rn-grid, .chart-page .rn-two > .rn-table { break-inside: avoid; }
   .chart-page .rn-blank { background: none; }
   .chart-page .rn-grid { min-width: 0; }
   .chart-page .rn-grid th, .chart-page .rn-grid td { padding: 1.6mm 0.4mm; }
@@ -646,6 +654,8 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
   .chart-page .rn-r { font-size: 12pt; }
   .chart-page .rn-h-r { font-size: 8pt; }
   .chart-page .rn-grid-100 th, .chart-page .rn-grid-100 td { padding: 3.4mm 0.4mm; }
+  /* whole-page print: a little tighter so the grid fits under the title on Letter */
+  html:not([data-chart-print]) .chart-page .rn-grid-100 th, html:not([data-chart-print]) .chart-page .rn-grid-100 td { padding: 3mm 0.4mm; }
   /* Hundreds and years grids: the 800s run to 12 letters (DCCCLXXXVIII), so the
      type is small and tight to keep every block inside A4's 186 mm width. */
   .chart-page .rn-grid-wide { min-width: 0; }
@@ -660,9 +670,10 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
   .chart-page .rn-two { gap: 6mm; margin: 2mm 0; grid-template-columns: 1fr 1fr; }
   .chart-page .rn-two > .rn-table { border: 0; border-radius: 0; border-collapse: collapse; overflow: visible; }
 
-  /* collapsible blocks print open, as plain headed tables */
+  /* collapsible blocks print open (PrintSheetButton or ChartPageEffects opens
+     them; CSS cannot), as plain headed tables */
   .chart-page .rn-details { border: 0; border-radius: 0; background: none; margin-top: 4mm; }
-  .chart-page .rn-details > summary { list-style: none; padding: 0 0 1mm; font-size: 13pt; font-weight: 700; border: 0; }
+  .chart-page .rn-details > summary { list-style: none; padding: 0 0 1mm; font-size: 13pt; font-weight: 700; border: 0; break-after: avoid; }
   .chart-page .rn-details > summary::-webkit-details-marker { display: none; }
   .chart-page .rn-details > .rn-table-wrap { margin: 0; }
   .chart-page .rn-details > p { margin: 2mm 0 0; }

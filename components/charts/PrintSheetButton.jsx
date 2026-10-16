@@ -8,7 +8,8 @@ import { trackEvent } from "../../lib/analytics";
 // the print stylesheet (the "Printable charts" block at the end of
 // app/globals.css) then prints only those sections. Closed <details> inside them
 // would print empty, so they are opened for the print and closed again after.
-// Without a button (Ctrl+P) the whole chart page prints as it is shown.
+// Without a button (Ctrl+P) the whole chart page prints, and ChartPageEffects
+// opens the collapsed blocks for that print.
 export default function PrintSheetButton({ sheet, chart = "", label = "Print", className = "btn btn-sm" }) {
   function onClick() {
     const root = document.documentElement;

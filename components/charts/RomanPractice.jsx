@@ -6,7 +6,8 @@ import PrintSheetButton from "./PrintSheetButton";
 
 // Practice sheet that works two ways: answer on screen and press "Check", or
 // print it (questions on page 1, answer key on page 2). A seeded generator makes
-// every version reproducible: the version number on the sheet regenerates it.
+// every version reproducible: typing the version number printed on a sheet into
+// the Version box, with the same sheet type and level, rebuilds that sheet.
 
 const LEVELS = {
   "1-20": { label: "1 to 20", min: 1, max: 20 },
@@ -24,6 +25,14 @@ const TYPES = {
 
 const QUESTIONS = 20;
 const GRID_BLANKS = 50;
+const MAX_VERSION = 99999;
+
+function parseVersion(raw) {
+  const s = String(raw).trim();
+  if (!/^\d+$/.test(s)) return null;
+  const v = Number(s);
+  return v >= 1 && v <= MAX_VERSION ? v : null;
+}
 
 // mulberry32: tiny deterministic PRNG, good enough for shuffling a worksheet.
 function rng(seed) {
@@ -73,6 +82,8 @@ export default function RomanPractice({ source }) {
   const [type, setType] = useState("to-numeral");
   const [level, setLevel] = useState("1-100");
   const [seed, setSeed] = useState(1);
+  // What is in the Version box; it can be briefly invalid (empty) while typing.
+  const [versionText, setVersionText] = useState("1");
   const [answers, setAnswers] = useState({});
   const [checked, setChecked] = useState(false);
 
@@ -82,6 +93,21 @@ export default function RomanPractice({ source }) {
     setAnswers({});
     setChecked(false);
     next();
+  }
+
+  function onVersionChange(e) {
+    const raw = e.target.value;
+    setVersionText(raw);
+    const v = parseVersion(raw);
+    if (v !== null && v !== seed) reset(() => setSeed(v));
+  }
+
+  function newVersion() {
+    const v = 1 + Math.floor(Math.random() * MAX_VERSION);
+    reset(() => {
+      setSeed(v);
+      setVersionText(String(v));
+    });
   }
 
   const gridItems = useMemo(() => {
@@ -124,8 +150,23 @@ export default function RomanPractice({ source }) {
             {Object.entries(LEVELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
         </div>
+        <div className="tool-field">
+          <label className="tool-label" htmlFor="rn-ws-version">Version</label>
+          <input
+            id="rn-ws-version"
+            className="tool-input"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={MAX_VERSION}
+            step={1}
+            value={versionText}
+            onChange={onVersionChange}
+            onBlur={() => setVersionText(String(seed))}
+          />
+        </div>
         <div className="tool-actions" style={{ alignSelf: "end" }}>
-          <button type="button" className="btn btn-sm" onClick={() => reset(() => setSeed(1 + Math.floor(Math.random() * 99999)))}>New version</button>
+          <button type="button" className="btn btn-sm" onClick={newVersion}>New version</button>
           <PrintSheetButton sheet="worksheet" chart="roman-numerals" label="Print worksheet + answer key" className="btn btn-sm btn-primary" />
         </div>
       </div>
@@ -207,7 +248,8 @@ export default function RomanPractice({ source }) {
           ) : null}
         </div>
 
-        <details className="rn-key">
+        {/* data-print-closed: Ctrl+P leaves the key shut; the worksheet print button opens it onto page 2. */}
+        <details className="rn-key" data-print-closed="">
           <summary className="chart-noprint">Show the answer key</summary>
           <h3 className="rn-ws-title">Answer key: {title}</h3>
           <p className="rn-ws-meta">{version}</p>

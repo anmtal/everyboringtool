@@ -17,6 +17,7 @@ import {
   superBowlYear,
 } from "../../../lib/roman";
 import PrintSheetButton from "../../../components/charts/PrintSheetButton";
+import ChartPageEffects from "../../../components/charts/ChartPageEffects";
 import RomanBuilder from "../../../components/charts/RomanBuilder";
 import RomanPractice from "../../../components/charts/RomanPractice";
 import RomanDataDownload from "../../../components/charts/RomanDataDownload";
@@ -26,8 +27,9 @@ import AdSlot from "../../../components/AdSlot";
 // Printable Roman numerals chart: a reference asset for teachers, librarians and
 // anyone who wants to link to a correct chart. HOUSE RULE: every numeral on this
 // page comes from lib/roman.js at build time. The only numeral-like strings typed
-// below are the deliberately WRONG forms used as counter-examples, and the build
-// fails if any of them is accepted (selfCheck).
+// below are the deliberately WRONG forms used as counter-examples (the build
+// fails if any of them is accepted) and the KNOWN answers selfCheck compares
+// against, which are never rendered. Unit tests: lib/roman.test.mjs (npm test).
 
 const CHART = getChart("roman-numerals");
 const PATH = chartUrl(CHART.slug);
@@ -63,10 +65,39 @@ const WRONG = {
 const VAL = Object.fromEntries(SYMBOLS);
 const DESCENDING = SYMBOLS.map(([s]) => s).reverse().join("");
 
+// The standard form, written out independently of toRoman: up to three M's,
+// then one hundreds, one tens and one ones group, each in its only legal shape.
+const STANDARD = /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
+
+// Known answers, typed by hand on purpose so the check does not lean on the
+// encoder it is checking. Compared against only; never rendered.
+const KNOWN = [
+  [1, "I"],
+  [4, "IV"],
+  [9, "IX"],
+  [40, "XL"],
+  [90, "XC"],
+  [400, "CD"],
+  [900, "CM"],
+  [1994, "MCMXCIV"],
+  [3888, "MMMDCCCLXXXVIII"],
+  [3999, "MMMCMXCIX"],
+];
+
 // Runs once at build time. Any failure throws, so a wrong chart can never ship.
+// A round trip alone is not enough (fromRoman accepts whatever toRoman emits),
+// so each numeral must also have the standard shape and add up to n when read
+// symbol by symbol (looseRomanValue does not call toRoman). Shape plus value
+// pins down the one correct numeral for every n.
 function selfCheck() {
   for (let n = 1; n <= ROMAN_MAX; n++) {
-    if (fromRoman(toRoman(n)) !== n) throw new Error(`Roman chart self-check failed at ${n}`);
+    const r = toRoman(n);
+    if (!STANDARD.test(r)) throw new Error(`Roman chart self-check: ${n} -> ${r} is not in standard form`);
+    if (looseRomanValue(r) !== n) throw new Error(`Roman chart self-check: ${r} does not add up to ${n}`);
+    if (fromRoman(r) !== n) throw new Error(`Roman chart self-check: ${r} does not read back as ${n}`);
+  }
+  for (const [n, r] of KNOWN) {
+    if (toRoman(n) !== r) throw new Error(`Roman chart self-check: ${n} must be ${r}, got ${toRoman(n)}`);
   }
   for (const w of Object.keys(WRONG)) {
     if (fromRoman(w) !== null) throw new Error(`Roman chart self-check: ${w} must be rejected`);
@@ -275,8 +306,8 @@ const RULES = [
     wrong: ["IIII", "XXXX", "VV"],
   },
   {
-    h: "There is no zero, no negative numbers and no fractions.",
-    p: `Roman numerals count from ${R(1)} (one). Medieval writers sometimes used the Latin word nulla ("none") for zero, but it was never a numeral.`,
+    h: "There is no zero and no negative numbers, and the standard numerals are whole numbers only.",
+    p: `Roman numerals count from ${R(1)} (one). Medieval writers sometimes used the Latin word nulla ("none") for zero, but it was never a numeral. The Romans did write fractions, but in a separate base-12 notation: S (semis) for one half and a dot for each twelfth (uncia).`,
   },
   {
     h: `The standard form stops at ${fmt(ROMAN_MAX)}.`,
@@ -355,7 +386,7 @@ const SHEETS = [
   { id: "chart100", title: "1–100 chart", pages: 1, desc: "The 10 × 10 tens-and-ones grid, the chart most classrooms use." },
   { id: "chart1000", title: "1–1000 chart", pages: 10, desc: "The 1–100 grid plus one page for each hundred up to 999, then 1000." },
   { id: "years", title: "Years 1900–2099", pages: 2, desc: "Every year of the 20th and 21st centuries, one century per page." },
-  { id: "worksheet", title: "Worksheet + answer key", pages: 2, desc: "20 questions or a fill-in grid at four levels, answers on page 2.", practice: true },
+  { id: "worksheet", title: "Worksheet + answer key", pages: 2, desc: "20 questions at four levels, or a fill-in 1–100 grid. Answer key on page 2.", practice: true },
 ];
 
 function citationApa() {
@@ -404,9 +435,9 @@ export const metadata = {
 };
 
 const JUMP = [
+  ["chart-1-100", "1–100"],
   ["symbols", "Symbols"],
   ["printables", "Print & download"],
-  ["chart-1-100", "1–100"],
   ["chart-1-20", "1–20"],
   ["chart-1-1000", "1–1000"],
   ["build", "Build any number"],
@@ -488,7 +519,38 @@ export default function RomanNumeralsChartPage() {
         ))}
       </nav>
 
-      {/* 1. Symbols ------------------------------------------------------- */}
+      {/* 1. 1-100 ----------------------------------------------------------- */}
+      <section className="chart-section" id="chart-1-100" data-sheets="chart100 chart1000" aria-labelledby="c100-h">
+        <h2 className="tool-h2" id="c100-h">Roman numerals 1–100 chart</h2>
+        <TensGrid
+          from={0}
+          withHundred
+          size="rn-grid-100"
+          caption={`Roman numerals 1 to 100. Each row is a tens value and each column adds the ones, so row 20 (${R(20)}) and column +4 (${R(4)}) give 24 = ${R(24)}.`}
+        />
+        <div className="chart-sheet-skip">
+          <h3 className="rn-h3">Patterns to spot</h3>
+          <ul className="chart-prose rn-bullets">
+            <li>
+              Every number ending in 4 ends in {R(4)} and every number ending in 9 ends in {R(9)}: 14 = {R(14)},
+              39 = {R(39)}, 94 = {R(94)}.
+            </li>
+            <li>
+              The 40s all start with {R(40)} and the 90s with {R(90)}: 45 = {R(45)}, 92 = {R(92)}.
+            </li>
+            <li>
+              Every number is its tens part plus its ones part: 24 = {partsText(24)} = {R(24)}, and 67 = {partsText(67)} ={" "}
+              {R(67)}.
+            </li>
+            <li>
+              The longest numeral up to 100 is {LONGEST_100.n} = {LONGEST_100.roman}, with {LONGEST_100.roman.length} letters.
+            </li>
+          </ul>
+        </div>
+        <p className="chart-print-source">{SOURCE}</p>
+      </section>
+
+      {/* 2. Symbols ------------------------------------------------------- */}
       <section className="chart-section" id="symbols" data-sheets="basics" aria-labelledby="symbols-h">
         <h2 className="tool-h2" id="symbols-h">Roman numeral symbols</h2>
         <p className="chart-prose chart-sheet-skip">Seven letters make every Roman numeral. They alternate between ones and fives: 1, 5, 10, 50, 100, 500, 1,000.</p>
@@ -515,7 +577,7 @@ export default function RomanNumeralsChartPage() {
         </p>
       </section>
 
-      {/* 2. Printables ---------------------------------------------------- */}
+      {/* 3. Printables ---------------------------------------------------- */}
       <section className="chart-section chart-noprint" id="printables" aria-labelledby="printables-h">
         <h2 className="tool-h2" id="printables-h">Printable Roman numerals charts</h2>
         <p className="chart-prose">
@@ -549,37 +611,6 @@ export default function RomanNumeralsChartPage() {
           written in Roman numerals in Year 5. The 1–20 sheet (with its clock faces), the 1–100 chart, and the 1–1000
           and years sheets match those three steps.
         </p>
-      </section>
-
-      {/* 3. 1-100 ----------------------------------------------------------- */}
-      <section className="chart-section" id="chart-1-100" data-sheets="chart100 chart1000" aria-labelledby="c100-h">
-        <h2 className="tool-h2" id="c100-h">Roman numerals 1–100 chart</h2>
-        <TensGrid
-          from={0}
-          withHundred
-          size="rn-grid-100"
-          caption={`Roman numerals 1 to 100. Each row is a tens value and each column adds the ones, so row 20 (${R(20)}) and column +4 (${R(4)}) give 24 = ${R(24)}.`}
-        />
-        <div className="chart-sheet-skip">
-          <h3 className="rn-h3">Patterns to spot</h3>
-          <ul className="chart-prose rn-bullets">
-            <li>
-              Every number ending in 4 ends in {R(4)} and every number ending in 9 ends in {R(9)}: 14 = {R(14)},
-              39 = {R(39)}, 94 = {R(94)}.
-            </li>
-            <li>
-              The 40s all start with {R(40)} and the 90s with {R(90)}: 45 = {R(45)}, 92 = {R(92)}.
-            </li>
-            <li>
-              Every number is its tens part plus its ones part: 24 = {partsText(24)} = {R(24)}, and 67 = {partsText(67)} ={" "}
-              {R(67)}.
-            </li>
-            <li>
-              The longest numeral up to 100 is {LONGEST_100.n} = {LONGEST_100.roman}, with {LONGEST_100.roman.length} letters.
-            </li>
-          </ul>
-        </div>
-        <p className="chart-print-source">{SOURCE}</p>
       </section>
 
       {/* 4. 1-20 ------------------------------------------------------------ */}
@@ -624,7 +655,10 @@ export default function RomanNumeralsChartPage() {
             <ListTable caption="Hundreds from 100 to 1000" rows={[100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]} />
           </div>
           <h3 className="rn-h3">Every number from 100 to 999</h3>
-          <p className="chart-prose">Open a block to see all hundred numerals in it. Numbers 1 to 99 are in the chart above.</p>
+          <p className="chart-prose">
+            <span className="chart-noprint">Open a block to see all hundred numerals in it. </span>Numbers 1 to 99 are in
+            the 1–100 chart above.
+          </p>
         </div>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((h) => {
           const from = h * 100;
@@ -704,8 +738,8 @@ export default function RomanNumeralsChartPage() {
               </li>
             ))}
           </ul>
-          <h3 className="rn-h3">Try it</h3>
           <div className="chart-noprint">
+            <h3 className="rn-h3">Try it</h3>
             <RomanBuilder initial={1994} />
           </div>
         </div>
@@ -975,8 +1009,8 @@ export default function RomanNumeralsChartPage() {
         <h2 className="tool-h2 chart-sheet-skip" id="practice-h">Roman numerals quiz and worksheets</h2>
         <p className="chart-prose chart-sheet-skip">
           Answer on screen and press &ldquo;Check my answers&rdquo;, or print the sheet: questions on page 1, the answer
-          key on page 2. &ldquo;New version&rdquo; shuffles a fresh set, and the version number lets you print the same
-          sheet again later.
+          key on page 2. &ldquo;New version&rdquo; shuffles a fresh set. To get a printed sheet back later, choose the
+          same sheet type and level and type the version number from the sheet into the Version box.
         </p>
         <RomanPractice source={SOURCE} />
       </section>
@@ -1028,9 +1062,10 @@ export default function RomanNumeralsChartPage() {
           <h3 className="rn-h3" style={{ marginTop: 0 }}>How we checked this chart</h3>
           <p className="chart-prose">
             Every numeral on this page comes from one function rather than being typed in. Before the page is built,
-            that function converts all {fmt(ROMAN_MAX)} numbers from 1 to {fmt(ROMAN_MAX)} and reads each numeral back;
-            the page will not build unless every one returns the number it started from and every wrong example in the
-            rules is rejected. The{" "}
+            that function converts all {fmt(ROMAN_MAX)} numbers from 1 to {fmt(ROMAN_MAX)}, and every result must have
+            the shape of a standard numeral, add back up to the number it started from, and read back correctly. A set
+            of known answers must match exactly and every wrong example in the rules must be rejected. If any check
+            fails, the page does not build. The function also has its own unit tests, and the{" "}
             <Link href={CONVERTER} style={{ textDecoration: "underline" }}>Roman Numeral Converter</Link> uses the same
             code. Last reviewed <time dateTime={UPDATED}>{UPDATED_LABEL}</time>.
           </p>
@@ -1062,6 +1097,7 @@ export default function RomanNumeralsChartPage() {
       </section>
 
       <p className="chart-print-footer">{SOURCE}</p>
+      <ChartPageEffects />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </div>
