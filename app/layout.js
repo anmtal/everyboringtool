@@ -188,11 +188,6 @@ export default function RootLayout({ children }) {
                 {SITE.tagline} No sign-up, no clutter — just tools that work, right in your browser.
               </p>
               <p className="footer-count muted">{TOOL_COUNT_LABEL} free tools · nothing to install</p>
-              <nav className="footer-social" aria-label="Social profiles">
-                {SOCIAL.map((s) => (
-                  <a key={s.name} href={s.url} rel="me noopener">{s.name}</a>
-                ))}
-              </nav>
             </div>
 
             <div className="footer-links">
@@ -230,6 +225,11 @@ export default function RootLayout({ children }) {
           </div>
           <div className="footer-bottom">
             <span>© {year} {SITE.name}</span>
+            <nav className="footer-social" aria-label="Social profiles">
+              {SOCIAL.map((s) => (
+                <a key={s.name} href={s.url} rel="me noopener">{s.name}</a>
+              ))}
+            </nav>
             <span>Boring, but it works.</span>
           </div>
         </footer>
