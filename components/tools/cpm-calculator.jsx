@@ -73,7 +73,15 @@ function round2(n) {
 // significant digits instead of rounding to cents, so switching modes and back
 // doesn't drift the numbers the user typed ($500 / 213,220 impressions -> CPM
 // 2.344995779 -> cost 500, not 498.93 as a 2.34 CPM would give).
+// Write a solved value back into its box as the shortest number within 1e-9
+// (relative) of it, so a value the user typed comes back exactly as typed
+// (6716 stays 6716, 26.68 stays 26.68) instead of with float noise.
 function toInputValue(n) {
+  if (n === 0) return "0";
+  for (let p = 1; p <= 10; p++) {
+    const v = Number(n.toPrecision(p));
+    if (Math.abs(v - n) <= Math.abs(n) * 1e-9) return String(v);
+  }
   return String(Number(n.toPrecision(10)));
 }
 
