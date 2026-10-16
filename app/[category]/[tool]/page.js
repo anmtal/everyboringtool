@@ -50,6 +50,27 @@ function metaDescription(t, content) {
   return cut.replace(/[\s,;:.!?–—-]+$/, "") + ".";
 }
 
+// About copy is plain text. The one markup it allows is an internal link written
+// [label](/path), rendered as a real <Link> so related pages (e.g. a printable
+// chart) get a crawlable in-content link. Only site-relative paths are linked.
+function withInlineLinks(text) {
+  const out = [];
+  const re = /\[([^\]]+)\]\((\/[^)\s]*)\)/g;
+  let last = 0;
+  let m;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    out.push(
+      <Link key={m.index} href={m[2]} style={{ textDecoration: "underline" }}>
+        {m[1]}
+      </Link>
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 // "2026-08-26" -> "August 26, 2026". Parsed by hand so a timezone offset can't
@@ -254,7 +275,7 @@ export default function ToolPage({ params }) {
         <section className="tool-about">
           <h2 className="tool-h2">About {displayName}</h2>
           {content.about.split("\n\n").map((para, i) => (
-            <p key={i}>{para}</p>
+            <p key={i}>{withInlineLinks(para)}</p>
           ))}
           {rt && rt.aboutAppend ? <p>{rt.aboutAppend}</p> : null}
         </section>

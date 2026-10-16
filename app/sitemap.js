@@ -4,6 +4,7 @@ import { TYPING_LANDING, LANDING_UPDATED, visibleLandingKeys } from "../lib/typi
 import { TOOL_LANDINGS, visibleToolLandingKeys } from "../lib/toolLandings";
 import { sortedPosts, BLOG_UPDATED } from "../lib/blogPosts";
 import { withRetargetDate } from "../lib/retargets";
+import { charts, chartUrl, CHARTS_UPDATED } from "../lib/charts";
 
 export default function sitemap() {
   const base = SITE.url;
@@ -20,6 +21,11 @@ export default function sitemap() {
   const urls = [{ url: base, lastModified: siteDate, priority: 1 }];
   for (const u of ["/about", "/privacy", "/terms", "/contact"]) {
     urls.push({ url: `${base}${u}`, lastModified: siteDate, priority: 0.3 });
+  }
+  // Printable reference charts (lib/charts.js): the /charts hub + each chart.
+  urls.push({ url: `${base}/charts`, lastModified: new Date(CHARTS_UPDATED), priority: 0.6 });
+  for (const c of charts) {
+    urls.push({ url: `${base}${chartUrl(c.slug)}`, lastModified: new Date(c.updated), priority: 0.7 });
   }
   // Blog / guides: index + each published post (hand-written how-to content).
   const blogDate = new Date(BLOG_UPDATED);

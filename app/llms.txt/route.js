@@ -4,6 +4,7 @@
 // URLs and one-line descriptions. See /llms-full.txt for the full answer prose.
 import { categories, SITE, LOW_VALUE_NOINDEX } from "../../lib/tools";
 import { toolContent } from "../../lib/toolContent";
+import { charts, chartUrl } from "../../lib/charts";
 
 export const dynamic = "force-static";
 
@@ -26,6 +27,13 @@ function buildLlms() {
     "Every Boring Tool is a free collection of small, practical online utilities: PDF and image tools, unit and format converters, everyday calculators, developer and SEO helpers, word games and more. Every tool is free, needs no account or sign-up, has no usage limits, and works in a normal web browser on desktop or mobile with nothing to install. Most tools do their work entirely in your browser.",
     ""
   );
+
+  if (charts.length) {
+    L.push("## Printable Reference Charts");
+    L.push(`- [All charts](${b}/charts): Printable reference charts, free to print and copy.`);
+    for (const c of charts) L.push(`- [${c.title}](${b}${chartUrl(c.slug)}): ${c.description}`);
+    L.push("");
+  }
 
   L.push("## Word Games");
   for (const [href, name, desc] of WORD_GAMES) L.push(`- [${name}](${b}${href}): ${desc}`);

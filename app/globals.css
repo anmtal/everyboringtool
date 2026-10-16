@@ -580,3 +580,254 @@ html[data-framed="blocked"] body::before {
 .tool-embed .tool-textarea { min-height: 0; font-size: 12.5px; }
 .tool-embed .tool-actions { margin-top: 10px; }
 .tool-embed > .tool-note { margin-top: 8px; }
+
+/* =========================================================================
+   PRINTABLE REFERENCE CHARTS (/charts/*) — screen styles.
+   Generic print plumbing uses the chart- prefix (chart-page, chart-section,
+   chart-noprint, chart-sheet-skip, chart-print-source, chart-break-before) so
+   future charts can reuse it; rn- classes are the Roman numerals chart's own.
+   ========================================================================= */
+.chart-section { margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--border); }
+/* Jump links land below the sticky .site-header. ChartPageEffects measures the
+   header into --chart-header-h; these values cover the moment before it runs. */
+.chart-page { --chart-header-h: 112px; }
+@media (min-width: 768px) { .chart-page { --chart-header-h: 202px; } }
+@media (min-width: 840px) { .chart-page { --chart-header-h: 170px; } }
+.chart-page .chart-section, .chart-page [id] { scroll-margin-top: calc(var(--chart-header-h) + 16px); }
+.chart-prose { max-width: 72ch; line-height: 1.65; margin: 0 0 12px; text-wrap: pretty; }
+.chart-print-source, .chart-print-footer { display: none; }
+.rn-jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.rn-jump a.badge { font-size: 12.5px; padding: 5px 11px; color: var(--text); transition: border-color 120ms ease-out; }
+.rn-jump a.badge:hover { border-color: var(--text); }
+.rn-h3 { font-size: 15.5px; font-weight: 640; letter-spacing: -0.01em; margin: 24px 0 10px; }
+.rn-numeral { letter-spacing: 0.03em; font-variant-numeric: tabular-nums; }
+.rn-nowrap { white-space: nowrap; }
+.rn-tiles .tool-stat-num { font-size: clamp(24px, 6vw, 34px); }
+.rn-tiles { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
+.rn-pairs { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 12px; }
+.rn-pairs li { padding: 7px 14px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); font-size: 15px; }
+.rn-pairs li .rn-numeral { font-weight: 700; }
+.rn-bullets { padding-left: 20px; }
+.rn-bullets li { margin: 0 0 8px; }
+.rn-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: start; margin: 14px 0; }
+
+/* tables */
+.rn-table-wrap { margin-top: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); }
+.rn-table-wrap.rn-narrow { max-width: 640px; }
+.rn-table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); }
+.rn-two > .rn-table { border: 1px solid var(--border); border-radius: var(--r-sm); border-collapse: separate; border-spacing: 0; overflow: hidden; }
+.rn-table caption { caption-side: top; text-align: left; padding: 10px 12px 8px; font-size: 13px; color: var(--muted); text-wrap: pretty; }
+.rn-table th, .rn-table td { padding: 7px 10px; border-top: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.rn-table thead th { font-size: 12px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.rn-table tbody th { font-weight: 600; font-variant-numeric: tabular-nums; }
+.rn-table td.rn-numeral { font-weight: 650; }
+.rn-big td.rn-numeral { font-size: 22px; }
+.rn-big td.rn-numeral + td.rn-numeral { font-weight: 500; color: var(--muted); }
+.rn-big tbody th { font-size: 18px; }
+.rn-grid { min-width: 720px; table-layout: auto; }
+.rn-grid th, .rn-grid td { text-align: center; padding: 6px 4px; white-space: nowrap; }
+.rn-grid td { border-left: 1px solid var(--border); }
+.rn-grid thead th { text-transform: none; letter-spacing: 0; font-size: 12px; }
+.rn-grid tbody th { text-align: left; padding-left: 10px; font-size: 12.5px; color: var(--muted); }
+.rn-grid .rn-corner { text-align: left; padding-left: 10px; }
+.rn-h-r { display: block; font-size: 11px; color: var(--text); font-weight: 600; letter-spacing: 0.02em; }
+.rn-n { display: block; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; line-height: 1.3; }
+.rn-r { display: block; font-weight: 650; font-size: 15px; letter-spacing: 0.02em; line-height: 1.35; }
+.rn-grid-wide { min-width: 900px; }
+.rn-grid-wide .rn-r { font-size: 13.5px; }
+.rn-none { color: var(--faint); font-weight: 400; font-size: 12px; }
+.rn-blank { background: var(--surface-2); }
+.rn-blocks td { text-align: center; white-space: nowrap; }
+.rn-blocks thead th { text-align: center; }
+.rn-blocks thead th:first-child { text-align: left; }
+.rn-mistakes td, .rn-mistakes th { vertical-align: top; }
+.rn-wrong-form { text-decoration: line-through; color: var(--muted); }
+.rn-why { color: var(--muted); font-size: 13.5px; min-width: 220px; }
+.rn-over { text-decoration: overline; text-decoration-thickness: 2px; text-underline-offset: 0; }
+.rn-vinc { font-weight: 650; padding-top: 3px; display: inline-block; }
+
+/* collapsible blocks */
+.rn-details { margin-top: 10px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); }
+.rn-details > summary { cursor: pointer; padding: 11px 14px; font-weight: 600; font-size: 14.5px; list-style-position: inside; }
+.rn-details > summary:hover { background: var(--surface); border-radius: var(--r-sm); }
+.rn-details[open] > summary { border-bottom: 1px solid var(--border); }
+.rn-details > .rn-table-wrap { margin: 12px; }
+.rn-details > p { margin: 0 14px 12px; }
+
+/* rules */
+.rn-rules { padding-left: 22px; margin: 0; display: flex; flex-direction: column; gap: 12px; max-width: 78ch; }
+.rn-rules li { line-height: 1.6; padding-left: 4px; }
+.rn-rules li::marker { font-weight: 700; color: var(--muted); }
+.rn-examples { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 4px; font-size: 14px; color: var(--muted); }
+.rn-examples .rn-numeral { color: var(--text); font-weight: 650; }
+.rn-examples s.rn-numeral { color: var(--muted); font-weight: 500; }
+.rn-ex-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); }
+
+/* printables cards */
+.rn-sheets { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 14px 0 6px; }
+.rn-sheet-card { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+.rn-sheet-card .rn-h3 { margin: 0; }
+.rn-sheet-card .tool-note { flex: 1; }
+.rn-sheet-meta { font-size: 12px; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
+
+/* clocks */
+.rn-clocks { display: flex; flex-wrap: wrap; gap: 20px; }
+.rn-clock { margin: 0; width: 210px; max-width: 100%; text-align: center; color: var(--text); }
+.rn-clock svg { width: 100%; height: auto; display: block; font-family: var(--font-sans), sans-serif; }
+.rn-clock figcaption { font-size: 12.5px; color: var(--muted); margin-top: 6px; text-wrap: pretty; }
+
+/* builder, callout, cite */
+.rn-builder { margin-top: 6px; }
+.rn-build-parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+.rn-build-sum { margin: 12px 0 0; font-size: 15px; overflow-wrap: anywhere; }
+.rn-callout { border-left: 3px solid var(--text); background: var(--surface-2); padding: 14px 18px; border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: 4px 0 16px; }
+.rn-callout .chart-prose { margin: 0; }
+.rn-cite-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.rn-copy-text { min-height: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+.rn-thousand { font-size: 15px; }
+
+/* practice / worksheet */
+.rn-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 16px; align-items: end; margin-bottom: 16px; }
+.rn-controls > .tool-actions { grid-column: 1 / -1; }
+.rn-ws { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); padding: 18px 20px; }
+.rn-ws-title { font-size: 16px; font-weight: 650; margin: 0 0 2px; }
+.rn-ws-meta { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+.rn-ws-name { font-size: 14px; margin: 0 0 14px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.rn-line { display: inline-block; width: 200px; max-width: 45vw; border-bottom: 1px solid var(--text); }
+.rn-line-short { width: 110px; }
+.rn-ws-list { margin: 0; padding-left: 28px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px 28px; }
+.rn-ws-list li { font-size: 15px; }
+.rn-ws-list li::marker { color: var(--faint); font-size: 13px; }
+.rn-ws-q { display: inline-block; min-width: 3.4em; font-weight: 650; letter-spacing: 0.02em; margin-right: 6px; }
+.rn-ws-input { width: 9.5em; max-width: 100%; padding: 5px 8px; font: inherit; font-size: 15px; color: var(--text); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 7px; text-transform: uppercase; }
+.rn-ws-input:focus { outline: none; border-color: var(--text); }
+.rn-ws-grid .rn-ws-input { width: 100%; min-width: 4.5em; padding: 3px 4px; font-size: 13px; text-align: center; }
+.rn-mark { display: inline-block; margin-left: 6px; font-size: 13px; font-weight: 700; }
+.rn-mark.is-right { color: var(--live); }
+.rn-mark.is-wrong { color: #b3261e; }
+@media (prefers-color-scheme: dark) { .rn-mark.is-wrong { color: #f2b8b5; } }
+.rn-ws-grid .rn-mark { display: block; margin: 2px 0 0; font-size: 11.5px; }
+.rn-key { margin-top: 16px; }
+.rn-key > summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.rn-key[open] > summary { margin-bottom: 12px; }
+.rn-key-list { margin: 0; padding-left: 28px; columns: 2 220px; column-gap: 28px; font-size: 14px; }
+.rn-key-list li { break-inside: avoid; margin: 0 0 4px; }
+.rn-key-grid { columns: 4 120px; }
+
+/* =========================================================================
+   PRINTABLE REFERENCE CHARTS — print stylesheet.
+   Scoped with body:has(.chart-page) and the named page "chart", so printing
+   any other page on the site is unchanged.
+   - Ctrl+P prints the whole chart page as shown, without site chrome or UI.
+   - A PrintSheetButton sets html[data-chart-print] and marks its sections
+     .chart-print-target: only those print, each with its own source footer.
+   - No @page size: the printer's own Letter or A4 is used, and the layouts
+     below are sized to fit the smaller of the two (A4 width, Letter height).
+   - Ink saver: black text on white, thin grey rules, no fills or shadows.
+   ========================================================================= */
+@page chart { margin: 12mm; }
+@media print {
+  body:has(.chart-page) {
+    --bg: #fff; --surface: #fff; --surface-2: #fff; --text: #000; --muted: #222; --faint: #444;
+    --border: #999; --border-strong: #777; --live: #000;
+    background: #fff; color: #000; font-size: 10.5pt; line-height: 1.4;
+  }
+  body:has(.chart-page) .site-header,
+  body:has(.chart-page) .site-footer,
+  body:has(.chart-page) .skip-link,
+  .chart-page .breadcrumb,
+  .chart-page .ad-slot,
+  .chart-page .chart-noprint { display: none !important; }
+  body:has(.chart-page) .main { padding: 0; margin: 0; max-width: none; min-height: 0; }
+  .chart-page { page: chart; }
+  .chart-page * { box-shadow: none !important; animation: none !important; transition: none !important; }
+  .chart-page a { color: #000; text-decoration: none; }
+  .chart-page .chart-section { margin-top: 8mm; padding-top: 4mm; border-top: 0.5pt solid #999; }
+  .chart-page .page-head { padding: 0 0 2mm; }
+  .chart-page .page-head h1 { font-size: 18pt; }
+  .chart-page .tool-h2 { font-size: 15pt; margin: 0 0 3mm; break-after: avoid; }
+  .chart-page .rn-h3 { font-size: 11.5pt; margin: 4mm 0 2mm; break-after: avoid; }
+  .chart-page .chart-prose { max-width: none; margin: 0 0 2.5mm; }
+
+  /* tables: no scroll boxes, thin rules, rows never split */
+  .chart-page .rn-table-wrap { overflow: visible; border: 0; border-radius: 0; margin-top: 2mm; max-width: none; }
+  .chart-page .rn-table { font-size: 9.5pt; min-width: 0; width: 100%; }
+  .chart-page .rn-table caption { font-size: 8.5pt; padding: 0 0 1.5mm; color: #222; }
+  .chart-page .rn-table th, .chart-page .rn-table td { border: 0.5pt solid #999; padding: 1.2mm 1.6mm; }
+  .chart-page .rn-table thead th { color: #000; }
+  .chart-page .rn-table tr { break-inside: avoid; }
+  /* a whole grid or list moves to the next page rather than splitting */
+  .chart-page .rn-table-wrap:has(> .rn-grid), .chart-page .rn-grid, .chart-page .rn-two > .rn-table { break-inside: avoid; }
+  .chart-page .rn-blank { background: none; }
+  .chart-page .rn-grid { min-width: 0; }
+  .chart-page .rn-grid th, .chart-page .rn-grid td { padding: 1.6mm 0.4mm; }
+  .chart-page .rn-grid tbody th { padding-left: 1.2mm; font-size: 8pt; color: #000; }
+  .chart-page .rn-grid .rn-corner { padding-left: 1.2mm; }
+  .chart-page .rn-n { font-size: 7.5pt; color: #333; }
+  .chart-page .rn-r { font-size: 12pt; }
+  .chart-page .rn-h-r { font-size: 8pt; }
+  .chart-page .rn-grid-100 th, .chart-page .rn-grid-100 td { padding: 3.4mm 0.4mm; }
+  /* whole-page print: a little tighter so the grid fits under the title on Letter */
+  html:not([data-chart-print]) .chart-page .rn-grid-100 th, html:not([data-chart-print]) .chart-page .rn-grid-100 td { padding: 3mm 0.4mm; }
+  /* Hundreds and years grids: the 800s run to 12 letters (DCCCLXXXVIII), so the
+     type is small and tight to keep every block inside A4's 186 mm width. */
+  .chart-page .rn-grid-wide { min-width: 0; }
+  .chart-page .rn-grid-wide th, .chart-page .rn-grid-wide td { padding: 2.4mm 0.2mm; }
+  .chart-page .rn-grid-wide .rn-r { font-size: 7pt; letter-spacing: -0.02em; }
+  .chart-page .rn-grid-wide .rn-n { font-size: 6.5pt; }
+  .chart-page .rn-grid-wide thead .rn-h-r { font-size: 6.5pt; letter-spacing: 0; }
+  .chart-page .rn-grid-wide tbody .rn-h-r { display: none; }
+  .chart-page .rn-big td.rn-numeral { font-size: 18pt; }
+  .chart-page .rn-big tbody th { font-size: 15pt; }
+  .chart-page .rn-big th, .chart-page .rn-big td { padding: 1.3mm 3mm; }
+  .chart-page .rn-two { gap: 6mm; margin: 2mm 0; grid-template-columns: 1fr 1fr; }
+  .chart-page .rn-two > .rn-table { border: 0; border-radius: 0; border-collapse: collapse; overflow: visible; }
+
+  /* collapsible blocks print open (PrintSheetButton or ChartPageEffects opens
+     them; CSS cannot), as plain headed tables */
+  .chart-page .rn-details { border: 0; border-radius: 0; background: none; margin-top: 4mm; }
+  .chart-page .rn-details > summary { list-style: none; padding: 0 0 1mm; font-size: 13pt; font-weight: 700; border: 0; break-after: avoid; }
+  .chart-page .rn-details > summary::-webkit-details-marker { display: none; }
+  .chart-page .rn-details > .rn-table-wrap { margin: 0; }
+  .chart-page .rn-details > p { margin: 2mm 0 0; }
+
+  /* symbols, rules, clocks, practice */
+  .chart-page .tool-stat { border: 0.5pt solid #999; border-radius: 2mm; padding: 1.2mm 3mm; break-inside: avoid; }
+  .chart-page .rn-tiles { grid-template-columns: repeat(7, 1fr); gap: 2mm; }
+  .chart-page .rn-tiles .tool-stat-num { font-size: 17pt; line-height: 1.15; }
+  .chart-page .rn-tiles .tool-stat-label { margin-top: 0; }
+  .chart-page .rn-pairs { margin: 0 0 2mm; gap: 2mm; }
+  .chart-page .rn-pairs li { border: 0.5pt solid #777; padding: 1mm 3mm; font-size: 10.5pt; }
+  .chart-page .rn-rules { gap: 1.2mm; max-width: none; }
+  .chart-page .rn-rules li { break-inside: avoid; line-height: 1.35; }
+  .chart-page .rn-examples { font-size: 9.5pt; margin-top: 0.5mm; }
+  .chart-page .rn-clocks { gap: 10mm; justify-content: center; }
+  .chart-page .rn-clock { width: 58mm; break-inside: avoid; }
+  .chart-page .rn-ws { border: 0; padding: 0; }
+  .chart-page .rn-ws-title { font-size: 14pt; }
+  .chart-page .rn-ws-name { font-size: 11pt; margin: 3mm 0 6mm; }
+  .chart-page .rn-line { width: 70mm; max-width: none; }
+  .chart-page .rn-line-short { width: 40mm; }
+  .chart-page .rn-ws-list { grid-template-columns: 1fr 1fr; gap: 6mm 12mm; }
+  .chart-page .rn-ws-list li { font-size: 12pt; break-inside: avoid; }
+  .chart-page .rn-ws-input { border: 0; border-bottom: 0.75pt solid #000; border-radius: 0; background: none; width: 45mm; padding: 0 1mm; font-size: 12pt; }
+  .chart-page .rn-ws-grid .rn-ws-input { width: 100%; min-width: 0; font-size: 9pt; }
+  .chart-page .rn-ws-grid .rn-r { font-size: 10pt; }
+  .chart-page .rn-mark { display: none; }
+  .chart-page .rn-key-list { font-size: 11pt; }
+
+  /* source line on every printed sheet */
+  html[data-chart-print] .chart-page .chart-print-source,
+  html:not([data-chart-print]) .chart-page .chart-print-footer {
+    display: block; margin: 3mm 0 0; font-size: 8pt; color: #333; break-before: avoid;
+  }
+
+  /* one sheet at a time */
+  html[data-chart-print] .chart-page > :not(.chart-print-target) { display: none !important; }
+  html[data-chart-print] .chart-page .chart-sheet-skip { display: none !important; }
+  html[data-chart-print] .chart-page > .chart-print-target { border-top: 0; margin-top: 3.5mm; padding-top: 0; }
+  html[data-chart-print] .chart-page .tool-h2 { font-size: 13.5pt; margin-bottom: 2mm; }
+  html[data-chart-print] .chart-page > .chart-print-target:not(.chart-print-target ~ .chart-print-target) { margin-top: 0; }
+  html[data-chart-print] .chart-page .chart-break-before { break-before: page; margin-top: 0; }
+  html[data-chart-print] .chart-page .rn-key { break-before: page; margin-top: 0; }
+}
