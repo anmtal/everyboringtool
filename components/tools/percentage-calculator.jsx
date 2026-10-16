@@ -10,14 +10,23 @@ function toNumber(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+// Rounds to at most maxDecimals places. A nonzero number that would round to
+// 0 is shown to 4 significant figures instead, so a tiny value never prints as
+// "0" (which would make a working line false, e.g. "30 ÷ 0 = 300,000,000").
+// Negatives use a real minus sign (U+2212) everywhere, so labels, results and
+// working lines in one box never mix "-" and "−".
 function formatNumber(n, maxDecimals = 4) {
   if (n === null || n === undefined || !Number.isFinite(n)) return "—";
-  // `|| 0` turns a rounded -0 into 0 so tiny negatives never print as "-0".
+  // `|| 0` turns a rounded -0 into 0.
   const rounded = Number(n.toFixed(maxDecimals)) || 0;
-  return rounded.toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: maxDecimals,
-  });
+  const s =
+    rounded === 0 && n !== 0
+      ? n.toLocaleString(undefined, { maximumSignificantDigits: 4 })
+      : rounded.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: maxDecimals,
+        });
+  return s.replace(/-/g, "−");
 }
 
 // --- Working-line helpers -------------------------------------------------
@@ -25,9 +34,9 @@ function formatNumber(n, maxDecimals = 4) {
 // a percentage typed with 4 decimals still shows its exact decimal form.
 const STEP_DECIMALS = 6;
 
-// A number in a working line, with a real minus sign.
+// A number in a working line (formatNumber already uses a real minus sign).
 function fw(n, maxDecimals = 4) {
-  return formatNumber(n, maxDecimals).replace(/^-/, "−");
+  return formatNumber(n, maxDecimals);
 }
 
 // A number that follows an operator: negatives go in brackets, "100 − (−80)".
@@ -104,7 +113,11 @@ function addSubtract(x, p, mode) {
 // (5) X is P% of what number?
 function reversePercent(x, p) {
   if (x === null || p === null) return null;
-  if (p === 0) return { error: "A percentage of 0 can't give you that number, so there is no answer." };
+  if (p === 0) {
+    return x === 0
+      ? { error: "0 is 0% of every number, so there's no single answer." }
+      : { error: "A percentage of 0 can't give you that number, so there is no answer." };
+  }
   const value = (x * 100) / p;
   return {
     value,
@@ -152,6 +165,11 @@ const CONVERSIONS = [
 const H2_STYLE = { margin: 0, fontSize: 16 };
 const H3_STYLE = { margin: 0, fontSize: 14 };
 const DIVIDER = { borderTop: "1px solid var(--border)", paddingTop: 16 };
+// Working lines sit inside the result box but outside its aria-live region, so
+// screen readers announce the answer, not the long working, on each keystroke.
+// overflowWrap lets a very long number wrap instead of widening the box.
+const WORKING_STYLE = { overflowWrap: "anywhere" };
+const WRAP_TH = { whiteSpace: "normal" };
 
 export default function PercentageCalculator() {
   // Section 1: What is X% of Y?
@@ -202,7 +220,7 @@ export default function PercentageCalculator() {
         <h2 className="tool-h2" style={H2_STYLE}>What is P% of a number?</h2>
         <div className="tool-row">
           <div className="tool-field">
-            <label className="tool-label" htmlFor="pct1">Percentage (X%)</label>
+            <label className="tool-label" htmlFor="pct1">Percentage (P%)</label>
             <input
               className="tool-input"
               id="pct1"
@@ -214,7 +232,7 @@ export default function PercentageCalculator() {
             />
           </div>
           <div className="tool-field">
-            <label className="tool-label" htmlFor="base1">Of value (Y)</label>
+            <label className="tool-label" htmlFor="base1">Number</label>
             <input
               className="tool-input"
               id="base1"
@@ -226,14 +244,16 @@ export default function PercentageCalculator() {
             />
           </div>
         </div>
-        <div className="tool-result" role="status" aria-live="polite">
-          <p className="tool-result-label">
-            {result1
-              ? `${formatNumber(p1)}% of ${formatNumber(y1)} is`
-              : "Result"}
-          </p>
-          <div className="tool-result-value">{formatNumber(result1 ? result1.value : null)}</div>
-          {result1 && <p className="tool-note">Working: {result1.working}</p>}
+        <div className="tool-result">
+          <div role="status" aria-live="polite">
+            <p className="tool-result-label">
+              {result1
+                ? `${formatNumber(p1)}% of ${formatNumber(y1)} is`
+                : "Result"}
+            </p>
+            <div className="tool-result-value">{formatNumber(result1 ? result1.value : null)}</div>
+          </div>
+          {result1 && <p className="tool-note" style={WORKING_STYLE}>Working: {result1.working}</p>}
         </div>
         {y1 !== null && (
           // minWidth 0 lets this grid item shrink so the table scrolls inside
@@ -246,8 +266,10 @@ export default function PercentageCalculator() {
                   <tr>
                     <th>Percent</th>
                     <th>Amount</th>
-                    <th>{formatNumber(y1)} + percent</th>
-                    <th>{formatNumber(y1)} − percent</th>
+                    {/* Short headers that may wrap, so a long number in them
+                        doesn't push the table past a phone-width card. */}
+                    <th style={WRAP_TH}>{formatNumber(y1)} + %</th>
+                    <th style={WRAP_TH}>{formatNumber(y1)} − %</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -301,16 +323,18 @@ export default function PercentageCalculator() {
         {result2 && result2.error ? (
           <p className="tool-error" role="alert">{result2.error}</p>
         ) : (
-          <div className="tool-result" role="status" aria-live="polite">
-            <p className="tool-result-label">
-              {result2
-                ? `${formatNumber(toNumber(part2))} is this percent of ${formatNumber(toNumber(whole2))}`
-                : "Result"}
-            </p>
-            <div className="tool-result-value">
-              {result2 ? `${formatNumber(result2.value)}%` : "—"}
+          <div className="tool-result">
+            <div role="status" aria-live="polite">
+              <p className="tool-result-label">
+                {result2
+                  ? `${formatNumber(toNumber(part2))} is this percent of ${formatNumber(toNumber(whole2))}`
+                  : "Result"}
+              </p>
+              <div className="tool-result-value">
+                {result2 ? `${formatNumber(result2.value)}%` : "—"}
+              </div>
             </div>
-            {result2 && <p className="tool-note">Working: {result2.working}</p>}
+            {result2 && <p className="tool-note" style={WORKING_STYLE}>Working: {result2.working}</p>}
           </div>
         )}
       </div>
@@ -347,29 +371,31 @@ export default function PercentageCalculator() {
         {result3 && result3.error ? (
           <p className="tool-error" role="alert">{result3.error}</p>
         ) : (
-          <div className="tool-result" role="status" aria-live="polite">
-            <p className="tool-result-label">
-              {result3
-                ? result3.value > 0
-                  ? "Increase"
-                  : result3.value < 0
-                  ? "Decrease"
-                  : "No change"
-                : "Result"}
-            </p>
-            <div className="tool-result-value">
-              {result3
-                ? `${result3.value > 0 ? "+" : ""}${formatNumber(result3.value)}%`
-                : "—"}
-            </div>
-            {result3 && (
-              <p className="tool-note">
-                {`${result3.diff > 0 ? "+" : ""}${formatNumber(result3.diff)} from ${formatNumber(
-                  toNumber(from3)
-                )} to ${formatNumber(toNumber(to3))}`}
+          <div className="tool-result">
+            <div role="status" aria-live="polite">
+              <p className="tool-result-label">
+                {result3
+                  ? result3.value > 0
+                    ? "Increase"
+                    : result3.value < 0
+                    ? "Decrease"
+                    : "No change"
+                  : "Result"}
               </p>
-            )}
-            {result3 && <p className="tool-note">Working: {result3.working}</p>}
+              <div className="tool-result-value">
+                {result3
+                  ? `${result3.value > 0 ? "+" : ""}${formatNumber(result3.value)}%`
+                  : "—"}
+              </div>
+              {result3 && (
+                <p className="tool-note">
+                  {`${result3.diff > 0 ? "+" : ""}${formatNumber(result3.diff)} from ${formatNumber(
+                    toNumber(from3)
+                  )} to ${formatNumber(toNumber(to3))}`}
+                </p>
+              )}
+            </div>
+            {result3 && <p className="tool-note" style={WORKING_STYLE}>Working: {result3.working}</p>}
           </div>
         )}
       </div>
@@ -426,23 +452,20 @@ export default function PercentageCalculator() {
             Decrease (−)
           </button>
         </div>
-        <div className="tool-result" role="status" aria-live="polite">
-          <p className="tool-result-label">
-            {result4
-              ? `${formatNumber(x4)} ${down4 ? "decreased" : "increased"} by ${formatNumber(p4)}% is`
-              : "Result"}
-          </p>
-          <div className="tool-result-value">{formatNumber(result4 ? result4.value : null)}</div>
-          {result4 && (
-            <p className="tool-note">
-              {down4 ? "Amount removed: " : "Amount added: "}
-              {fsigned(result4.delta)}
+        <div className="tool-result">
+          <div role="status" aria-live="polite">
+            <p className="tool-result-label">
+              {result4
+                ? `${formatNumber(x4)} ${down4 ? "decreased" : "increased"} by ${formatNumber(p4)}% is`
+                : "Result"}
             </p>
-          )}
-          {result4 && down4 && p4 > 100 && x4 > 0 && (
-            <p className="tool-note">A decrease of more than 100% goes below zero.</p>
-          )}
-          {result4 && <p className="tool-note">Working: {result4.working}</p>}
+            <div className="tool-result-value">{formatNumber(result4 ? result4.value : null)}</div>
+            {result4 && <p className="tool-note">Change: {fsigned(result4.delta)}</p>}
+            {result4 && down4 && p4 > 100 && x4 > 0 && (
+              <p className="tool-note">A decrease of more than 100% goes below zero.</p>
+            )}
+          </div>
+          {result4 && <p className="tool-note" style={WORKING_STYLE}>Working: {result4.working}</p>}
         </div>
       </div>
 
@@ -478,14 +501,16 @@ export default function PercentageCalculator() {
         {result5 && result5.error ? (
           <p className="tool-error" role="alert">{result5.error}</p>
         ) : (
-          <div className="tool-result" role="status" aria-live="polite">
-            <p className="tool-result-label">
-              {result5
-                ? `${formatNumber(toNumber(part5))} is ${formatNumber(toNumber(pct5))}% of`
-                : "Result"}
-            </p>
-            <div className="tool-result-value">{formatNumber(result5 ? result5.value : null)}</div>
-            {result5 && <p className="tool-note">Working: {result5.working}</p>}
+          <div className="tool-result">
+            <div role="status" aria-live="polite">
+              <p className="tool-result-label">
+                {result5
+                  ? `${formatNumber(toNumber(part5))} is ${formatNumber(toNumber(pct5))}% of`
+                  : "Result"}
+              </p>
+              <div className="tool-result-value">{formatNumber(result5 ? result5.value : null)}</div>
+            </div>
+            {result5 && <p className="tool-note" style={WORKING_STYLE}>Working: {result5.working}</p>}
           </div>
         )}
         <p className="tool-note">
@@ -523,16 +548,18 @@ export default function PercentageCalculator() {
             />
           </div>
         </div>
-        <div className="tool-result" role="status" aria-live="polite">
-          <p className="tool-result-label">
-            {result6
-              ? `Difference between ${formatNumber(toNumber(a6))} and ${formatNumber(toNumber(b6))}`
-              : "Result"}
-          </p>
-          <div className="tool-result-value">
-            {result6 ? `${formatNumber(result6.value)}%` : "—"}
+        <div className="tool-result">
+          <div role="status" aria-live="polite">
+            <p className="tool-result-label">
+              {result6
+                ? `Difference between ${formatNumber(toNumber(a6))} and ${formatNumber(toNumber(b6))}`
+                : "Result"}
+            </p>
+            <div className="tool-result-value">
+              {result6 ? `${formatNumber(result6.value)}%` : "—"}
+            </div>
           </div>
-          {result6 && <p className="tool-note">Working: {result6.working}</p>}
+          {result6 && <p className="tool-note" style={WORKING_STYLE}>Working: {result6.working}</p>}
         </div>
         <p className="tool-note">
           Order doesn't matter. To measure a change from an old value to a new one, use Percentage change above.
@@ -562,7 +589,10 @@ export default function PercentageCalculator() {
             </tbody>
           </table>
         </div>
-        <p className="tool-note">Results are rounded to at most 4 decimal places.</p>
+        <p className="tool-note">
+          Results are rounded to at most 4 decimal places. A number too small to show that way is given to 4
+          significant figures.
+        </p>
       </div>
     </div>
   );
