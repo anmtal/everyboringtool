@@ -1,72 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { copyText } from "../../lib/copyText";
+// toRoman / fromRoman live in lib/roman.js, shared with the printable chart at
+// /charts/roman-numerals so both always agree. fromRoman is strict: it only
+// accepts the standard form and returns null for IIII, VV, IC, XM, etc.
+import { SYMBOLS, fromRoman, toRoman } from "../../lib/roman";
 
-// Subtractive pairs ordered high-to-low so the greedy encoder emits the
-// canonical (shortest / standard) Roman numeral for any value 1-3999.
-const ROMAN_MAP = [
-  [1000, "M"],
-  [900, "CM"],
-  [500, "D"],
-  [400, "CD"],
-  [100, "C"],
-  [90, "XC"],
-  [50, "L"],
-  [40, "XL"],
-  [10, "X"],
-  [9, "IX"],
-  [5, "V"],
-  [4, "IV"],
-  [1, "I"],
-];
-
-const SYMBOL_VALUES = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
-
-const REFERENCE = [
-  ["I", "1"],
-  ["V", "5"],
-  ["X", "10"],
-  ["L", "50"],
-  ["C", "100"],
-  ["D", "500"],
-  ["M", "1000"],
-];
-
-// Encode an integer (assumed already validated to 1-3999) as a Roman numeral.
-function toRoman(n) {
-  let out = "";
-  let rem = n;
-  for (const [val, sym] of ROMAN_MAP) {
-    while (rem >= val) {
-      out += sym;
-      rem -= val;
-    }
-  }
-  return out;
-}
-
-// Decode a Roman numeral to an integer, or return null when the string is not
-// a well-formed, canonical numeral in range. Strictness is guaranteed by a
-// round-trip: we re-encode the computed value and require it to match the
-// (uppercased) input exactly, which rejects "IIII", "VV", "IC", "XM", etc.
-function fromRoman(raw) {
-  const s = raw.replace(/\s+/g, "").toUpperCase();
-  if (s === "") return null;
-  if (!/^[IVXLCDM]+$/.test(s)) return null;
-
-  let total = 0;
-  for (let i = 0; i < s.length; i++) {
-    const cur = SYMBOL_VALUES[s[i]];
-    const next = SYMBOL_VALUES[s[i + 1]];
-    if (next && cur < next) total -= cur;
-    else total += cur;
-  }
-
-  if (total < 1 || total > 3999) return null;
-  if (toRoman(total) !== s) return null;
-  return total;
-}
+const SYMBOL_VALUES = Object.fromEntries(SYMBOLS);
+const REFERENCE = SYMBOLS.map(([sym, val]) => [sym, String(val)]);
 
 // Characters in the input that are not valid Roman symbols, for a precise
 // error message. Letters are compared case-insensitively.
@@ -250,6 +193,14 @@ export default function RomanNumeralConverter() {
         Roman numeral to read off its value. Both directions convert instantly
         and only the standard, subtractive form (IV, IX, XL, XC, CD, CM) is
         accepted. Everything runs in your browser — nothing is uploaded.
+      </p>
+
+      <p className="tool-note">
+        Want the whole table?{" "}
+        <Link href="/charts/roman-numerals" style={{ textDecoration: "underline" }}>
+          Printable Roman numerals chart
+        </Link>{" "}
+        — 1 to 1000, years 1900–2099, the rules and worksheets with answer keys.
       </p>
     </div>
   );
