@@ -52,6 +52,15 @@ export const viewport = {
 // Sitewide brand entity for E-E-A-T. Anonymity-safe: the publisher is the brand
 // "Every Boring Tool", never a person. Establishes a consistent Organization +
 // WebSite entity that per-page WebApplication schema can attribute to.
+// Our own brand profiles, linked in the footer and listed in the Organization
+// schema's sameAs below.
+const SOCIAL = [
+  { name: "YouTube", url: "https://www.youtube.com/channel/UCBUS0GlS5YbY45xtWuNcE7w" },
+  { name: "Instagram", url: "https://www.instagram.com/everyboringtool/" },
+  { name: "Facebook", url: "https://www.facebook.com/profile.php?id=61594195742039" },
+  { name: "X", url: "https://x.com/everyboringtool" },
+];
+
 const ORG_LD = {
   "@context": "https://schema.org",
   "@graph": [
@@ -64,13 +73,7 @@ const ORG_LD = {
       description: SITE.description,
       // Brand profiles for the same entity — helps Google/AI tie "Every Boring Tool"
       // together across the web (E-E-A-T / entity signal for GEO + SEO).
-      sameAs: [
-        "https://www.youtube.com/channel/UCBUS0GlS5YbY45xtWuNcE7w",
-        "https://www.instagram.com/everyboringtool/",
-        "https://www.facebook.com/profile.php?id=61594195742039",
-        "https://www.producthunt.com/products/every-boring-tool",
-        "https://x.com/everyboringtool",
-      ],
+      sameAs: [...SOCIAL.map((s) => s.url), "https://www.producthunt.com/products/every-boring-tool"],
     },
     {
       "@type": "WebSite",
@@ -185,6 +188,11 @@ export default function RootLayout({ children }) {
                 {SITE.tagline} No sign-up, no clutter — just tools that work, right in your browser.
               </p>
               <p className="footer-count muted">{TOOL_COUNT_LABEL} free tools · nothing to install</p>
+              <nav className="footer-social" aria-label="Social profiles">
+                {SOCIAL.map((s) => (
+                  <a key={s.name} href={s.url} rel="me noopener">{s.name}</a>
+                ))}
+              </nav>
             </div>
 
             <div className="footer-links">
