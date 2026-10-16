@@ -8,6 +8,7 @@ import BrandLogo from "../components/BrandLogo";
 import SiteChrome, { FrameGuard } from "../components/SiteChrome";
 import { EMBED_PATHS } from "../lib/embedSlugs.mjs";
 import { NO_ADS_SLUGS } from "../lib/noAds";
+import { SOCIAL } from "../lib/social";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
@@ -52,15 +53,6 @@ export const viewport = {
 // Sitewide brand entity for E-E-A-T. Anonymity-safe: the publisher is the brand
 // "Every Boring Tool", never a person. Establishes a consistent Organization +
 // WebSite entity that per-page WebApplication schema can attribute to.
-// Our own brand profiles, linked in the footer and listed in the Organization
-// schema's sameAs below.
-const SOCIAL = [
-  { name: "YouTube", url: "https://www.youtube.com/channel/UCBUS0GlS5YbY45xtWuNcE7w" },
-  { name: "Instagram", url: "https://www.instagram.com/everyboringtool/" },
-  { name: "Facebook", url: "https://www.facebook.com/profile.php?id=61594195742039" },
-  { name: "X", url: "https://x.com/everyboringtool" },
-];
-
 const ORG_LD = {
   "@context": "https://schema.org",
   "@graph": [
@@ -227,7 +219,10 @@ export default function RootLayout({ children }) {
             <span>© {year} {SITE.name}</span>
             <nav className="footer-social" aria-label="Social profiles">
               {SOCIAL.map((s) => (
-                <a key={s.name} href={s.url} rel="me noopener">{s.name}</a>
+                <a key={s.name} href={s.url} rel="me noopener">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d={s.icon} /></svg>
+                  {s.name}
+                </a>
               ))}
             </nav>
             <span>Boring, but it works.</span>

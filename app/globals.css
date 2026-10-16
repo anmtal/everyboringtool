@@ -289,7 +289,8 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .footer-tag { font-size: 13.5px; margin: 14px 0 0; max-width: 320px; text-wrap: pretty; line-height: 1.55; }
 .footer-count { font-size: 12.5px; margin: 12px 0 0; color: var(--faint); }
 .footer-social { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; }
-.footer-social a { color: var(--muted); transition: color 120ms ease-out; }
+.footer-social a { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); transition: color 120ms ease-out; }
+.footer-social svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
 .footer-social a:hover { color: var(--text); }
 .footer-h { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--faint); font-weight: 600; margin: 0 0 14px; }
 .footer-col { display: flex; flex-direction: column; gap: 11px; }
