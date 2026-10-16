@@ -39,12 +39,14 @@ const IMPERIAL_UNITS = new Set(["ft", "in", "sqft"]);
 const FT3_PER_YD3 = 27; // a cubic yard is 3 ft x 3 ft x 3 ft
 const M3_PER_FT3 = 0.3048 * 0.3048 * 0.3048; // 0.0283168...
 const FT3_PER_M3 = 1 / M3_PER_FT3; // 35.3147...
+const M3_PER_YD3 = FT3_PER_YD3 * M3_PER_FT3; // 0.7646...
 const LITRES_PER_FT3 = M3_PER_FT3 * 1000; // 28.3168...
-const FT3_PER_LITRE = 0.0353147;
+const FT3_PER_LITRE = 1 / LITRES_PER_FT3; // 0.0353146...
 const KG_PER_LB = 0.45359237;
 
-// Normal-weight concrete is roughly 145-150 lb/ft³ (about 2,400 kg/m³), which
-// puts a cubic yard at about 4,000 lb (150 x 27 = 4,050). Approximate.
+// Normal-weight concrete is roughly 140 to 150 lb/ft³ (about 2,250-2,400
+// kg/m³). The pour weight uses the top of that range, 150 lb/ft³ (2,400 kg/m³),
+// so a cubic yard reads 4,050 lb; the real pour may weigh a little less.
 const CONCRETE_LB_PER_FT3 = 150;
 const CONCRETE_KG_PER_M3 = 2400;
 
@@ -92,18 +94,19 @@ const THICKNESS_PRESETS = [
   { inches: "6", title: "heavy-duty driveway or garage" },
 ];
 
+// Short labels so the three buttons fit on a 375px phone.
 const SHAPES = [
-  { id: "slab", label: "Slab / footing" },
-  { id: "round", label: "Round hole / column" },
+  { id: "slab", label: "Slab" },
+  { id: "round", label: "Hole / column" },
   { id: "steps", label: "Steps" },
 ];
 
 const SHAPE_HELP = {
   slab: "For slabs, pads, patios, driveways and footings. For a wall, enter its height as the width.",
   round:
-    "Also works for Sonotube forms, round columns and round slabs (use thickness as depth). The post option assumes the post runs the full depth.",
+    "For round post holes and piers. Also works for Sonotube forms, round columns and round slabs (use thickness as depth). The post option assumes the post runs the full depth.",
   steps:
-    "For solid steps poured down to the ground, like a front stoop. Rise is the height of each step; run is the depth of each tread.",
+    "For solid steps poured down to the ground, like a front stoop. Rise is the height of each step; run is the depth of each tread. With a landing, count only the steps below it; the landing is the top.",
 };
 
 // Bag counts round UP, but a float artifact must never add a bag: a 12 x 12 ft
@@ -132,12 +135,20 @@ function parseOptional(value) {
   return n;
 }
 
-// Whole number of 1 or more. Empty returns emptyValue.
+// Whole number of 1 or more. Empty returns emptyValue; a fraction such as 2.7
+// is rejected rather than silently rounded.
 function parseCount(value, emptyValue) {
   if (typeof value !== "string" || value.trim() === "") return emptyValue;
   const n = Number(value);
-  if (!isFinite(n) || n < 1) return null;
-  return Math.floor(n);
+  if (!Number.isInteger(n) || n < 1) return null;
+  return n;
+}
+
+// A square post fits a round hole only if its diagonal (side x √2) is
+// narrower than the diameter; comparing areas would accept a 6x6 post
+// (7.78 in corner to corner) in a 7 in hole.
+function postFitsHole(postSideFt, diameterFt) {
+  return postSideFt * Math.SQRT2 < diameterFt;
 }
 
 // Cylinder minus a square post that runs the full depth.
@@ -147,10 +158,11 @@ function roundVolumeFt3(diameterFt, depthFt, postSideFt) {
 }
 
 // Solid steps poured to the ground: step i is a block i rises tall, so the
-// side profile is R x T x n(n+1)/2, plus an optional top landing at full height.
-// V = W x (R x T x n(n+1)/2 + P x R x n)
+// side profile is R x T x n(n+1)/2. A top landing of depth P sits one rise
+// above the n steps (they are the steps below it), so it is (n + 1) rises tall.
+// V = W x (R x T x n(n+1)/2 + P x R x (n + 1))
 function stepsVolumeFt3(n, riseFt, runFt, widthFt, landingFt) {
-  return widthFt * ((riseFt * runFt * n * (n + 1)) / 2 + landingFt * riseFt * n);
+  return widthFt * ((riseFt * runFt * n * (n + 1)) / 2 + landingFt * riseFt * (n + 1));
 }
 
 // The units that decide whether the headline reads in yd³ or m³.
@@ -180,12 +192,17 @@ function pourVolume(s) {
     const hFt = h * TO_FEET[s.depthUnit];
     const post = POST_OPTIONS.find((p) => p.id === s.post) || POST_OPTIONS[0];
     const postFt = post.sideIn / 12;
-    if (postFt * postFt >= Math.PI * (dFt / 2) * (dFt / 2)) {
-      return { error: "The post fills the whole hole. Enter a wider hole or choose a smaller post." };
+    if (postFt > 0 && !postFitsHole(postFt, dFt)) {
+      return {
+        error: "The post is wider than the hole, measured corner to corner. Enter a wider hole or choose a smaller post.",
+      };
     }
     unitFt3 = roundVolumeFt3(dFt, hFt, postFt);
   } else if (s.shape === "steps") {
     const n = parseCount(s.steps, null);
+    if (n === null && s.steps.trim() !== "") {
+      return { error: "Number of steps must be a whole number, 1 or more." };
+    }
     const rise = parsePositive(s.rise);
     const run = parsePositive(s.run);
     const width = parsePositive(s.stepWidth);
@@ -292,7 +309,8 @@ const BAG_TABLE = STANDARD_BAGS.map((b) => ({
   yieldL: b.yieldFt3 * LITRES_PER_FT3,
   perYd3: bagsFor(FT3_PER_YD3, b.yieldFt3),
   perM3: bagsFor(FT3_PER_M3, b.yieldFt3),
-  sqFtAt4in: b.yieldFt3 / (4 / 12),
+  // Floored, not rounded, so coverage is never overstated (50 lb: 1.125 -> 1.12).
+  sqFtAt4in: Math.floor(Number(((b.yieldFt3 / (4 / 12)) * 100).toFixed(6))) / 100,
 }));
 
 const SLAB_SIZES = [
@@ -466,7 +484,12 @@ export default function ConcreteCalculator() {
 
   return (
     <div className="tool">
-      <div className="seg-toggle" role="tablist" aria-label="Shape of the pour" style={{ alignSelf: "flex-start", maxWidth: "100%" }}>
+      <div
+        className="seg-toggle"
+        role="tablist"
+        aria-label="Shape of the pour"
+        style={{ alignSelf: "flex-start", maxWidth: "100%", flexWrap: "wrap" }}
+      >
         {SHAPES.map((sh) => (
           <button
             key={sh.id}
@@ -775,7 +798,8 @@ export default function ConcreteCalculator() {
 
       {result && result.orderYd3 >= 1 && (
         <p className="tool-note">
-          This pour is a cubic yard or more. Ready-mix delivery is often easier at this size than mixing bags by hand.
+          This pour is {imperial ? "a cubic yard" : `about ${formatNumber(M3_PER_YD3, 2)} m³ (a cubic yard)`} or more.
+          Ready-mix delivery is often easier at this size than mixing bags by hand.
         </p>
       )}
 
