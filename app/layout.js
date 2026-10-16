@@ -7,6 +7,7 @@ import CategoryNav from "../components/CategoryNav";
 import BrandLogo from "../components/BrandLogo";
 import SiteChrome, { FrameGuard } from "../components/SiteChrome";
 import { EMBED_PATHS } from "../lib/embedSlugs.mjs";
+import { NO_ADS_SLUGS } from "../lib/noAds";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
@@ -81,6 +82,12 @@ const ORG_LD = {
   ],
 };
 
+// Tool pages that must never request ads (lib/noAds.js). The gate below pauses
+// ad requests there too, so Auto ads can't place units either. (A client-side
+// navigation into one of these pages doesn't re-run the gate; the tool page
+// also skips its manual AdSlot.)
+const NO_AD_PATHS = categories.flatMap((c) => c.tools.filter((t) => NO_ADS_SLUGS.has(t.slug)).map((t) => `/${c.slug}/${t.slug}`));
+
 export default function RootLayout({ children }) {
   const year = new Date().getFullYear();
   // Set NEXT_PUBLIC_ADSENSE_ENABLED=1 in Vercel once AdSense is approved and ad units are placed.
@@ -104,7 +111,7 @@ export default function RootLayout({ children }) {
             frame, gets the same two switches (but isn't marked internal). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var n=navigator,u=n.userAgent||"",c=document.cookie||"";if(/(?:^|;\\s*)ebt_internal=1(?:;|$)/.test(c)||u.indexOf("EBT-Internal")>-1||(n.webdriver&&!/Google/i.test(u))||!/(^|\\.)everyboringtool\\.com$/.test(location.hostname)){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;window.__ebtInternal=true;}if(/^\\/embed\\//.test(location.pathname)||window.self!==window.top){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;}}catch(e){}})();`,
+            __html: `(function(){try{var n=navigator,u=n.userAgent||"",c=document.cookie||"";if(/(?:^|;\\s*)ebt_internal=1(?:;|$)/.test(c)||u.indexOf("EBT-Internal")>-1||(n.webdriver&&!/Google/i.test(u))||!/(^|\\.)everyboringtool\\.com$/.test(location.hostname)){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;window.__ebtInternal=true;}}catch(e){}try{if(/^\\/embed\\//.test(location.pathname)||window.self!==window.top){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;}if(${JSON.stringify(NO_AD_PATHS)}.indexOf(location.pathname)>-1){(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;}}catch(e){}})();`,
           }}
         />
         {/* Frame guard. Only the /embed/<slug> pages (lib/embedSlugs.mjs) may

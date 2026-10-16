@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { trackEvent } from "../../lib/analytics";
 
 // Classroom Timer: a big countdown made to be projected on a board.
 //
@@ -446,12 +447,19 @@ export default function ClassroomTimer() {
     const isR = e.key === "r" || e.key === "R";
     if (!isSpace && !isR) return;
     if (!shortcutTarget(e)) return;
+    if (isR) {
+      const root = rootRef.current;
+      const inTimer = !!(root && e.target && root.contains(e.target));
+      if (!inTimer && !isFull) return;
+    }
     // preventDefault also stops a focused button inside the timer from being
     // "clicked" by the same Space press.
     e.preventDefault();
     if (e.repeat) return;
-    if (isSpace) toggle();
-    else reset();
+    if (isSpace) {
+      if (status === "idle" || status === "done") trackEvent("tool_use", { tool_slug: "classroom-timer", tool_action: "start_key" });
+      toggle();
+    } else reset();
   }
 
   function onKeyUp(e) {
@@ -697,7 +705,7 @@ export default function ClassroomTimer() {
         </p>
       )}
       <p className="tool-note ct-hint">
-        Keyboard: Space starts or pauses, R resets (except while you&rsquo;re typing in a time box).
+        Keyboard: Space starts or pauses; R resets when the timer is selected (not while you&rsquo;re typing in a time box).
       </p>
       <p className="sr-only" role="status" aria-live="polite">
         {announce}
