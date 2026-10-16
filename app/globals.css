@@ -567,6 +567,9 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
    the tool plus its credit line. */
 .main:has(> .embed-page) { padding: 8px 10px 0; min-height: 0; }
 .embed-page .tool-shell { margin: 0; }
+/* Wheel of Names embed: keep the wheel, list and controls; drop the stats and
+   spin history (they live on the full tool page) so it fits its iframe. */
+.embed-page .wheel-extra { display: none; }
 .embed-credit { margin: 8px 0 10px; font-size: 12.5px; color: var(--muted); text-align: center; }
 .embed-credit a { text-decoration: underline; text-underline-offset: 2px; }
 .embed-credit a:hover { color: var(--text); }

@@ -714,7 +714,7 @@ export default function WheelOfNames() {
         </div>
       </div>
 
-      <div className="tool-stat-grid">
+      <div className="tool-stat-grid wheel-extra">
         <div className="tool-stat">
           <div className="tool-stat-num">{nextN}</div>
           <div className="tool-stat-label">{pendingAuto ? "Entries in the next spin" : "Entries on the wheel"}</div>
@@ -730,7 +730,7 @@ export default function WheelOfNames() {
       </div>
 
       {history.length > 0 && (
-        <div className="tool-result">
+        <div className="tool-result wheel-extra">
           <p className="tool-result-label">Spin history ({spinCount})</p>
           <ol start={history[0].n} style={{ margin: "6px 0 0", paddingLeft: "1.8rem", lineHeight: 1.7, maxHeight: 260, overflowY: "auto" }}>
             {history.map((h) => (
