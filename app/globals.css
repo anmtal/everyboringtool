@@ -547,6 +547,35 @@ img { outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
 .embed-credit { margin: 8px 0 10px; font-size: 12.5px; color: var(--muted); text-align: center; }
 .embed-credit a { text-decoration: underline; text-underline-offset: 2px; }
 .embed-credit a:hover { color: var(--text); }
+/* Classroom Timer in an embed. The snippet's iframe is 460px tall at every
+   width (lib/embeds.js), so below 720px the buttons, presets and custom-time
+   row go compact, and below 560px the keyboard hint and the "Custom" label are
+   visually hidden (screen readers still get them; the form is labelled
+   "Custom time"). Measured: tool + credit fit in 460px from 320px wide up. */
+@media (max-width: 719px) {
+  .embed-page .ct { gap: 10px; }
+  .embed-page .ct-stage { padding: 10px; gap: 8px; }
+  .embed-page .ct-controls { gap: 8px; }
+  .embed-page .ct .btn { min-height: 34px; padding: 6px 12px; font-size: 13px; }
+  .embed-page .ct-setup { gap: 8px; }
+  .embed-page .ct-presets { gap: 6px; }
+  .embed-page .ct-preset { padding: 5px 10px; font-size: 13px; }
+  .embed-page .ct-custom { gap: 6px; }
+  .embed-page .ct-custom .tool-input { width: 60px; padding: 6px 8px; }
+}
+@media (max-width: 559px) {
+  .embed-page .ct-custom-label, .embed-page .ct-hint {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+}
+/* Frame guard (app/layout.js): a page other than /embed/<slug> that ends up in
+   another site's frame shows a line of text and nothing to click. */
+html[data-framed="blocked"] body > * { display: none !important; }
+html[data-framed="blocked"] body::before {
+  content: "This page can\2019t be shown inside another site. Open everyboringtool.com in a new tab.";
+  display: block; padding: 16px; font-size: 14px; color: var(--muted);
+}
 /* "Embed this tool" box on the tool pages listed in lib/embeds.js */
 .tool-embed .tool-textarea { min-height: 0; font-size: 12.5px; }
 .tool-embed .tool-actions { margin-top: 10px; }

@@ -4,9 +4,10 @@ import { EMBEDS, getEmbed } from "../../../lib/embeds";
 import { getToolBySlug, SITE } from "../../../lib/tools";
 
 // /embed/<slug>: the bare tool for other sites to iframe (see lib/embeds.js).
-// The root layout leaves out the header, nav and footer on /embed/* paths
+// The root layout leaves out the header, nav and footer on these pages
 // (components/SiteChrome.jsx) and its gate turns off ads and analytics here;
-// next.config.mjs sends the framing-friendly headers + X-Robots-Tag: noindex.
+// next.config.mjs sends the framing-friendly headers + X-Robots-Tag: noindex to
+// exactly these paths (lib/embedSlugs.mjs), not to other /embed/* URLs.
 // Only slugs in EMBEDS exist: anything else is a 404.
 export const dynamicParams = false;
 

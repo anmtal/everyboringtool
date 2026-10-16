@@ -5,7 +5,8 @@ import { SITE, categories } from "../lib/tools";
 import { TOOL_COUNT_LABEL } from "../lib/toolCount";
 import CategoryNav from "../components/CategoryNav";
 import BrandLogo from "../components/BrandLogo";
-import SiteChrome from "../components/SiteChrome";
+import SiteChrome, { FrameGuard } from "../components/SiteChrome";
+import { EMBED_PATHS } from "../lib/embedSlugs.mjs";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
@@ -106,6 +107,20 @@ export default function RootLayout({ children }) {
             __html: `(function(){try{var n=navigator,u=n.userAgent||"",c=document.cookie||"";if(/(?:^|;\\s*)ebt_internal=1(?:;|$)/.test(c)||u.indexOf("EBT-Internal")>-1||(n.webdriver&&!/Google/i.test(u))||!/(^|\\.)everyboringtool\\.com$/.test(location.hostname)){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;window.__ebtInternal=true;}if(/^\\/embed\\//.test(location.pathname)||window.self!==window.top){window["ga-disable-${GA_ID}"]=true;(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;}}catch(e){}})();`,
           }}
         />
+        {/* Frame guard. Only the /embed/<slug> pages (lib/embedSlugs.mjs) may
+            be framed by other sites; every other page sends X-Frame-Options
+            and frame-ancestors 'self'. If one is ever shown in a cross-origin
+            frame anyway (a header rule that misses, a proxy that strips the
+            headers), hide it before it paints, so there is nothing to click
+            (the rule is in app/globals.css). A same-origin parent can read
+            top.location; a cross-origin one throws. FrameGuard (below) covers
+            client-side navigations, which load no new document. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(window.self===window.top||${JSON.stringify(EMBED_PATHS)}.indexOf(location.pathname)>-1)return;try{window.top.location.href}catch(e){document.documentElement.setAttribute("data-framed","blocked")}}catch(e){}})();`,
+          }}
+        />
+        <FrameGuard />
         {/* Raw <script> so the AdSense crawler sees it in the server HTML (a
             next/script afterInteractive tag is JS-injected and invisible to the
             non-JS verification crawler). defer, not async: React hoists async
@@ -132,8 +147,8 @@ export default function RootLayout({ children }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_LD) }}
         />
-        {/* SiteChrome renders its children everywhere except /embed/* (the
-            iframe-able tool pages), which must show only the tool. */}
+        {/* SiteChrome renders its children everywhere except /embed/<slug>
+            (the iframe-able tool pages), which must show only the tool. */}
         <SiteChrome>
         <a href="#main" className="skip-link">Skip to content</a>
         <header className="site-header">
